@@ -1,18 +1,18 @@
-predict/
-model/
-log/
+/predict/
+/model/
+/log/
 .ipynb_checkpoints/
-old/
-out/
-data/
+/old/
+/out/
+/data/
 
 *.egg-info/
+__pycache__/
 
 *.DS*
 *.log
 *.pt
 *.swp
-*__pycache__*
 *.txt
 *.model
 *.json

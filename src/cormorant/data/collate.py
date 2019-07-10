@@ -17,7 +17,7 @@ def drop_zeros(props, to_keep):
     Function to drop zeros from batches when the entire dataset is padded to the largest molecule size.
     """
     if type(props[0]) is not torch.Tensor:
-        return torch.tensor(props)
+        return props
     elif props[0].dim() == 0:
         return props
     else:

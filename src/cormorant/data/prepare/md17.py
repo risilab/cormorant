@@ -54,6 +54,9 @@ def download_dataset_md17(datadir, dataname, subset, splits=None, cleanup=True):
     # Convert numpy arrays to torch.Tensors
     md17_data = {new_key: md17_raw_data[old_key] for old_key, new_key in md17_keys.items()}
 
+    # Reshape energies to remove final singleton dimension
+    md17_data['energies'] = md17_data['energies'].squeeze(1)
+
     # Add charges to md17_data
     md17_data['charges'] = np.tile(md17_raw_data['z'], (num_tot_mols, 1))
 
@@ -69,7 +72,7 @@ def download_dataset_md17(datadir, dataname, subset, splits=None, cleanup=True):
     # Save processed GDB9 data into train/validation/test splits
     logging.info('Saving processed data:')
     for split, data_split in md17_data_split.items():
-        savefile = join(md17dir, 'data_' + split + '.npz')
+        savefile = join(md17dir, split + '.npz')
         np.savez_compressed(savefile, **data_split)
 
     cleanup_file(md17_data_npz, cleanup)

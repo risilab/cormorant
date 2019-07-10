@@ -55,6 +55,8 @@ def init_args():
     elif args.dataset.startswith('md17'):
         if not args.subset:
             args.subset = 'uracil'
+        if not args.target:
+            args.target = 'energies'
     else:
         raise ValueError('Dataset must be qm9 or md17!')
 
