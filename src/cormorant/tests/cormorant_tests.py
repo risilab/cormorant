@@ -46,32 +46,33 @@ def covariance_test(model, data):
 		covariance_test_mean = [torch.tensor(p) for p in covariance_test_mean]
 
 
-	logging.info('Rotation Invariance test:', invariance_test)
-	logging.info('Rotation Covariance test (norm):', covariance_test_norm)
-	logging.info('Rotation Covariance test (mean):', covariance_test_mean)
+	logging.info('Rotation Invariance test: {}'.format(invariance_test))
+	logging.info('Rotation Covariance test (norm): {}'.format(covariance_test_norm))
+	logging.info('Rotation Covariance test (mean): {}'.format(covariance_test_mean))
 
 
 def permutation_test(model, data):
 	logging.info('Beginning permutation test!')
 
-	mask = data['charges'] > 0
-	perm = 1*torch.arange(mask.shape[1]).expand(mask.shape[0], -1)
+	mask = data['atom_mask']
+
+	perm = torch.arange(mask.shape[1]).expand(mask.shape[0], -1)
 	for idx in range(len(mask)):
-		num_atoms = mask[idx, :].sum()
+		num_atoms = (mask[idx, :].long()).sum()
 		perm[idx, :num_atoms] = torch.randperm(num_atoms)
 	apply_perm = lambda mat: torch.stack([mat[idx, p] for (idx, p) in enumerate(perm)])
 
 	assert((mask == apply_perm(mask)).all())
 
 	data_noperm = data
-	data_perm = {key: apply_perm(val) if type(val) is torch.Tensor else None for key, val in data.items()}
+	data_perm = {key: apply_perm(val) if torch.is_tensor(val) and val.dim() > 1 else val for key, val in data.items()}
 
 	outputs_perm = model(data_perm, covariance_test=False)
 	outputs_noperm = model(data_noperm, covariance_test=False)
 
 	invariance_test = (outputs_perm - outputs_noperm).norm()
 
-	logging.info('Permutation Invariance test:', invariance_test)
+	logging.info('Permutation Invariance test: {}'.format(invariance_test))
 
 
 def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=1):
@@ -87,6 +88,6 @@ def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=
 	data = next(iter(dataloader))
 
 	covariance_test(model, data)
-	# permutation_test(model, data)
+	permutation_test(model, data)
 
 	logging.info('Test complete!')

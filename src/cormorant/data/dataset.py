@@ -13,6 +13,7 @@ class MolecularDataset(Dataset):
     """
     def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True):
 
+
         self.data = data
 
         if num_pts < 0:
@@ -24,8 +25,11 @@ class MolecularDataset(Dataset):
             else:
                 self.num_pts = num_pts
 
+        # If included species is not specified
         if included_species is None:
-            included_species = torch.unique(self.data['charges'])
+            included_species = torch.unique(self.data['charges'], sorted=True)
+            if included_species[0] == 1:
+                included_species = included_species[1:]
 
         self.included_species = included_species
 

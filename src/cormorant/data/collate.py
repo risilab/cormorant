@@ -5,7 +5,7 @@ def batch_stack(props):
     Stack a list of torch.tensors so they are padded to the size of the
     largest tensor along each axis.
     """
-    if type(props[0]) is not torch.Tensor:
+    if not torch.is_tensor(props[0]):
         return torch.tensor(props)
     elif props[0].dim() == 0:
         return torch.stack(props)
@@ -16,7 +16,7 @@ def drop_zeros(props, to_keep):
     """
     Function to drop zeros from batches when the entire dataset is padded to the largest molecule size.
     """
-    if type(props[0]) is not torch.Tensor:
+    if not torch.is_tensor(props[0]):
         return props
     elif props[0].dim() == 0:
         return props

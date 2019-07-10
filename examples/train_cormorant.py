@@ -33,7 +33,7 @@ def main():
     global_cg_dict(maxl=max(args.maxl+args.max_sh), dtype=dtype, device=device)
 
     # Initialize dataloder
-    datasets, num_species, charge_scale = initialize_datasets(args.datadir, args.dataset, subset=args.subset, 
+    datasets, num_species, charge_scale = initialize_datasets(args.datadir, args.dataset, subset=args.subset,
                                                               num_pts={'train': args.num_train, 'test': args.num_test, 'valid': args.num_valid})
 
     # Construct PyTorch dataloaders from datasets
@@ -55,7 +55,7 @@ def main():
     loss_fn = torch.nn.functional.mse_loss
 
     # Apply the covariance and permutation invariance tests.
-    cormorant_tests(model, datasets['train'], args, charge_scale=charge_scale)
+    cormorant_tests(model, dataloaders['train'], args, charge_scale=charge_scale)
 
     # Instantiate the training class
     trainer = TrainCormorant(args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype)
