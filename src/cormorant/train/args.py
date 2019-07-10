@@ -94,7 +94,7 @@ def setup_argparse():
                         help='Directory to look up data from. (default: data/)')
 
     # Dataset options
-    parser.add_argument('--num-train', '--num-samples', dest='num_train', type=int, default=-1, metavar='N',
+    parser.add_argument('--num-train', type=int, default=-1, metavar='N',
                         help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
     parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
                         help='Number of validation samples to use. Set to -1 to use entire dataset. (default: -1)')

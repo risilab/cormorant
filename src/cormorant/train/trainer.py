@@ -170,8 +170,24 @@ class TrainCormorant:
 
             logging.info('Epoch {} complete!'.format(epoch+1))
 
+    def _get_target(self, data, stats=None):
+        """
+        Get the learning target.
+        If a stats dictionary is included, return a normalized learning target.
+        """
+        if stats is not None:
+            mu, sigma = stats[self.args.target]
+        else:
+            mu, sigma = 0, 0
+
+        targets = data[self.args.target].to(self.device, self.dtype)
+        targets = (targets - mu) / sigma
+
+        return targets
+
     def train_epoch(self):
         dataloader = self.dataloaders['train']
+        stats = dataloader.dataset.stats
 
         current_idx, num_data_pts = 0, len(dataloader.dataset)
         self.mae, self.rmse, self.batch_time = 0, 0, 0
@@ -182,13 +198,18 @@ class TrainCormorant:
         for batch_idx, data in enumerate(dataloader):
             batch_t = datetime.now()
 
-            # data = {key: val.to(self.device, self.dtype) if type(val) is torch.Tensor else val for key, val in data.items()}
-            targets = data[self.args.target].to(self.device, self.dtype)
-
+            # Standard zero-gradient
             self.optimizer.zero_grad()
+
+            # Get targets and predictions
+            targets = self._get_target(data, stats)
             predict = self.model(data)
+
+            # Calculate loss and backprop
             loss = self.loss_fn(predict, targets)
             loss.backward()
+
+            # Step optimizer and learning rate
             self.optimizer.step()
             self._step_lr_batch()
 
@@ -206,6 +227,7 @@ class TrainCormorant:
 
     def predict(self, set='valid'):
         dataloader = self.dataloaders[set]
+        stats = dataloader.dataset.stats
 
         self.model.eval()
         all_predict, all_targets = [], []
@@ -214,13 +236,11 @@ class TrainCormorant:
 
         for batch_idx, data in enumerate(dataloader):
 
-            data = {key: val.to(self.device, self.dtype) if type(val) is torch.Tensor else val for key, val in data.items()}
+            targets = self._get_target(data, stats)
+            predict = self.model(data).detach()
 
-            targets = data[self.args.target]
-            predict = self.model(data).clone().detach()
-
-            all_targets.append(targets.to(dtype=self.dtype, device='cpu'))
-            all_predict.append(predict.to(dtype=self.dtype, device='cpu'))
+            all_targets.append(targets)
+            all_predict.append(predict)
 
         all_predict = torch.cat(all_predict)
         all_targets = torch.cat(all_targets)

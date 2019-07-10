@@ -11,9 +11,18 @@ class MolecularDataset(Dataset):
     """
     PyTorch dataset.
     """
-    def __init__(self, data, included_species=None):
+    def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True):
 
         self.data = data
+
+        if num_pts < 0:
+            self.num_pts = len(data['charges'])
+        else:
+            if num_pts > len(data['charges']):
+                logging.warn('Desired number of points ({}) is greater than the number of data points ({}) available in the dataset!'.format(num_pts, len(data['charges'])))
+                self.num_pts = len(data['charges'])
+            else:
+                self.num_pts = num_pts
 
         if included_species is None:
             included_species = torch.unique(self.data['charges'])
@@ -22,14 +31,24 @@ class MolecularDataset(Dataset):
 
         self.data['one_hot'] = self.data['charges'].unsqueeze(-1) == included_species.unsqueeze(0).unsqueeze(0)
 
-        self.num_pts = len(data['charges'])
         self.num_species = len(included_species)
         self.max_charge = max(included_species)
 
         self.parameters = {'num_species': self.num_species, 'max_charge': self.max_charge}
 
+        # Get a dictionary of statistics for all properties that are one-dimensional tensors.
+        self.stats = {key: (val.mean(), val.std()) for key, val in self.data.items() if type(val) is torch.Tensor and val.dim() == 1 and val.is_floating_point()}
+
+        if shuffle:
+            self.perm = torch.randperm(len(data['charges']))[:self.num_pts]
+        else:
+            self.perm = None
+
+
     def __len__(self):
         return self.num_pts
 
     def __getitem__(self, idx):
+        if self.perm is not None:
+            idx = self.perm[idx]
         return {key: val[idx] for key, val in self.data.items()}

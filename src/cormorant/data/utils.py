@@ -7,11 +7,11 @@ from torch.utils.data import DataLoader
 from cormorant.data.dataset import MolecularDataset
 from cormorant.data.prepare import prepare_dataset
 
-def initialize_datasets(datadir, dataset, subset=None, splits=None):
+def initialize_datasets(datadir, dataset, subset=None, splits=None, num_pts={}):
     """
     Initialize datasets.
     """
-    
+
     # Download and process dataset. Returns datafiles.
     datafiles = prepare_dataset(datadir, dataset, subset, splits)
 
@@ -26,7 +26,7 @@ def initialize_datasets(datadir, dataset, subset=None, splits=None):
     assert all([key == keys[0] for key in keys]), 'Datasets must have same set of keys!'
 
     # Now initialize MolecularDataset based upon loaded data
-    datasets = {split: MolecularDataset(data) for split, data in datasets.items()}
+    datasets = {split: MolecularDataset(data, num_pts=num_pts.get(split, -1)) for split, data in datasets.items()}
 
     # Check that all datasets have the same included species:
     assert(len(set(tuple(data.included_species.tolist()) for data in datasets.values())) == 1), 'All datasets must have same included_species! {}'.format({key: data.included_species for key, data in datasets.items()})

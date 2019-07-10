@@ -29,6 +29,16 @@ def init_args():
     logdir = args.logdir
     predictdir = args.predictdir
 
+    if not os.path.exists(modeldir):
+        logging.warning('Model directory {} does not exist. Creating!'.format(modeldir))
+        os.mkdir(modeldir)
+    if not os.path.exists(logdir):
+        logging.warning('Logging directory {} does not exist. Creating!'.format(logdir))
+        os.mkdir(logdir)
+    if not os.path.exists(predictdir):
+        logging.warning('Prediction directory {} does not exist. Creating!'.format(predictdir))
+        os.mkdir(predictdir)
+
     if prefix and not args.logfile:  args.logfile =  logdir + prefix + '.log'
     if prefix and not args.bestfile: args.bestfile = modeldir + prefix + '_best.pt'
     if prefix and not args.checkfile: args.checkfile = modeldir + prefix + '.pt'

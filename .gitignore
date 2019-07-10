@@ -4,7 +4,7 @@ log/
 .ipynb_checkpoints/
 old/
 out/
-data/*
+data/
 
 *.egg-info/
 
