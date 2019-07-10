@@ -36,7 +36,7 @@ def collate_fn(batch):
     atom_mask = batch['charges'] > 0
     edge_mask = atom_mask.unsqueeze(1) * atom_mask.unsqueeze(2)
 
-    batch['atom_mask'] = atom_mask.to(torch.bool)
-    batch['edge_mask'] = edge_mask.to(torch.bool)
+    batch['atom_mask'] = atom_mask.to(torch.uint8)
+    batch['edge_mask'] = edge_mask.to(torch.uint8)
 
     return batch
