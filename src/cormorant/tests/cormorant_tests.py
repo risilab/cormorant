@@ -37,6 +37,8 @@ def covariance_test(model, data):
 	covariance_test_norm = [[(part_in - part_out).norm().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 	covariance_test_mean = [[(part_in - part_out).abs().mean().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 
+	covariance_test_max = torch.cat([torch.tensor([(part_in - part_out).abs().max().item() for (part_in, part_out) in zip(level_in, level_out)]) for (level_in, level_out) in zip(reps_rotin, reps_rotout)])
+	covariance_test_max = covariance_test_max.max().item()
 
 	if set([len(part) for part in reps_rotout]) == 1:
 		covariance_test_norm = torch.tensor(covariance_test_norm)
@@ -46,9 +48,16 @@ def covariance_test(model, data):
 		covariance_test_mean = [torch.tensor(p) for p in covariance_test_mean]
 
 
-	logging.info('Rotation Invariance test: {}'.format(invariance_test))
-	logging.info('Rotation Covariance test (norm): {}'.format(covariance_test_norm))
-	logging.info('Rotation Covariance test (mean): {}'.format(covariance_test_mean))
+	logging.info('Rotation Invariance test: {:0.5g}'.format(invariance_test))
+	logging.info('Largest deviation in covariance test : {:0.5g}'.format(covariance_test_max))
+
+	# If the largest deviation in the covariance test is greater than 1e-5,
+	# display l1 and l2 norms of each irrep along each level.
+	if covariance_test_max > 1e-5:
+		logging.warning('Largest deviation in covariance test {:0.5g} detected! Detailed summary:'.format(covariance_test_max))
+		for lvl_idx, (lvl_norm, lvl_mean) in enumerate(zip(covariance_test_norm, covariance_test_mean)):
+			for ell_idx, (ell_norm, ell_mean) in enumerate(zip(lvl_norm, lvl_mean)):
+				logging.warning('(lvl, ell) = ({}, {}) -> {:0.5g} (mean) {:0.5g} (max)'.format(lvl_idx, ell_idx, ell_norm, ell_mean))
 
 
 def permutation_test(model, data):
@@ -56,8 +65,10 @@ def permutation_test(model, data):
 
 	mask = data['atom_mask']
 
-	perm = torch.arange(mask.shape[1]).expand(mask.shape[0], -1)
-	for idx in range(len(mask)):
+	# Generate a list of indices for each molecule.
+	# We will generate a permutation only for the atoms that exist (are not masked.)
+	perm = 1*torch.arange(mask.shape[1]).expand(mask.shape[0], -1)
+	for idx in range(mask.shape[0]):
 		num_atoms = (mask[idx, :].long()).sum()
 		perm[idx, :num_atoms] = torch.randperm(num_atoms)
 	apply_perm = lambda mat: torch.stack([mat[idx, p] for (idx, p) in enumerate(perm)])
