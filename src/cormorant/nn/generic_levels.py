@@ -75,13 +75,21 @@ class BasicMLP(nn.Module):
         for i in range(num_hidden):
             self.activations.append(activation_fn)
 
+        self.zero = torch.tensor(0, device=device, dtype=dtype)
+
         self.to(device=device, dtype=dtype)
 
-    def forward(self, x):
-
+    def forward(self, x, mask=None):
+        # Standard MLP. Loop over a linear layer followed by a non-linear activation
         for (lin, activation) in zip(self.linear, self.activations):
             x = activation(lin(x))
+
+        # After last non-linearity, apply a final linear mixing layer
         x = self.linear[-1](x)
+
+        # If mask is included, mask the output
+        if mask is not None:
+            x = torch.where(mask, x, self.zero)
 
         return x
 

@@ -46,7 +46,7 @@ class RadPolyTrig(nn.Module):
     Rather than than introducing the bessel functions explicitly we just write out a basis
     that can produce them. Then, when apply a weight mixing matrix to reduce the number of channels
     at the end.
-    :max_sh: 
+    :max_sh:
     """
     def __init__(self, max_sh, basis_set, num_channels, mix=False, device=torch.device('cpu'), dtype=torch.float):
         super(RadPolyTrig, self).__init__()
@@ -70,8 +70,13 @@ class RadPolyTrig(nn.Module):
         self.scales = nn.Parameter(self.scales)
         self.phases = nn.Parameter(self.phases)
 
-        if mix:
-            self.linear = nn.ModuleList([nn.Linear(self.num_rad, 2*self.num_channels).to(device=device, dtype=dtype) for _ in range(max_sh+1)])
+        # If desired, mix the radial components to a desired shape
+        self.mix = mix
+        if mix == 'cplx':
+            self.linear = nn.ModuleList([nn.Linear(2*self.num_rad, 2*self.num_channels).to(device=device, dtype=dtype) for _ in range(max_sh+1)])
+            self.radial_types = (num_channels,) * (max_sh + 1)
+        elif mix == 'real':
+            self.linear = nn.ModuleList([nn.Linear(2*self.num_rad, self.num_channels).to(device=device, dtype=dtype) for _ in range(max_sh+1)])
             self.radial_types = (num_channels,) * (max_sh + 1)
         else:
             self.linear = None
@@ -79,20 +84,28 @@ class RadPolyTrig(nn.Module):
 
         self.zero = torch.tensor(0, device=device, dtype=dtype)
 
-    def forward(self, norms, mask):
+    def forward(self, norms, edge_mask):
+        # Shape to resize at end
         s = norms.shape
 
-        mask = (mask * (norms > 0)).unsqueeze(-1)
+        # Mask and reshape
+        edge_mask = (edge_mask * (norms > 0)).unsqueeze(-1)
         norms = norms.unsqueeze(-1)
 
-        rad_powers = torch.stack([torch.where(mask, norms.pow(-pow), self.zero) for pow in range(self.rpow+1)], dim=-1)
+        # Get inverse powers
+        rad_powers = torch.stack([torch.where(edge_mask, norms.pow(-pow), self.zero) for pow in range(self.rpow+1)], dim=-1)
 
-        rad_trig = torch.where(mask, torch.sin(2*pi*norms*self.scales+self.phases), self.zero).unsqueeze(-1)
+        # Calculate trig functions
+        rad_trig = torch.where(edge_mask, torch.sin((2*pi*self.scales)*norms+self.phases), self.zero).unsqueeze(-1)
 
+        # Take the product of the radial powers and the trig components and reshape
         rad_prod = (rad_powers*rad_trig).view(s + (1, 2*self.num_rad,))
 
-        if self.linear:
+        # Apply linear mixing function, if desired
+        if self.mix == 'clpx':
             radial_functions = [linear(rad_prod).view(s + (self.num_channels, 2)) for linear in self.linear]
+        elif self.mix == 'real':
+            radial_functions = [linear(rad_prod).view(s + (self.num_channels,)) for linear in self.linear]
         else:
             radial_functions = [rad_prod.view(s + (self.num_rad, 2))] * (self.max_sh + 1)
 

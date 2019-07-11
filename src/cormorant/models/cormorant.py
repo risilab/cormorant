@@ -121,8 +121,6 @@ class Cormorant(nn.Module):
         else:
             raise ValueError('Improper choice of top of network! {}'.format(top))
 
-        self.zero = torch.tensor(0, device=device, dtype=dtype)
-
         logging.info('Model initialized. Number of parameters: {}'.format(sum([p.nelement() for p in self.parameters()])))
 
 
@@ -132,7 +130,7 @@ class Cormorant(nn.Module):
         spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
         rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0))
 
-        atom_reps = [self.input_func(input_scalars, atom_positions, atom_mask)]
+        atom_reps = [self.input_func(input_scalars, atom_mask, edge_mask, norms)]
         edge_net = [torch.tensor([]).to(self.device, self.dtype)]
 
         # Construct iterated multipoles

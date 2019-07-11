@@ -14,13 +14,11 @@ class CormorantEdgeLevel(nn.Module):
         super(CormorantEdgeLevel, self).__init__()
 
         # Set up type of edge network depending on specified input operations
-
         self.dot_matrix = DotMatrix(tau_in, cat=cat, device=device, dtype=dtype)
-
         tau_dot = self.dot_matrix.tau_out
-        edge_taus = [tau_edge, tau_dot, tau_rad]
 
         # Set up mixing layer
+        edge_taus = [tau_edge, tau_dot, tau_rad]
         self.cat_mix = CatMixRepsScalar(edge_taus, nout, real=False, device=device, dtype=dtype)
         self.tau_out = self.cat_mix.tau_out
 
@@ -31,12 +29,7 @@ class CormorantEdgeLevel(nn.Module):
         self.device = device
         self.dtype = dtype
 
-        self.empty = torch.tensor([], device=device, dtype=dtype)
-        self.zero = torch.tensor(0, device=device, dtype=dtype)
-        self.one = torch.tensor(1, device=device, dtype=dtype)
-
     def forward(self, edge_in, atom_reps, rad_funcs, base_mask, mask, norms, spherical_harmonics):
-
         # Caculate the dot product matrix.
         edge_dot = self.dot_matrix(atom_reps)
 
@@ -63,9 +56,6 @@ class CormorantAtomLevel(nn.Module):
         self.maxl = maxl
         self.num_channels = num_channels
 
-        self.device = device
-        self.dtype = dtype
-
         self.tau_in = tau_in
         self.tau_pos = tau_pos
 
@@ -81,10 +71,17 @@ class CormorantAtomLevel(nn.Module):
 
         self.taus = {'tau_out': self.tau_out, 'tau_ag': tau_ag, 'tau_sq': tau_sq, 'tau_id': tau_in}
 
-    def forward(self, reps, position_functions, mask):
-        reps_ag = self.cg_aggregate(position_functions, reps)
-        reps_sq = self.cg_power(reps, reps)
+        self.device = device
+        self.dtype = dtype
 
-        reps_out = self.cat_mix([reps_ag, reps, reps_sq])
+    def forward(self, atom_reps, edge_reps, mask):
+        # Aggregate information based upon edge reps
+        reps_ag = self.cg_aggregate(edge_reps, atom_reps)
+
+        # CG non-linearity for each atom
+        reps_sq = self.cg_power(atom_reps, atom_reps)
+
+        # Concatenate and mix results
+        reps_out = self.cat_mix([reps_ag, atom_reps, reps_sq])
 
         return reps_out
