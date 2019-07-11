@@ -11,7 +11,7 @@ Cormorant is installable using pip.  You can currently install it from source by
 
 ::
 
-    pip install pyDiffMap -e . 
+    pip install cormorant -e . 
 
 
 Documentation
