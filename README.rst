@@ -7,7 +7,7 @@ This is the home of the cormorant software package for learning on atomic enviro
 Installation
 ============
 
-Pydiffmap is installable using pip.  You can currently install it from source by going to the directory with setup.py  
+Cormorant is installable using pip.  You can currently install it from source by going to the directory with setup.py  
 
 ::
 
