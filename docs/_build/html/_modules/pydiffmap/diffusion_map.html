@@ -1,0 +1,552 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pydiffmap.diffusion_map &mdash; cormorant 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> cormorant
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgements.html">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">cormorant</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pydiffmap.diffusion_map</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pydiffmap.diffusion_map</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Routines and Class definitions for the diffusion maps algorithm.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sps</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span> <span class="k">as</span> <span class="nn">spsl</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">kernel</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="DiffusionMap"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap">[docs]</a><span class="k">class</span> <span class="nc">DiffusionMap</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Diffusion Map object for data analysis</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kernel_object : Kernel object.</span>
+<span class="sd">        Kernel object that outputs the values of the kernel.  Must have the method .fit(X) and .compute() methods.</span>
+<span class="sd">        Any epsilon desired for normalization should be stored at kernel_object.epsilon_fitted and any bandwidths</span>
+<span class="sd">        should be located at kernel_object.bandwidths.</span>
+<span class="sd">    alpha : scalar, optional</span>
+<span class="sd">        Exponent to be used for the left normalization in constructing the diffusion map.</span>
+<span class="sd">    n_evecs : int, optional</span>
+<span class="sd">        Number of diffusion map eigenvectors to return</span>
+<span class="sd">    weight_fxn : callable or None, optional</span>
+<span class="sd">        Callable function that take in a point, and outputs the value of the weight matrix at those points.</span>
+<span class="sd">    density_fxn : callable or None, optional</span>
+<span class="sd">        Callable function that take in X, and outputs the value of the density of X. Used instead of kernel density estimation in the normalisation.</span>
+<span class="sd">    bandwidth_normalize: boolean, optional</span>
+<span class="sd">        If true, normalize the final constructed transition matrix by the bandwidth as described in Berry and Harlim. [1]_</span>
+<span class="sd">    oos : &#39;nystroem&#39; or &#39;power&#39;, optional</span>
+<span class="sd">        Method to use for out-of-sample extension.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96</span>
+<span class="sd">       (2016).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_object</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">weight_fxn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">density_fxn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">oos</span><span class="o">=</span><span class="s1">&#39;nystroem&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes Diffusion Map, sets parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_evecs</span> <span class="o">=</span> <span class="n">n_evecs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon_fitted</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_fxn</span> <span class="o">=</span> <span class="n">weight_fxn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bandwidth_normalize</span> <span class="o">=</span> <span class="n">bandwidth_normalize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oos</span> <span class="o">=</span> <span class="n">oos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density_fxn</span> <span class="o">=</span> <span class="n">density_fxn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_kernel</span> <span class="o">=</span> <span class="n">kernel_object</span>
+
+<div class="viewcode-block" id="DiffusionMap.from_sklearn"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap.from_sklearn">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_sklearn</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_type</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="s1">&#39;bgh&#39;</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">neighbor_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span> <span class="n">metric_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_fxn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">density_fxn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bandwidth_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">oos</span><span class="o">=</span><span class="s1">&#39;nystroem&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds the diffusion map using a kernel constructed using the Scikit-learn nearest neighbor object.</span>
+<span class="sd">        Parameters are largely the same as the constructor, but in place of the kernel object it take</span>
+<span class="sd">        the following parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        k : int, optional</span>
+<span class="sd">            Number of nearest neighbors over which to construct the kernel.</span>
+<span class="sd">        kernel_type : string, optional</span>
+<span class="sd">            Type of kernel to construct. Currently the only option is &#39;gaussian&#39;, but more will be implemented.</span>
+<span class="sd">        epsilon: string or scalar, optional</span>
+<span class="sd">            Method for choosing the epsilon.  Currently, the only options are to provide a scalar (epsilon is set to the provided scalar) &#39;bgh&#39; (Berry, Giannakis and Harlim), and &#39;bgh_generous&#39; (&#39;bgh&#39; method, with answer multiplied by 2.</span>
+<span class="sd">        neighbor_params : dict or None, optional</span>
+<span class="sd">            Optional parameters for the nearest Neighbor search. See scikit-learn NearestNeighbors class for details.</span>
+<span class="sd">        metric : string, optional</span>
+<span class="sd">            Metric for distances in the kernel. Default is &#39;euclidean&#39;. The callable should take two arrays as input and return one value indicating the distance between them.</span>
+<span class="sd">        metric_params : dict or None, optional</span>
+<span class="sd">            Optional parameters required for the metric given.</span>
+<span class="sd">        bandwidth_type: callable, number, string, or None, optional</span>
+<span class="sd">            Type of bandwidth to use in the kernel.  If None (default), a fixed bandwidth kernel is used.  If a callable function, the data is passed to the function, and the bandwidth is output (note that the function must take in an entire dataset, not the points 1-by-1).  If a number, e.g. -.25, a kernel density estimate is performed, and the bandwidth is taken to be q**(input_number).  For a string input, the input is assumed to be an evaluatable expression in terms of the dimension d, e.g. &quot;-1/(d+2)&quot;.  The dimension is then estimated, and the bandwidth is set to q**(evaluated input string).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        # setup neighbor_params list with as many jobs as CPU cores and kd_tree neighbor search.</span>
+<span class="sd">        &gt;&gt;&gt; neighbor_params = {&#39;n_jobs&#39;: -1, &#39;algorithm&#39;: &#39;kd_tree&#39;}</span>
+<span class="sd">        # initialize diffusion map object with the top two eigenvalues being computed, epsilon set to 0.1</span>
+<span class="sd">        # and alpha set to 1.0.</span>
+<span class="sd">        &gt;&gt;&gt; mydmap = DiffusionMap.from_sklearn(n_evecs = 2, epsilon = .1, alpha = 1.0, neighbor_params = neighbor_params)</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] T. Berry, and J. Harlim, Applied and Computational Harmonic Analysis 40, 68-96</span>
+<span class="sd">           (2016).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">buendia</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">Kernel</span><span class="p">(</span><span class="n">kernel_type</span><span class="o">=</span><span class="n">kernel_type</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">neighbor_params</span><span class="o">=</span><span class="n">neighbor_params</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="n">metric_params</span><span class="o">=</span><span class="n">metric_params</span><span class="p">,</span> <span class="n">bandwidth_type</span><span class="o">=</span><span class="n">bandwidth_type</span><span class="p">)</span>
+        <span class="n">dmap</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">buendia</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="n">n_evecs</span><span class="p">,</span> <span class="n">weight_fxn</span><span class="o">=</span><span class="n">weight_fxn</span><span class="p">,</span> <span class="n">density_fxn</span><span class="o">=</span><span class="n">density_fxn</span><span class="p">,</span> <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="n">bandwidth_normalize</span><span class="p">,</span> <span class="n">oos</span><span class="o">=</span><span class="n">oos</span><span class="p">)</span>
+        <span class="c1"># if ((bandwidth_type is None) and (bandwidth_normalize is True)):</span>
+        <span class="c1">#     warnings.warn(&#39;Bandwith normalization set to true, but no bandwidth function provided.  Setting to False.&#39;)</span>
+        <span class="k">return</span> <span class="n">dmap</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">my_kernel</span><span class="p">):</span>
+        <span class="n">my_kernel</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">kernel_matrix</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_symmetrize_matrix</span><span class="p">(</span><span class="n">my_kernel</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">my_kernel</span>
+
+    <span class="k">def</span> <span class="nf">_compute_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_fxn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_fxn</span><span class="p">(</span><span class="n">Xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">Xi</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_make_right_norm_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bandwidths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">q</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># perform kde</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kernel_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">bandwidths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">/=</span> <span class="n">bandwidths</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">right_norm_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">right_norm_vec</span>
+
+    <span class="k">def</span> <span class="nf">_right_normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">right_norm_vec</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">right_norm_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Dalpha</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">right_norm_vec</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="n">kernel_matrix</span> <span class="o">=</span> <span class="n">kernel_matrix</span> <span class="o">*</span> <span class="n">Dalpha</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weight_mat</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="n">kernel_matrix</span> <span class="o">=</span> <span class="n">kernel_matrix</span> <span class="o">*</span> <span class="n">weight_mat</span>
+        <span class="k">return</span> <span class="n">kernel_matrix</span>
+
+    <span class="k">def</span> <span class="nf">_left_normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_matrix</span><span class="p">):</span>
+        <span class="n">row_sum</span> <span class="o">=</span> <span class="n">kernel_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">row_sum</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Dalpha</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">row_sum</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">Dalpha</span> <span class="o">*</span> <span class="n">kernel_matrix</span>
+        <span class="k">return</span> <span class="n">P</span>
+
+    <span class="k">def</span> <span class="nf">_build_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">epsilon_fitted</span><span class="p">,</span> <span class="n">bandwidths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span> <span class="o">-</span> <span class="n">sps</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">)))</span> <span class="o">/</span> <span class="n">epsilon_fitted</span>
+        <span class="k">if</span> <span class="n">bandwidth_normalize</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bandwidths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bw_diag</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">bandwidths</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="n">bw_diag</span> <span class="o">*</span> <span class="n">L</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Bandwith normalization set to true, but no bandwidth function was found in normalization.  Not performing normalization&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">L</span>
+
+    <span class="k">def</span> <span class="nf">_make_diffusion_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+        <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">spsl</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_evecs</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;LR&#39;</span><span class="p">)</span>
+        <span class="n">ix</span> <span class="o">=</span> <span class="n">evals</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">evals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">evals</span><span class="p">[</span><span class="n">ix</span><span class="p">])</span>
+        <span class="n">evecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">evecs</span><span class="p">[:,</span> <span class="n">ix</span><span class="p">])</span>
+        <span class="n">dmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">evecs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">evals</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">dmap</span><span class="p">,</span> <span class="n">evecs</span><span class="p">,</span> <span class="n">evals</span>
+
+<div class="viewcode-block" id="DiffusionMap.construct_Lmat"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap.construct_Lmat">[docs]</a>    <span class="k">def</span> <span class="nf">construct_Lmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds the transition matrix, but does NOT compute the eigenvectors.  This is useful for applications where the transition matrix itself is the object of interest.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like, shape (n_query, n_features)</span>
+<span class="sd">            Data upon which to construct the diffusion map.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : the object itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">my_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_kernel</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_kernel</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_weights</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_fxn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_fxn</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bandwidths</span> <span class="o">=</span> <span class="n">my_kernel</span><span class="o">.</span><span class="n">bandwidths</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">bandwidths</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">q</span><span class="p">,</span> <span class="n">right_norm_vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_right_norm_vec</span><span class="p">(</span><span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">bandwidths</span><span class="o">=</span><span class="n">bandwidths</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right_normalize</span><span class="p">(</span><span class="n">kernel_matrix</span><span class="p">,</span> <span class="n">right_norm_vec</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_left_normalize</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_generator</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">my_kernel</span><span class="o">.</span><span class="n">epsilon_fitted</span><span class="p">,</span> <span class="n">bandwidths</span><span class="p">,</span> <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth_normalize</span><span class="p">)</span>
+
+        <span class="c1"># Save data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_kernel</span> <span class="o">=</span> <span class="n">my_kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon_fitted</span> <span class="o">=</span> <span class="n">my_kernel</span><span class="o">.</span><span class="n">epsilon_fitted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_matrix</span> <span class="o">=</span> <span class="n">kernel_matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">L</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right_norm_vec</span> <span class="o">=</span> <span class="n">right_norm_vec</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="DiffusionMap.fit"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fits the data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like, shape (n_query, n_features)</span>
+<span class="sd">            Data upon which to construct the diffusion map.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : the object itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">construct_Lmat</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">dmap</span><span class="p">,</span> <span class="n">evecs</span><span class="p">,</span> <span class="n">evals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_diffusion_coords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">)</span>
+
+        <span class="c1"># Save constructed data.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evals</span> <span class="o">=</span> <span class="n">evals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evecs</span> <span class="o">=</span> <span class="n">evecs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmap</span> <span class="o">=</span> <span class="n">dmap</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="DiffusionMap.transform"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Y : array-like, shape (n_query, n_features)</span>
+<span class="sd">            Data for which to perform the out-of-sample extension.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        phi : numpy array, shape (n_query, n_eigenvectors)</span>
+<span class="sd">            Transformed value of the given values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># turn Y into 2D array if needed</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">oos</span> <span class="o">==</span> <span class="s2">&quot;nystroem&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">nystroem_oos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">oos</span> <span class="o">==</span> <span class="s2">&quot;power&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">power_oos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Did not understand the OOS algorithm specified&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DiffusionMap.fit_transform"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.DiffusionMap.fit_transform">[docs]</a>    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fits the data and returns diffusion coordinates.  equivalent to calling dmap.fit(X).transform(x).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like, shape (n_query, n_features)</span>
+<span class="sd">            Data upon which to construct the diffusion map.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        phi : numpy array, shape (n_query, n_eigenvectors)</span>
+<span class="sd">            Transformed value of the given values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmap</span></div></div>
+
+
+<div class="viewcode-block" id="TMDmap"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.TMDmap">[docs]</a><span class="k">class</span> <span class="nc">TMDmap</span><span class="p">(</span><span class="n">DiffusionMap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the TargetMeasure diffusion map.  This provides a more convenient interface for some hyperparameter selection for the general diffusion object.  It takes the same parameters as the base Diffusion Map object.  However, rather than taking a weight function, it takes as input a change of measure function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    change_of_measure : callable, optional</span>
+<span class="sd">        Function that takes in a point and evaluates the change-of-measure between the density otherwise stationary to the diffusion map and the desired density.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_type</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="s1">&#39;bgh&#39;</span><span class="p">,</span>
+                 <span class="n">n_evecs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">neighbor_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span>
+                 <span class="n">metric_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">change_of_measure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">density_fxn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bandwidth_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">oos</span><span class="o">=</span><span class="s1">&#39;nystroem&#39;</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">weight_fxn</span><span class="p">(</span><span class="n">y_i</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">change_of_measure</span><span class="p">(</span><span class="n">y_i</span><span class="p">))</span>
+
+        <span class="n">buendia</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">Kernel</span><span class="p">(</span><span class="n">kernel_type</span><span class="o">=</span><span class="n">kernel_type</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">neighbor_params</span><span class="o">=</span><span class="n">neighbor_params</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="n">metric_params</span><span class="o">=</span><span class="n">metric_params</span><span class="p">,</span> <span class="n">bandwidth_type</span><span class="o">=</span><span class="n">bandwidth_type</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">TMDmap</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">buendia</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">n_evecs</span><span class="o">=</span><span class="n">n_evecs</span><span class="p">,</span> <span class="n">weight_fxn</span><span class="o">=</span><span class="n">weight_fxn</span><span class="p">,</span> <span class="n">density_fxn</span><span class="o">=</span><span class="n">density_fxn</span><span class="p">,</span> <span class="n">bandwidth_normalize</span><span class="o">=</span><span class="n">bandwidth_normalize</span><span class="p">,</span> <span class="n">oos</span><span class="o">=</span><span class="n">oos</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="nystroem_oos"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.nystroem_oos">[docs]</a><span class="k">def</span> <span class="nf">nystroem_oos</span><span class="p">(</span><span class="n">dmap_object</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs Nystroem out-of-sample extension to calculate the values of the diffusion coordinates at each given point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dmap_object : DiffusionMap object</span>
+<span class="sd">        Diffusion map upon which to perform the out-of-sample extension.</span>
+<span class="sd">    Y : array-like, shape (n_query, n_features)</span>
+<span class="sd">        Data for which to perform the out-of-sample extension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phi : numpy array, shape (n_query, n_eigenvectors)</span>
+<span class="sd">        Transformed value of the given values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check if Y is equal to data. If yes, no computation needed.</span>
+    <span class="c1"># compute the values of the kernel matrix</span>
+    <span class="n">kernel_extended</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">local_kernel</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_compute_weights</span><span class="p">(</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">local_kernel</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_left_normalize</span><span class="p">(</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">_right_normalize</span><span class="p">(</span><span class="n">kernel_extended</span><span class="p">,</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">right_norm_vec</span><span class="p">,</span> <span class="n">weights</span><span class="p">))</span>
+    <span class="n">oos_evecs</span> <span class="o">=</span> <span class="n">P</span> <span class="o">*</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">dmap</span>
+    <span class="c1"># evals_p = dmap_object.local_kernel.epsilon_fitted * dmap_object.evals + 1.</span>
+    <span class="c1"># oos_dmap = np.dot(oos_evecs, np.diag(1. / evals_p))</span>
+    <span class="k">return</span> <span class="n">oos_evecs</span></div>
+
+
+<div class="viewcode-block" id="power_oos"><a class="viewcode-back" href="../../reference/diffusion_map.html#pydiffmap.diffusion_map.power_oos">[docs]</a><span class="k">def</span> <span class="nf">power_oos</span><span class="p">(</span><span class="n">dmap_object</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs out-of-sample extension to calculate the values of the diffusion coordinates at each given point using the power-like method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dmap_object : DiffusionMap object</span>
+<span class="sd">        Diffusion map upon which to perform the out-of-sample extension.</span>
+<span class="sd">    Y : array-like, shape (n_query, n_features)</span>
+<span class="sd">        Data for which to perform the out-of-sample extension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    phi : numpy array, shape (n_query, n_eigenvectors)</span>
+<span class="sd">        Transformed value of the given values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">k_yx</span><span class="p">,</span> <span class="n">y_bandwidths</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">local_kernel</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">return_bandwidths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Evaluate on ref points</span>
+    <span class="n">yy_right_norm_vec</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_make_right_norm_vec</span><span class="p">(</span><span class="n">k_yx</span><span class="p">,</span> <span class="n">y_bandwidths</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">k_yy_diag</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">local_kernel</span><span class="o">.</span><span class="n">kernel_fxn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">epsilon_fitted</span><span class="p">)</span>
+    <span class="n">data_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">local_kernel</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Y</span><span class="p">])</span>
+    <span class="n">k_full</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">k_yx</span><span class="p">,</span> <span class="n">sps</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">*</span> <span class="n">k_yy_diag</span><span class="p">])</span>
+    <span class="n">right_norm_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">right_norm_vec</span><span class="p">,</span> <span class="n">yy_right_norm_vec</span><span class="p">])</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_compute_weights</span><span class="p">(</span><span class="n">data_full</span><span class="p">)</span>
+
+    <span class="n">P</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_left_normalize</span><span class="p">(</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">_right_normalize</span><span class="p">(</span><span class="n">k_full</span><span class="p">,</span> <span class="n">right_norm_full</span><span class="p">,</span> <span class="n">weights</span><span class="p">))</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">_build_generator</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">epsilon_fitted</span><span class="p">,</span> <span class="n">y_bandwidths</span><span class="p">)</span>
+    <span class="n">L_yx</span> <span class="o">=</span> <span class="n">L</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="n">m</span><span class="p">]</span>
+    <span class="n">L_yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">L</span><span class="p">[:,</span> <span class="o">-</span><span class="n">m</span><span class="p">:]</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+    <span class="n">adj_evals</span> <span class="o">=</span> <span class="n">dmap_object</span><span class="o">.</span><span class="n">evals</span> <span class="o">-</span> <span class="n">L_yy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dot_part</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">L_yx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dmap_object</span><span class="o">.</span><span class="n">dmap</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">adj_evals</span><span class="p">)</span> <span class="o">*</span> <span class="n">dot_part</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Brandon Anderson
+      <span class="lastupdated">
+        Last updated on Jul 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
