@@ -17,7 +17,7 @@ Pydiffmap is installable using pip.  You can currently install it from source by
 Documentation
 =============
 
-Coming Soon...
+To install the documentation, go to the docs folder and run "make html".  You will need to install the sphinx_rtd_theme (this can be done using pip install).
 
 Development
 ===========
