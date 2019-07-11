@@ -5,6 +5,7 @@
 /old/
 /out/
 /data/
+TODO.txt
 
 *.egg-info/
 __pycache__/

@@ -1,0 +1,8 @@
+graft docs
+graft src
+graft ci
+graft tests
+graft examples
+
+prune docs/_build
+prune examples/.ipynb_checkpoints
