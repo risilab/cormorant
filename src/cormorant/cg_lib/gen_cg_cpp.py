@@ -21,4 +21,6 @@ if not sys.warnoptions:
 source = __file__.replace('.py', '.cpp')
 _GenCG = ext.load(name='GenCG', sources=[source], build_directory=build_directory)
 
+gen_cg_coefffs = _GenCG.gen_cg_coefffs
+
 if restore_warnings: warnings.simplefilter("default")

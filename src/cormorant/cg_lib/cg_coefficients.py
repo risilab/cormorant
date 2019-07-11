@@ -1,6 +1,7 @@
 import torch
 
-from .gen_cg import _GenCG
+# from .gen_cg_cpp import gen_cg_coefffs
+from .gen_cg_py import gen_cg_coefffs
 
 class CGDict():
     def __init__(self):
@@ -24,7 +25,7 @@ class CGDict():
                 self.initialized = False
                 self.initialize(maxl, split=split, transpose=transpose, dtype=dtype, device=device)
 
-        cg_mats = _GenCG.gen_cg_coefffs(maxl)
+        cg_mats = gen_cg_coefffs(maxl)
         cg_dict = {((cg_mat.shape[0]-1)//2, (cg_mat.shape[1]-1)//2): cg_mat.view(-1, cg_mat.shape[2]) for cg_mat in cg_mats}
 
         if split:
