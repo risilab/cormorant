@@ -34,7 +34,14 @@ def init_logger(args):
     else:
         handlers = [logging.StreamHandler()]
 
-    logging.basicConfig(level=logging.INFO,
+    if args.log_level.lower() == 'debug':
+        loglevel = logging.DEBUG
+    elif args.log_level.lower() == 'info':
+        loglevel = logging.INFO
+    else:
+        ValueError('Inappropriate choice of logging_level. {}'.format(args.logging_level))
+
+    logging.basicConfig(level=loglevel,
                         format="%(message)s",
                         handlers=handlers
                         )
@@ -134,6 +141,9 @@ def init_scheduler(args, optimizer):
         logger.info('SGD Restart epochs: {}'.format(restart_epochs))
     else:
         restart_epochs = []
+        lr_hold = args.num_epoch
+        if args.lr_minibatch:
+            lr_hold *= minibatch_per_epoch
 
     if args.lr_decay_type.startswith('cos'):
         scheduler = sched.CosineAnnealingLR(optimizer, lr_hold, eta_min=lr_final)

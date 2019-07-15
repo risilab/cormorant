@@ -59,6 +59,9 @@ def setup_argparse():
     parser.add_argument('--skip-test', '--notest', action='store_true',
                         help='Disable initial network testing.')
 
+    parser.add_argument('--log-level', type=str, default='info',
+                        help='Logging level to output')
+
     ### Arguments for files to save things to
     # Job prefix is used to name checkpoint/best file
     parser.add_argument('--prefix', type=str, default='nosave',
