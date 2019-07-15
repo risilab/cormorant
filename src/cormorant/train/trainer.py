@@ -3,13 +3,16 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.optim.lr_scheduler as sched
 
-import argparse, os, sys, pickle, logging
+import argparse, os, sys, pickle
 from datetime import datetime
 from math import sqrt, inf, log, log2, exp, ceil
 
 MAE = torch.nn.L1Loss()
 MSE = torch.nn.MSELoss()
 RMSE = lambda x, y : sqrt(MSE(x, y))
+
+import logging
+logger = logging.getLogger(__name__)
 
 class TrainCormorant:
     """
@@ -74,7 +77,7 @@ class TrainCormorant:
         logging.info('Best loss from checkpoint: {} at epoch {}'.format(best_loss, epoch0))
 
     def tests(self):
-        if not self.save:
+        if not self.args.save:
             logging.info('No model saved! Cannot give final status.')
             return
 
@@ -83,6 +86,10 @@ class TrainCormorant:
         # Load checkpoint model to make predictions
         checkpoint = torch.load(self.args.checkfile)
         self.model.load_state_dict(checkpoint['model_state'])
+
+        # Predict on the training set for checkpoint model -- added by request
+        valid_predict, valid_targets = self.predict_set('train')
+        self.log_predict(valid_predict, valid_targets, 'train', description='Final')
 
         # Predict on the validation set for checkpoint model
         valid_predict, valid_targets = self.predict_set('valid')
@@ -97,6 +104,10 @@ class TrainCormorant:
         # Load best model to make predictions
         checkpoint = torch.load(self.args.bestfile)
         self.model.load_state_dict(checkpoint['model_state'])
+
+        # Predict on the training set for best model -- added by request
+        valid_predict, valid_targets = self.predict_set('train')
+        self.log_predict(valid_predict, valid_targets, 'train', description='Best')
 
         # Predict on the validation set for best model
         valid_predict, valid_targets = self.predict_set('valid')

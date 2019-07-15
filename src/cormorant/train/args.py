@@ -80,6 +80,9 @@ def setup_argparse():
     parser.add_argument('--predictfile', type=str, default='',
                         help='Save predictions to file. Set to empty string to generate from prefix. (default: (empty))')
 
+    # Working directory to place all files
+    parser.add_argument('--workdir', type=str, default='./',
+                        help='Working directory as a default location for all files. (default: ./)')
     # Directory to place logging information
     parser.add_argument('--logdir', type=str, default='log/',
                         help='Directory to place log and savefiles. (default: log/)')
@@ -94,19 +97,19 @@ def setup_argparse():
                         help='Directory to look up data from. (default: data/)')
 
     # Dataset options
-    parser.add_argument('--num-train', type=int, default=-1, metavar='N',
-                        help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
-    parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
-                        help='Number of validation samples to use. Set to -1 to use entire dataset. (default: -1)')
-    parser.add_argument('--num-test', type=int, default=-1, metavar='N',
-                        help='Number of test samples to use. Set to -1 to use entire dataset. (default: -1)')
-
     parser.add_argument('--dataset', type=str, default='qm9',
                         help='Data set. Options: (qm9, md17). Default: qm9.')
     parser.add_argument('--target', type=str, default='',
                         help='Learning target for a dataset (such as qm9) with multiple options.')
     parser.add_argument('--subset', '--molecule', type=str, default='',
                         help='Subset/molecule on data with subsets (such as md17).')
+
+    parser.add_argument('--num-train', type=int, default=-1, metavar='N',
+                        help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
+    parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
+                        help='Number of validation samples to use. Set to -1 to use entire dataset. (default: -1)')
+    parser.add_argument('--num-test', type=int, default=-1, metavar='N',
+                        help='Number of test samples to use. Set to -1 to use entire dataset. (default: -1)')
 
     # Computation options
     parser.add_argument('--cuda', dest='cuda', action='store_true',
@@ -168,6 +171,8 @@ def setup_argparse():
 
     parser.add_argument('--edge-cat', action='store_true',
                         help='Concatenate the scalars from different \ell in the dot-product-matrix part of the edge network.')
+
+    print(parser)
 
     return parser
 
