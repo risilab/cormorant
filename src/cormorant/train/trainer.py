@@ -29,6 +29,7 @@ class TrainCormorant:
 
         self.best_loss = inf
         self.epoch = 0
+        self.minibatch = 0
 
         self.device = device
         self.dtype = dtype
@@ -41,6 +42,7 @@ class TrainCormorant:
                      'optimizer_state': self.optimizer.state_dict(),
                      'scheduler_state': self.scheduler.state_dict(),
                      'epoch': self.epoch,
+                     'minibatch': self.minibatch,
                      'best_loss': self.best_loss}
 
         if (valid_mae < self.best_loss):
@@ -73,6 +75,7 @@ class TrainCormorant:
         self.scheduler.load_state_dict(checkpoint['scheduler_state'])
         self.epoch = checkpoint['epoch']
         self.best_loss = checkpoint['best_loss']
+        self.minibatch = checkpoint['minibatch']
 
         logging.info('Best loss from checkpoint: {} at epoch {}'.format(best_loss, epoch0))
 
@@ -147,11 +150,16 @@ class TrainCormorant:
         self.batch_time += dtb
         tcollate = tepoch-self.batch_time
 
-        logstring = 'E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
-        logstring += '{:> 9.4f}{:> 9.4f}{:> 9.4f}'.format(sqrt(mini_batch_loss), self.mae, self.rmse)
-        logstring += '  dt:{:> 6.2f}{:> 8.2f}{:> 8.2f}'.format(dtb, tepoch, tcollate)
+        if self.args.textlog:
+            logstring = 'E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
+            logstring += '{:> 9.4f}{:> 9.4f}{:> 9.4f}'.format(sqrt(mini_batch_loss), self.mae, self.rmse)
+            logstring += '  dt:{:> 6.2f}{:> 8.2f}{:> 8.2f}'.format(dtb, tepoch, tcollate)
 
-        logging.info(logstring)
+            logging.info(logstring)
+
+        if self.summarize:
+            self.summarize.add_scalar('train/mae', sqrt(mini_batch_loss), self.minibatch)
+
 
     def _step_lr_batch(self):
         if self.args.lr_minibatch:
@@ -230,6 +238,8 @@ class TrainCormorant:
             all_targets.append(targets)
 
             self._log_minibatch(batch_idx, loss, targets, predict, batch_t, epoch_t)
+
+            self.minibatch += 1
 
         all_predict = torch.cat(all_predict)
         all_targets = torch.cat(all_targets)

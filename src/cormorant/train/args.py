@@ -29,8 +29,8 @@ def setup_argparse():
                         help='Type of learning rate decay. (cos | linear | exponential | pow | restart) (default: cos)')
     parser.add_argument('--lr-minibatch', '--lr-mb', action='store_true',
                         help='Decay learning rate every minibatch instead of epoch.')
-    parser.add_argument('--sgd-restart', type=int, default=1, metavar='int',
-                        help='Restart SGD optimizer every (lr_decay)^p epochs, where p=sgd_restart.  (default: 1)')
+    parser.add_argument('--sgd-restart', type=int, default=-1, metavar='int',
+                        help='Restart SGD optimizer every (lr_decay)^p epochs, where p=sgd_restart. (-1 to disable) (default: -1)')
 
     parser.add_argument('--optim', type=str, default='amsgrad', metavar='str',
                         help='Set optimizer. (SGD, AMSgrad, Adam, RMSprop)')
@@ -64,7 +64,7 @@ def setup_argparse():
 
     ### Arguments for files to save things to
     # Job prefix is used to name checkpoint/best file
-    parser.add_argument('--prefix', type=str, default='nosave',
+    parser.add_argument('--prefix', '--jobname', type=str, default='nosave',
                         help='Prefix to set load, save, and logfile. (default: nosave)')
 
     # Allow to manually specify file to load
@@ -152,7 +152,7 @@ def setup_argparse():
     parser.add_argument('--soft-width', dest='soft_cut_width',
                         type=float, default=0.2, nargs='*', metavar='N',
                         help='Width of SOFT cutoff in Angstroms (default: 0.2)')
-    parser.add_argument('--cutoff-type', '--cutoff', type=str, default=['soft'], nargs='*', metavar='str',
+    parser.add_argument('--cutoff-type', '--cutoff', type=str, default=['learn'], nargs='*', metavar='str',
                         help='Types of cutoffs to include')
 
     parser.add_argument('--basis-set', '--krange', type=int, default=[3, 3], nargs=2, metavar='N',
