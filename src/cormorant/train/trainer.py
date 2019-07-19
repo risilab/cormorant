@@ -27,6 +27,9 @@ class TrainCormorant:
         self.scheduler = scheduler
         self.restart_epochs = restart_epochs
 
+        # TODO: Fix this until TB summarize is implemented.
+        self.summarize = False
+
         self.best_loss = inf
         self.epoch = 0
         self.minibatch = 0

@@ -62,6 +62,9 @@ def setup_argparse():
     parser.add_argument('--log-level', type=str, default='info',
                         help='Logging level to output')
 
+    parser.add_argument('--textlog', action='store_true',
+                        help='Log a summary of each mini-batch to a text file.')
+
     ### Arguments for files to save things to
     # Job prefix is used to name checkpoint/best file
     parser.add_argument('--prefix', '--jobname', type=str, default='nosave',
