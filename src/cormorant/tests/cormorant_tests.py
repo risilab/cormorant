@@ -87,7 +87,7 @@ def permutation_test(model, data):
 
 
 def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=1):
-	if args.skip_test:
+	if not args.test:
 		logging.info("WARNING: network tests disabled!")
 		return
 

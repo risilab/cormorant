@@ -80,48 +80,49 @@ class TrainCormorant:
         self.best_loss = checkpoint['best_loss']
         self.minibatch = checkpoint['minibatch']
 
-        logging.info('Best loss from checkpoint: {} at epoch {}'.format(best_loss, epoch0))
+        logging.info('Best loss from checkpoint: {} at epoch {}'.format(self.best_loss, self.epoch))
 
-    def tests(self):
+    def evaluate(self, splits=['train', 'valid', 'test'], best=True, final=True):
+        """
+        Evaluate model on training/validation/testing splits.
+
+        :splits: List of splits to include. Only valid splits are: 'train', 'valid', 'test'
+        :best: Evaluate best model as determined by minimum validation error over evolution
+        :final: Evaluate final model at end of training phase
+        """
         if not self.args.save:
             logging.info('No model saved! Cannot give final status.')
             return
 
-        logging.info('Getting predictions for model in last checkpoint.')
+        # Evaluate final model (at end of training)
+        if final:
+            logging.info('Getting predictions for model in last checkpoint.')
 
-        # Load checkpoint model to make predictions
-        checkpoint = torch.load(self.args.checkfile)
-        self.model.load_state_dict(checkpoint['model_state'])
+            # Load checkpoint model to make predictions
+            checkpoint = torch.load(self.args.checkfile)
+            self.model.load_state_dict(checkpoint['model_state'])
 
-        # Predict on the training set for checkpoint model -- added by request
-        valid_predict, valid_targets = self.predict_set('train')
-        self.log_predict(valid_predict, valid_targets, 'train', description='Final')
+            # Loop over splits, predict, and output/log predictions
+            for split in splits:
+                predict, targets = self.predict(split)
+                self.log_predict(predict, targets, split, description='Final')
 
-        # Predict on the validation set for checkpoint model
-        valid_predict, valid_targets = self.predict_set('valid')
-        self.log_predict(valid_predict, valid_targets, 'valid', description='Final')
+        # Evaluate best model as determined by validation error
+        if best:
+            logging.info('Getting predictions for best model.')
 
-        # Predict on the test set for checkpoint model
-        test_predict, test_targets = self.predict_set('test')
-        self.log_predict(test_predict, test_targets, 'test', description='Final')
+            # Load best model to make predictions
+            checkpoint = torch.load(self.args.bestfile)
+            self.model.load_state_dict(checkpoint['model_state'])
 
-        logging.info('Getting predictions for best model.')
+            # Loop over splits, predict, and output/log predictions
+            for split in splits:
+                predict, targets = self.predict(split)
+                self.log_predict(predict, targets, split, description='Best')
 
-        # Load best model to make predictions
-        checkpoint = torch.load(self.args.bestfile)
-        self.model.load_state_dict(checkpoint['model_state'])
 
-        # Predict on the training set for best model -- added by request
-        valid_predict, valid_targets = self.predict_set('train')
-        self.log_predict(valid_predict, valid_targets, 'train', description='Best')
+        logging.info('Inference phase complete!')
 
-        # Predict on the validation set for best model
-        valid_predict, valid_targets = self.predict_set('valid')
-        process_prediction(valid_predict, valid_targets, 'valid', description='Best')
-
-        # Predict on the test set for best model
-        test_predict, test_targets = self.predict_set('test')
-        process_prediction(test_predict, test_targets, 'test', description='Best')
 
     def _warm_restart(self, epoch):
         restart_epochs = self.restart_epochs
@@ -284,12 +285,14 @@ class TrainCormorant:
         datastrings = {'train': 'Training', 'test': 'Testing', 'valid': 'Validation'}
 
         if epoch >= 0:
-            logging.info('Epoch: {} Complete! {} {} Loss: {:8.4f}{:8.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
+            suffix = 'final'
+            logging.info('Epoch: {} Complete! {} {} Loss: {:10.5g} {:10.5g}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
         else:
-            logging.info('Training Complete! {} {} Loss: {:8.4f}{:8.4f}'.format(description, datastrings[dataset], mae, rmse))
+            suffix = 'best'
+            logging.info('Training Complete! {} {} Loss: {:10.5g} {:10.5g}'.format(description, datastrings[dataset], mae, rmse))
 
         if self.args.predict:
-            file = self.args.predictfile + '.' + dataset
+            file = self.args.predictfile + '.' + suffix + '.' + dataset + '.pt'
             logging.info('Saving predictions to file: {}'.format(file))
             torch.save({'predict': predict, 'targets': targets}, file)
 

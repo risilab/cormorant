@@ -26,6 +26,8 @@ def init_argparse():
     parser = setup_argparse()
     args = parser.parse_args()
 
+    print(args)
+
     return args
 
 def init_logger(args):
@@ -59,7 +61,7 @@ def init_file_paths(args):
     if prefix and not args.bestfile: args.bestfile = os.path.join(workdir, modeldir, prefix+'_best.pt')
     if prefix and not args.checkfile: args.checkfile = os.path.join(workdir, modeldir, prefix+'.pt')
     if prefix and not args.loadfile: args.loadfile = args.checkfile
-    if prefix and not args.predictfile: args.predictfile = os.path.join(workdir, predictdir, prefix+'.pt')
+    if prefix and not args.predictfile: args.predictfile = os.path.join(workdir, predictdir, prefix)
 
     if not os.path.exists(modeldir):
         logger.warning('Model directory {} does not exist. Creating!'.format(modeldir))

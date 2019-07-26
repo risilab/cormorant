@@ -42,7 +42,12 @@ def main():
     args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset)
 
     # Construct PyTorch dataloaders from datasets
-    dataloaders = {split: DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, num_workers=0, collate_fn=collate_fn) for split, dataset in datasets.items()}
+    dataloaders = {split: DataLoader(dataset,
+                                     batch_size=args.batch_size,
+                                     shuffle=args.shuffle if (split == 'train') else False,
+                                     num_workers=args.num_workers,
+                                     collate_fn=collate_fn)
+                         for split, dataset in datasets.items()}
 
     # Initialize model
     model = Cormorant(args.num_cg_levels, args.maxl, args.max_sh, args.num_channels, num_species,
@@ -72,7 +77,7 @@ def main():
     trainer.train()
 
     # Test predictions on best model and also last checkpointed model.
-    trainer.predict()
+    trainer.evaluate()
 
 if __name__ == '__main__':
     main()

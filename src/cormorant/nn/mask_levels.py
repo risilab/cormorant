@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 
 class MaskLevel(nn.Module):
+    """
+    Mask level for implementing hard and soft cutoffs. With the current
+    architecutre, we have all-to-all communication.
+
+    This mask takes relative position vectors :math:`r_{ij} = r_i - r_j`
+    and implements either a hard cutoff, a soft cutoff, or both. The soft
+    cutoffs can also be made learnable.
+    """
     def __init__(self, num_rad_channels, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
                  gaussian_mask=False, eps=1e-8, device=torch.device('cpu'), dtype=torch.float):
         super(MaskLevel, self).__init__()

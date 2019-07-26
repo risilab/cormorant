@@ -56,6 +56,9 @@ class InputMPNN(nn.Module):
         self.masks = nn.ModuleList()
         self.rad_filts = nn.ModuleList()
 
+        # WARNING: temporarily overwriting basis set to be (0, 0)
+        # basis_set = (0, 0)
+
         for chan_in, chan_out in zip(channels_lvls[:-1], channels_lvls[1:]):
             rad_filt = RadPolyTrig(0, basis_set, chan_in, mix='real', device=device, dtype=dtype)
             mask = MaskLevel(chan_in, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type, device=device, dtype=dtype)
@@ -82,7 +85,8 @@ class InputMPNN(nn.Module):
             # Construct the learnable radial functions
             rad = rad_filt(norms, edge_mask)
             # Convert to a form that MaskLevel expects
-            rad = [rad[0].unsqueeze(-1)]
+            rad[0] = rad[0].unsqueeze(-1)
+
             # Mask the position function if desired
             edge = mask(rad, edge_mask, norms)
             # Convert to a form that MatMul expects

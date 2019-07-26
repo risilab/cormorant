@@ -47,11 +47,8 @@ class CormorantAtomLevel(nn.Module):
     Basic NBody level initialization.
     """
     def __init__(self, tau_in, tau_pos, maxl, num_channels, level_gain, weight_init,
-                 level_idx=0, device=torch.device('cpu'), dtype=torch.float):
+                 device=torch.device('cpu'), dtype=torch.float):
         super(CormorantAtomLevel, self).__init__()
-
-        if level_idx < 0:
-            maxl = 0
 
         self.maxl = maxl
         self.num_channels = num_channels
