@@ -57,7 +57,7 @@ class InputMPNN(nn.Module):
         self.rad_filts = nn.ModuleList()
 
         # WARNING: temporarily overwriting basis set to be (0, 0)
-        # basis_set = (0, 0)
+        basis_set = (0, 0)
 
         for chan_in, chan_out in zip(channels_lvls[:-1], channels_lvls[1:]):
             rad_filt = RadPolyTrig(0, basis_set, chan_in, mix='real', device=device, dtype=dtype)
