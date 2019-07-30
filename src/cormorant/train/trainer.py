@@ -286,10 +286,10 @@ class TrainCormorant:
 
         if epoch >= 0:
             suffix = 'final'
-            logging.info('Epoch: {} Complete! {} {} Loss: {:10.5g} {:10.5g}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
+            logging.info('Epoch: {} Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
         else:
             suffix = 'best'
-            logging.info('Training Complete! {} {} Loss: {:10.5g} {:10.5g}'.format(description, datastrings[dataset], mae, rmse))
+            logging.info('Training Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(description, datastrings[dataset], mae, rmse))
 
         if self.args.predict:
             file = self.args.predictfile + '.' + suffix + '.' + dataset + '.pt'
