@@ -1,7 +1,9 @@
 import torch
 
-# from .gen_cg_cpp import gen_cg_coefffs
-from .gen_cg_py import gen_cg_coefffs
+from .gen_cg import gen_cg_coefffs
+
+import logging
+logger = logging.getLogger(__name__)
 
 class CGDict():
     def __init__(self):
@@ -14,8 +16,8 @@ class CGDict():
     def __call__(self, maxl, split=False, transpose=True, dtype=torch.float, device=torch.device('cpu')):
         if self.initialized:
             if not (self.transpose == transpose and (self.split or not split) and self.dtype == dtype and self.device == device):
-                print('WARNING: CGDict options do not match. Initializing new CG dict. Could result in duplicate CG dicts in memory.')
-                print('({} {}) ({} {}) ({} {})'.format(self.transpose, transpose, self.dtype, dtype, self.device, device))
+                logger.warning('WARNING: CGDict options do not match. Initializing new CG dict. Could result in duplicate CG dicts in memory.')
+                logger.warning('({} {}) ({} {}) ({} {})'.format(self.transpose, transpose, self.dtype, dtype, self.device, device))
                 new_cg_dict = CGDict()
                 return new_cg_dict(maxl, split=split, transpose=transpose, dtype=dtype, device=device)
 

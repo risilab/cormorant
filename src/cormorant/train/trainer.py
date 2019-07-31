@@ -3,13 +3,16 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.optim.lr_scheduler as sched
 
-import argparse, os, sys, pickle, logging
+import argparse, os, sys, pickle
 from datetime import datetime
 from math import sqrt, inf, log, log2, exp, ceil
 
 MAE = torch.nn.L1Loss()
 MSE = torch.nn.MSELoss()
 RMSE = lambda x, y : sqrt(MSE(x, y))
+
+import logging
+logger = logging.getLogger(__name__)
 
 class TrainCormorant:
     """
@@ -24,8 +27,12 @@ class TrainCormorant:
         self.scheduler = scheduler
         self.restart_epochs = restart_epochs
 
+        # TODO: Fix this until TB summarize is implemented.
+        self.summarize = False
+
         self.best_loss = inf
         self.epoch = 0
+        self.minibatch = 0
 
         self.device = device
         self.dtype = dtype
@@ -38,6 +45,7 @@ class TrainCormorant:
                      'optimizer_state': self.optimizer.state_dict(),
                      'scheduler_state': self.scheduler.state_dict(),
                      'epoch': self.epoch,
+                     'minibatch': self.minibatch,
                      'best_loss': self.best_loss}
 
         if (valid_mae < self.best_loss):
@@ -70,41 +78,51 @@ class TrainCormorant:
         self.scheduler.load_state_dict(checkpoint['scheduler_state'])
         self.epoch = checkpoint['epoch']
         self.best_loss = checkpoint['best_loss']
+        self.minibatch = checkpoint['minibatch']
 
-        logging.info('Best loss from checkpoint: {} at epoch {}'.format(best_loss, epoch0))
+        logging.info('Best loss from checkpoint: {} at epoch {}'.format(self.best_loss, self.epoch))
 
-    def tests(self):
-        if not self.save:
+    def evaluate(self, splits=['train', 'valid', 'test'], best=True, final=True):
+        """
+        Evaluate model on training/validation/testing splits.
+
+        :splits: List of splits to include. Only valid splits are: 'train', 'valid', 'test'
+        :best: Evaluate best model as determined by minimum validation error over evolution
+        :final: Evaluate final model at end of training phase
+        """
+        if not self.args.save:
             logging.info('No model saved! Cannot give final status.')
             return
 
-        logging.info('Getting predictions for model in last checkpoint.')
+        # Evaluate final model (at end of training)
+        if final:
+            logging.info('Getting predictions for model in last checkpoint.')
 
-        # Load checkpoint model to make predictions
-        checkpoint = torch.load(self.args.checkfile)
-        self.model.load_state_dict(checkpoint['model_state'])
+            # Load checkpoint model to make predictions
+            checkpoint = torch.load(self.args.checkfile)
+            self.model.load_state_dict(checkpoint['model_state'])
 
-        # Predict on the validation set for checkpoint model
-        valid_predict, valid_targets = self.predict_set('valid')
-        self.log_predict(valid_predict, valid_targets, 'valid', description='Final')
+            # Loop over splits, predict, and output/log predictions
+            for split in splits:
+                predict, targets = self.predict(split)
+                self.log_predict(predict, targets, split, description='Final')
 
-        # Predict on the test set for checkpoint model
-        test_predict, test_targets = self.predict_set('test')
-        self.log_predict(test_predict, test_targets, 'test', description='Final')
+        # Evaluate best model as determined by validation error
+        if best:
+            logging.info('Getting predictions for best model.')
 
-        logging.info('Getting predictions for best model.')
+            # Load best model to make predictions
+            checkpoint = torch.load(self.args.bestfile)
+            self.model.load_state_dict(checkpoint['model_state'])
 
-        # Load best model to make predictions
-        checkpoint = torch.load(self.args.bestfile)
-        self.model.load_state_dict(checkpoint['model_state'])
+            # Loop over splits, predict, and output/log predictions
+            for split in splits:
+                predict, targets = self.predict(split)
+                self.log_predict(predict, targets, split, description='Best')
 
-        # Predict on the validation set for best model
-        valid_predict, valid_targets = self.predict_set('valid')
-        process_prediction(valid_predict, valid_targets, 'valid', description='Best')
 
-        # Predict on the test set for best model
-        test_predict, test_targets = self.predict_set('test')
-        process_prediction(test_predict, test_targets, 'test', description='Best')
+        logging.info('Inference phase complete!')
+
 
     def _warm_restart(self, epoch):
         restart_epochs = self.restart_epochs
@@ -136,11 +154,16 @@ class TrainCormorant:
         self.batch_time += dtb
         tcollate = tepoch-self.batch_time
 
-        logstring = 'E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
-        logstring += '{:> 9.4f}{:> 9.4f}{:> 9.4f}'.format(sqrt(mini_batch_loss), self.mae, self.rmse)
-        logstring += '  dt:{:> 6.2f}{:> 8.2f}{:> 8.2f}'.format(dtb, tepoch, tcollate)
+        if self.args.textlog:
+            logstring = 'E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
+            logstring += '{:> 9.4f}{:> 9.4f}{:> 9.4f}'.format(sqrt(mini_batch_loss), self.mae, self.rmse)
+            logstring += '  dt:{:> 6.2f}{:> 8.2f}{:> 8.2f}'.format(dtb, tepoch, tcollate)
 
-        logging.info(logstring)
+            logging.info(logstring)
+
+        if self.summarize:
+            self.summarize.add_scalar('train/mae', sqrt(mini_batch_loss), self.minibatch)
+
 
     def _step_lr_batch(self):
         if self.args.lr_minibatch:
@@ -220,6 +243,8 @@ class TrainCormorant:
 
             self._log_minibatch(batch_idx, loss, targets, predict, batch_t, epoch_t)
 
+            self.minibatch += 1
+
         all_predict = torch.cat(all_predict)
         all_targets = torch.cat(all_targets)
 
@@ -260,12 +285,14 @@ class TrainCormorant:
         datastrings = {'train': 'Training', 'test': 'Testing', 'valid': 'Validation'}
 
         if epoch >= 0:
-            logging.info('Epoch: {} Complete! {} {} Loss: {:8.4f}{:8.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
+            suffix = 'final'
+            logging.info('Epoch: {} Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
         else:
-            logging.info('Training Complete! {} {} Loss: {:8.4f}{:8.4f}'.format(description, datastrings[dataset], mae, rmse))
+            suffix = 'best'
+            logging.info('Training Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(description, datastrings[dataset], mae, rmse))
 
         if self.args.predict:
-            file = self.args.predictfile + '.' + dataset
+            file = self.args.predictfile + '.' + suffix + '.' + dataset + '.pt'
             logging.info('Saving predictions to file: {}'.format(file))
             torch.save({'predict': predict, 'targets': targets}, file)
 

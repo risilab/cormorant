@@ -8,7 +8,7 @@ from cormorant.cg_lib import SphericalHarmonicsRel
 from cormorant.models.cormorant_levels import CormorantAtomLevel, CormorantEdgeLevel
 
 from cormorant.nn import RadialFilters
-from cormorant.nn import InputLinear, InputMPNN
+from cormorant.nn import InputLinear, InputMPNN, InputMPNN_old
 from cormorant.nn import OutputLinear, OutputPMLP, GetScalars
 from cormorant.nn import scalar_mult_rep
 
@@ -75,7 +75,8 @@ class Cormorant(nn.Module):
         if input == 'linear':
             self.input_func = InputLinear(num_scalars_in, num_scalars_out, device=self.device, dtype=self.dtype)
         elif input == 'mpnn':
-            self.input_func = InputMPNN(num_scalars_in, num_scalars_out, num_mpnn_layers, soft_cut_rad[0], soft_cut_width[0], hard_cut_rad[0], activation=activation, device=self.device, dtype=self.dtype)
+            # self.input_func = InputMPNN(num_scalars_in, num_scalars_out, num_mpnn_layers, soft_cut_rad[0], soft_cut_width[0], hard_cut_rad[0], activation=activation, device=self.device, dtype=self.dtype)
+            self.input_func = InputMPNN_old(num_scalars_in, num_scalars_out, num_mpnn_layers, soft_cut_rad[0], soft_cut_width[0], hard_cut_rad[0], activation=activation, device=self.device, dtype=self.dtype)
         else:
             raise ValueError('Improper choice of input featurization of network! {}'.format(input))
 
@@ -121,8 +122,6 @@ class Cormorant(nn.Module):
         else:
             raise ValueError('Improper choice of top of network! {}'.format(top))
 
-        self.zero = torch.tensor(0, device=device, dtype=dtype)
-
         logging.info('Model initialized. Number of parameters: {}'.format(sum([p.nelement() for p in self.parameters()])))
 
 
@@ -132,7 +131,7 @@ class Cormorant(nn.Module):
         spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
         rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0))
 
-        atom_reps = [self.input_func(input_scalars, atom_positions, atom_mask)]
+        atom_reps = [self.input_func(input_scalars, atom_mask, edge_mask, norms)]
         edge_net = [torch.tensor([]).to(self.device, self.dtype)]
 
         # Construct iterated multipoles

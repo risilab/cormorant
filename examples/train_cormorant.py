@@ -9,7 +9,8 @@ from cormorant.models import Cormorant
 from cormorant.tests import cormorant_tests
 
 from cormorant.train import TrainCormorant
-from cormorant.train import init_args, init_cuda, init_optimizer, init_scheduler
+from cormorant.train import init_argparse, init_file_paths, init_logger, init_cuda
+from cormorant.train import init_optimizer, init_scheduler
 from cormorant.data.utils import initialize_datasets
 from cormorant.cg_lib import global_cg_dict
 
@@ -18,13 +19,18 @@ from cormorant.data.collate import collate_fn
 # This makes printing tensors more readable.
 torch.set_printoptions(linewidth=1000, threshold=100000)
 
+logger = logging.getLogger('')
+
 def main():
 
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger()
+    # Initialize arguments -- Just
+    args = init_argparse()
 
-    # Initialize arguments
-    args = init_args()
+    # Initialize file paths
+    args = init_file_paths(args)
+
+    # Initialize logger
+    init_logger(args)
 
     # Initialize device and data type
     device, dtype = init_cuda(args)
@@ -33,11 +39,15 @@ def main():
     global_cg_dict(maxl=max(args.maxl+args.max_sh), dtype=dtype, device=device)
 
     # Initialize dataloder
-    datasets, num_species, charge_scale = initialize_datasets(args.datadir, args.dataset, subset=args.subset,
-                                                              num_pts={'train': args.num_train, 'test': args.num_test, 'valid': args.num_valid})
+    args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset)
 
     # Construct PyTorch dataloaders from datasets
-    dataloaders = {split: DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, num_workers=0, collate_fn=collate_fn) for split, dataset in datasets.items()}
+    dataloaders = {split: DataLoader(dataset,
+                                     batch_size=args.batch_size,
+                                     shuffle=args.shuffle if (split == 'train') else False,
+                                     num_workers=args.num_workers,
+                                     collate_fn=collate_fn)
+                         for split, dataset in datasets.items()}
 
     # Initialize model
     model = Cormorant(args.num_cg_levels, args.maxl, args.max_sh, args.num_channels, num_species,
@@ -67,7 +77,7 @@ def main():
     trainer.train()
 
     # Test predictions on best model and also last checkpointed model.
-    trainer.predict()
+    trainer.evaluate()
 
 if __name__ == '__main__':
     main()

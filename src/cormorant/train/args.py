@@ -27,41 +27,41 @@ def setup_argparse():
                         help='Timescale over which to decay the learning rate (default: inf)')
     parser.add_argument('--lr-decay-type', type=str, default='cos', metavar='str',
                         help='Type of learning rate decay. (cos | linear | exponential | pow | restart) (default: cos)')
-    parser.add_argument('--lr-minibatch', '--lr-mb', action='store_true',
+    parser.add_argument('--lr-minibatch', '--lr-mb', action=BoolArg, default=True,
                         help='Decay learning rate every minibatch instead of epoch.')
-    parser.add_argument('--sgd-restart', type=int, default=1, metavar='int',
-                        help='Restart SGD optimizer every (lr_decay)^p epochs, where p=sgd_restart.  (default: 1)')
+    parser.add_argument('--sgd-restart', type=int, default=-1, metavar='int',
+                        help='Restart SGD optimizer every (lr_decay)^p epochs, where p=sgd_restart. (-1 to disable) (default: -1)')
 
     parser.add_argument('--optim', type=str, default='amsgrad', metavar='str',
                         help='Set optimizer. (SGD, AMSgrad, Adam, RMSprop)')
 
-    parser.add_argument('--predict', dest='predict', action='store_true',
-                        help='Save predictions. (default)')
-    parser.add_argument('--no-predict', dest='predict', action='store_false',
-                        help='Dont save predictions (default)')
-    parser.set_defaults(predict=True)
-
-    parser.add_argument('--shuffle', dest='shuffle', action='store_true',
-                        help='Shuffle minibatches. (default)')
-    parser.add_argument('--no-shuffle', dest='shuffle', action='store_false',
-                        help='Dont shuffle minibatches (default)')
-    parser.set_defaults(shuffle=True)
-
+    # Dataloader and randomness options
+    parser.add_argument('--shuffle', action=BoolArg, default=True,
+                        help='Shuffle minibatches.')
     parser.add_argument('--seed', type=int, default=1, metavar='N',
                         help='Set random number seed. Set to -1 to set based upon clock.')
 
     # Saving and logging options
-    parser.add_argument('--save', action='store_true',
-                        help='Save checkpoint after each epoch. (default: False)')
-    parser.add_argument('--load', action='store_true',
+    parser.add_argument('--save', action=BoolArg, default=True,
+                        help='Save checkpoint after each epoch. (default: True)')
+    parser.add_argument('--load', action=BoolArg, default=False,
                         help='Load from previous checkpoint. (default: False)')
 
-    parser.add_argument('--skip-test', '--notest', action='store_true',
-                        help='Disable initial network testing.')
+    parser.add_argument('--test', action=BoolArg, default=True,
+                        help='Perform automated network testing. (Default: True)')
+
+    parser.add_argument('--log-level', type=str, default='info',
+                        help='Logging level to output')
+
+    parser.add_argument('--textlog', action=BoolArg, default=True,
+                        help='Log a summary of each mini-batch to a text file.')
+
+    parser.add_argument('--predict', action=BoolArg, default=True,
+                        help='Save predictions. (default)')
 
     ### Arguments for files to save things to
     # Job prefix is used to name checkpoint/best file
-    parser.add_argument('--prefix', type=str, default='nosave',
+    parser.add_argument('--prefix', '--jobname', type=str, default='nosave',
                         help='Prefix to set load, save, and logfile. (default: nosave)')
 
     # Allow to manually specify file to load
@@ -80,6 +80,9 @@ def setup_argparse():
     parser.add_argument('--predictfile', type=str, default='',
                         help='Save predictions to file. Set to empty string to generate from prefix. (default: (empty))')
 
+    # Working directory to place all files
+    parser.add_argument('--workdir', type=str, default='./',
+                        help='Working directory as a default location for all files. (default: ./)')
     # Directory to place logging information
     parser.add_argument('--logdir', type=str, default='log/',
                         help='Directory to place log and savefiles. (default: log/)')
@@ -94,19 +97,19 @@ def setup_argparse():
                         help='Directory to look up data from. (default: data/)')
 
     # Dataset options
-    parser.add_argument('--num-train', type=int, default=-1, metavar='N',
-                        help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
-    parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
-                        help='Number of validation samples to use. Set to -1 to use entire dataset. (default: -1)')
-    parser.add_argument('--num-test', type=int, default=-1, metavar='N',
-                        help='Number of test samples to use. Set to -1 to use entire dataset. (default: -1)')
-
     parser.add_argument('--dataset', type=str, default='qm9',
                         help='Data set. Options: (qm9, md17). Default: qm9.')
     parser.add_argument('--target', type=str, default='',
                         help='Learning target for a dataset (such as qm9) with multiple options.')
     parser.add_argument('--subset', '--molecule', type=str, default='',
                         help='Subset/molecule on data with subsets (such as md17).')
+
+    parser.add_argument('--num-train', type=int, default=-1, metavar='N',
+                        help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
+    parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
+                        help='Number of validation samples to use. Set to -1 to use entire dataset. (default: -1)')
+    parser.add_argument('--num-test', type=int, default=-1, metavar='N',
+                        help='Number of test samples to use. Set to -1 to use entire dataset. (default: -1)')
 
     # Computation options
     parser.add_argument('--cuda', dest='cuda', action='store_true',
@@ -120,6 +123,9 @@ def setup_argparse():
     parser.add_argument('--double', dest='dtype', action='store_const', const='double',
                         help='Use doubles.')
     parser.set_defaults(dtype='float')
+
+    parser.add_argument('--num-workers', type=int, default=1,
+                        help='Set number of workers in dataloader. (Default: 1)')
 
     # Model options
     parser.add_argument('--num-cg-levels', type=int, default=4, metavar='N',
@@ -146,7 +152,7 @@ def setup_argparse():
     parser.add_argument('--soft-width', dest='soft_cut_width',
                         type=float, default=0.2, nargs='*', metavar='N',
                         help='Width of SOFT cutoff in Angstroms (default: 0.2)')
-    parser.add_argument('--cutoff-type', '--cutoff', type=str, default=['soft'], nargs='*', metavar='str',
+    parser.add_argument('--cutoff-type', '--cutoff', type=str, default=['learn'], nargs='*', metavar='str',
                         help='Types of cutoffs to include')
 
     parser.add_argument('--basis-set', '--krange', type=int, default=[3, 3], nargs=2, metavar='N',
@@ -170,6 +176,55 @@ def setup_argparse():
                         help='Concatenate the scalars from different \ell in the dot-product-matrix part of the edge network.')
 
     return parser
+
+###
+
+class BoolArg(argparse.Action):
+    """
+    Take an argparse argument that is either a boolean or a string and return a boolean.
+    """
+    def __init__(self, default=None, nargs=None, *args, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+
+        # Set default
+        if default is None:
+            raise ValueError("Default must be set!")
+
+        default = _arg_to_bool(default)
+
+        super().__init__(*args, default=default, nargs='?', **kwargs)
+
+    def __call__(self, parser, namespace, argstring, option_string):
+
+        if argstring is not None:
+            # If called with an argument, convert to bool
+            argval = _arg_to_bool(argstring)
+        else:
+            # BoolArg will invert default option
+            argval = True
+
+        setattr(namespace, self.dest, argval)
+
+def _arg_to_bool(arg):
+    # Convert argument to boolean
+
+    if type(arg) is bool:
+        # If argument is bool, just return it
+        return arg
+
+    elif type(arg) is str:
+        # If string, convert to true/false
+        arg = arg.lower()
+        if arg in ['true', 't', '1']:
+            return True
+        elif arg in ['false', 'f', '0']:
+            return False
+        else:
+            return ValueError('Could not parse a True/False boolean')
+    else:
+        raise ValueError('Input must be boolean or string! {}'.format(type(arg)))
+
 
 # From https://stackoverflow.com/questions/12116685/how-can-i-require-my-python-scripts-argument-to-be-a-float-between-0-0-1-0-usin
 class Range(object):
