@@ -7,12 +7,11 @@ from math import inf
 
 import logging
 
-class MolecularDataset(Dataset):
+class ProcessedDataset(Dataset):
     """
-    PyTorch dataset.
+    PyToch Dataset for a pre-processed dataset .
     """
-    def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True):
-
+    def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True, subtract_thermo=True):
 
         self.data = data
 
@@ -30,6 +29,15 @@ class MolecularDataset(Dataset):
             included_species = torch.unique(self.data['charges'], sorted=True)
             if included_species[0] == 0:
                 included_species = included_species[1:]
+
+        if subtract_thermo:
+            thermo_targets = [key.split('_')[0] for key in data.keys() if key.endswith('_thermo')]
+            if len(thermo_targets) == 0:
+                logging.warn('No thermochemical targets included! Try reprocessing dataset with --force-download!')
+            else:
+                logging.info('Removing thermochemical energy from targets {}'.format(' '.join(thermo_targets)))
+            for key in thermo_targets:
+                data[key] -= data[key + '_thermo'].to(data[key].dtype)
 
         self.included_species = included_species
 

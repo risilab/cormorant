@@ -39,7 +39,9 @@ def main():
     global_cg_dict(maxl=max(args.maxl+args.max_sh), dtype=dtype, device=device)
 
     # Initialize dataloder
-    args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset)
+    args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset,
+                                                                    force_download=args.force_download, subtract_thermo=args.subtract_thermo
+                                                                    )
 
     # Construct PyTorch dataloaders from datasets
     dataloaders = {split: DataLoader(dataset,

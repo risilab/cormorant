@@ -3,7 +3,7 @@ import logging, os
 from cormorant.data.prepare.md17 import download_dataset_md17
 from cormorant.data.prepare.qm9 import download_dataset_qm9
 
-def prepare_dataset(datadir, dataset, subset=None, splits=None, cleanup=True):
+def prepare_dataset(datadir, dataset, subset=None, splits=None, cleanup=True, force_download=False):
     """
     Download and process dataset
     """
@@ -35,10 +35,10 @@ def prepare_dataset(datadir, dataset, subset=None, splits=None, cleanup=True):
         raise ValueError('Dataset only partially processed. Try deleting {} and running again to download/process.'.format(os.path.join(dataset_dir)))
 
     # If need to download dataset, pass to appropriate downloader
-    if new_download:
+    if new_download or force_download:
         logging.info('Dataset does not exist. Downloading!')
         if dataset.lower().startswith('qm9'):
-            download_dataset_qm9(datadir, dataset, splits, subtract_thermo=False, cleanup=cleanup)
+            download_dataset_qm9(datadir, dataset, splits, cleanup=cleanup)
         elif dataset.lower().startswith('md17'):
             download_dataset_md17(datadir, dataset, subset, splits, cleanup=cleanup)
         else:

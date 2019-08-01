@@ -111,6 +111,11 @@ def setup_argparse():
     parser.add_argument('--num-test', type=int, default=-1, metavar='N',
                         help='Number of test samples to use. Set to -1 to use entire dataset. (default: -1)')
 
+    parser.add_argument('--force-download', action=BoolArg, default=False,
+                        help='Force download and processing of dataset.')
+    parser.add_argument('--subtract-thermo', action=BoolArg, default=False,
+                        help='Subtract thermochemical energy from relvant learning targets in QM9 dataset (only).')
+
     # Computation options
     parser.add_argument('--cuda', dest='cuda', action='store_true',
                         help='Use CUDA (default)')
