@@ -1,0 +1,8 @@
+digraph mydot {
+    rankdir=LR
+    node [shape=plaintext, width=0]
+    $v_1$(2)
+    $v_1$ -> $v_2$(2) [label=$\sqrt{2}+\frac{1}{x+5}$(9)]
+    $v_2$ -> $v_3$(2) [label=$S \subseteq \{1,2,3\}^4$(6)]
+    $v_3$ -> $v_1$ [label=$(f \circ g)^{-1}$(7)]
+    }

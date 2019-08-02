@@ -12,7 +12,10 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'sphinx.ext.graphviz'
+    # 'sphinxcontrib.plantuml'
 ]
+
 #    'sphinx.ext.autosummary',
 #    'sphinx.ext.todo',
 #    'sphinx.ext.doctest',

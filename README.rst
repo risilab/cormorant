@@ -52,8 +52,9 @@ can train both the datasets QM9 and MD17, and can also be extended to more gener
 Note that if no GPU is available, the the training script will throw an error.
 To force CPU-based training, add the : --cpu: flag
 
-================
-Architecture
-================
+..
+  ================
+  Architecture
+  ================
 
-A more detailed description of the Cormorant architecture is available here.
+  A more detailed description of the Cormorant architecture is available here.

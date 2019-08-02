@@ -1,10 +1,7 @@
-Welcome to Cormorant 
+Welcome to Cormorant
 ====================
 
 This is the documentation for the python implementation of the cormorant architecture.
-
-
-
 
 ========
 Contents
@@ -16,6 +13,7 @@ Contents
    readme
    installation
    usage
+   architecture/index
    reference/index
    contributing
    authors
