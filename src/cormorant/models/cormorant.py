@@ -22,6 +22,14 @@ def expand_var_list(var, num_cg_levels):
     return var_list
 
 class Cormorant(nn.Module):
+    """
+    Basic Cormorant Network
+    
+    Parameters
+    ----------
+    num_cg_levels : int
+        Number of cg levels to use.
+    """
     def __init__(self, num_cg_levels, maxl, max_sh, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  weight_init, level_gain, charge_power, basis_set,
@@ -126,6 +134,23 @@ class Cormorant(nn.Module):
 
 
     def forward(self, data, covariance_test=False):
+        """
+        Runs a forward pass of the network.
+
+        Parameters
+        ----------
+        data : ?????
+            Data input into the layer.
+        covariance_test : boolean, optional
+            If true, returns all of the atom-level representations twice.
+
+        Returns
+        -------
+        prediction : ?????
+            The output of the layer
+
+
+        """
         input_scalars, atom_mask, atom_positions, edge_mask = self.prepare_input(data)
 
         spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
@@ -156,6 +181,25 @@ class Cormorant(nn.Module):
             return prediction
 
     def prepare_input(self, data):
+        """
+        Extracts input from data class
+
+        Parameters
+        ----------
+        data : ?????
+            Information on the state of the system.
+
+        Returns
+        -------
+        scalars : ?????
+            ?????
+        atom_mask : ?????
+            ?????
+        atom_positions: ?????
+            Positions of the atoms
+        edge_mask: ?????
+            ?????
+        """
         charge_power, charge_scale, device, dtype = self.charge_power, self.charge_scale, self.device, self.dtype
 
         atom_positions = data['positions'].to(device, dtype)

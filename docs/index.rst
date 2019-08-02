@@ -16,6 +16,7 @@ Contents
    readme
    installation
    usage
+   reference/index
    contributing
    authors
    acknowledgements
