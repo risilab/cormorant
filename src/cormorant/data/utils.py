@@ -4,10 +4,11 @@ import numpy as np
 import logging, os
 
 from torch.utils.data import DataLoader
-from cormorant.data.dataset import MolecularDataset
+from cormorant.data.dataset import ProcessedDataset
 from cormorant.data.prepare import prepare_dataset
 
-def initialize_datasets(args, datadir, dataset, subset=None, splits=None, num_pts=None):
+def initialize_datasets(args, datadir, dataset, subset=None, splits=None, num_pts=None,
+                        force_download=False, subtract_thermo=False):
     """
     Initialize datasets.
     """
@@ -16,7 +17,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None, num_pt
         num_pts={'train': args.num_train, 'test': args.num_test, 'valid': args.num_valid}
 
     # Download and process dataset. Returns datafiles.
-    datafiles = prepare_dataset(datadir, dataset, subset, splits)
+    datafiles = prepare_dataset(datadir, dataset, subset, splits, force_download=force_download)
 
     # Load downloaded/processed datasets
     datasets = {}
@@ -32,7 +33,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None, num_pt
     all_species = _get_species(datasets, ignore_check=False)
 
     # Now initialize MolecularDataset based upon loaded data
-    datasets = {split: MolecularDataset(data, num_pts=num_pts.get(split, -1), included_species=all_species) for split, data in datasets.items()}
+    datasets = {split: ProcessedDataset(data, num_pts=num_pts.get(split, -1), included_species=all_species, subtract_thermo=subtract_thermo) for split, data in datasets.items()}
 
     # Check that all datasets have the same included species:
     assert(len(set(tuple(data.included_species.tolist()) for data in datasets.values())) == 1), 'All datasets must have same included_species! {}'.format({key: data.included_species for key, data in datasets.items()})

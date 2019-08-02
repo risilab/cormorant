@@ -78,12 +78,25 @@ def permutation_test(model, data):
 	data_noperm = data
 	data_perm = {key: apply_perm(val) if torch.is_tensor(val) and val.dim() > 1 else val for key, val in data.items()}
 
-	outputs_perm = model(data_perm, covariance_test=False)
-	outputs_noperm = model(data_noperm, covariance_test=False)
+	outputs_perm = model(data_perm)
+	outputs_noperm = model(data_noperm)
 
-	invariance_test = (outputs_perm - outputs_noperm).norm()
+	invariance_test = (outputs_perm - outputs_noperm).abs().max()
 
 	logging.info('Permutation Invariance test: {}'.format(invariance_test))
+
+
+def batch_test(model, data):
+	logging.info('Beginning batch invariance test!')
+	data_split = {key: val.unbind(dim=0) if (torch.is_tensor(val) and val.numel() > 1) else val for key, val in data.items()}
+	data_split = [{key: val[idx].unsqueeze(0) if type(val) is tuple else val for key, val in data_split.items()} for idx in range(len(data['charges']))]
+
+	outputs_split = torch.cat([model(data_sub) for data_sub in data_split])
+	outputs_full = model(data)
+
+	invariance_test = (outputs_split - outputs_full).abs().max()
+
+	logging.info('Batch invariance test: {}'.format(invariance_test))
 
 
 def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=1):
@@ -100,5 +113,6 @@ def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=
 
 	covariance_test(model, data)
 	permutation_test(model, data)
+	batch_test(model, data)
 
 	logging.info('Test complete!')
