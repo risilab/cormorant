@@ -67,7 +67,7 @@ class RadPolyTrig(nn.Module):
         self.phases = torch.cat([torch.zeros(trig_basis+1), pi/2*torch.ones(trig_basis+1)]).view(1, 1, 1, -1).to(device=device, dtype=dtype)
 
         # This avoids the sin(0*r + 0) = 0 part from wasting computations.
-        self.phases[0] = pi/2
+        self.phases[0, 0, 0, 0] = pi/2
 
         # Now, make the above learnable
         self.scales = nn.Parameter(self.scales)
