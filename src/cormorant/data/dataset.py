@@ -14,9 +14,20 @@ class ProcessedDataset(Dataset):
     Parameters
     ----------
     data : dict
-        Dictionary of arrays containing molecular properties ?????
-    included_species : int, optional
-        ??????
+        Dictionary of arrays containing molecular properties.
+    included_species : tensor of scalars, optional
+        Atomic species to include in ?????.  If None, uses all species.
+    num_pts : int, optional
+        Desired number of points to include in the dataset.
+        Default value, -1, uses all of the datapoints.
+    normalize : bool, optional
+        ????? IS THIS USED?
+    shuffle : bool, optional
+        If true, shuffle the points in the dataset.
+    subtract_thermo : bool, optional
+        If True, subtracts the thermochemical energy of the atoms from each molecule in GDB9.
+        Does nothing for other datasets.
+        
     """
     def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True, subtract_thermo=True):
 

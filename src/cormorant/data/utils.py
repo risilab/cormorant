@@ -25,7 +25,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None,
     subset : str, optional
         Which subset of a dataset to use.  Action is dependent on the dataset given.
         Must be specified if the dataset has subsets (i.e. MD17).  Otherwise ignored (i.e. GDB9).
-    splits: str, optional
+    splits : str, optional
         TODO: DELETE THIS ENTRY
     force_download : bool, optional
         If true, forces a fresh download of the dataset.
