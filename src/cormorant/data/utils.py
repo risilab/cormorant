@@ -47,7 +47,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None,
 
     Notes
     -----
-    TODO: Delete the splits argumens argument..
+    TODO: Delete the splits argument.
     """
     # Set the number of points based upon the arguments
     num_pts = {'train': args.num_train,

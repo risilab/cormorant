@@ -9,7 +9,14 @@ import logging
 
 class ProcessedDataset(Dataset):
     """
-    PyToch Dataset for a pre-processed dataset .
+    Data structure for a pre-processed cormorant dataset.  Extends PyTorch Dataset.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary of arrays containing molecular properties ?????
+    included_species : int, optional
+        ??????
     """
     def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True, subtract_thermo=True):
 
