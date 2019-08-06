@@ -21,9 +21,10 @@ Cloning the git repo
 
 Cormorant can be cloned directly from the git repo using::
 
+    TO BE IMPLEMENTED!!!
 
 Using pip
-`````````````
+`````````
 
 Cormorant is installable using pip.  You can currently install it from
 source by going to the directory with setup.py::
@@ -37,7 +38,7 @@ can also be installed in "development mode" using the command::
 
 
 Training example
---------------------
+----------------
 
 The example training script is in :examples/train_cormorant.py:. The same script
 can train both the datasets QM9 and MD17, and can also be extended to more general datasets.
