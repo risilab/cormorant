@@ -55,7 +55,7 @@ class MaskLevel(nn.Module):
             cut_rad = torch.max(self.eps, self.soft_cut_rad.abs())
 
             if self.gaussian_mask:
-                edge_mask = edge_mask * torch.exp((norms.unsqueeze(-1)/cut_rad).pow(2))
+                edge_mask = edge_mask * torch.exp(-(norms.unsqueeze(-1)/cut_rad).pow(2))
             else:
                 edge_mask = edge_mask * torch.sigmoid((cut_rad - norms.unsqueeze(-1))/cut_width)
 
