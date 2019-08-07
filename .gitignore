@@ -6,6 +6,7 @@
 /out/
 /data/
 TODO.txt
+/scratch/
 
 *.egg-info/
 __pycache__/

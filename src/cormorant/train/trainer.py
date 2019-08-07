@@ -27,6 +27,8 @@ class TrainCormorant:
         self.scheduler = scheduler
         self.restart_epochs = restart_epochs
 
+        self.stats = dataloaders['train'].dataset.stats
+
         # TODO: Fix this until TB summarize is implemented.
         self.summarize = False
 
@@ -198,19 +200,16 @@ class TrainCormorant:
         Get the learning target.
         If a stats dictionary is included, return a normalized learning target.
         """
+        targets = data[self.args.target].to(self.device, self.dtype)
+
         if stats is not None:
             mu, sigma = stats[self.args.target]
-        else:
-            mu, sigma = 0, 0
-
-        targets = data[self.args.target].to(self.device, self.dtype)
-        targets = (targets - mu) / sigma
+            targets = (targets - mu) / sigma
 
         return targets
 
     def train_epoch(self):
         dataloader = self.dataloaders['train']
-        stats = dataloader.dataset.stats
 
         current_idx, num_data_pts = 0, len(dataloader.dataset)
         self.mae, self.rmse, self.batch_time = 0, 0, 0
@@ -225,7 +224,7 @@ class TrainCormorant:
             self.optimizer.zero_grad()
 
             # Get targets and predictions
-            targets = self._get_target(data, stats)
+            targets = self._get_target(data, self.stats)
             predict = self.model(data)
 
             # Calculate loss and backprop
@@ -252,7 +251,6 @@ class TrainCormorant:
 
     def predict(self, set='valid'):
         dataloader = self.dataloaders[set]
-        stats = dataloader.dataset.stats
 
         self.model.eval()
         all_predict, all_targets = [], []
@@ -261,7 +259,7 @@ class TrainCormorant:
 
         for batch_idx, data in enumerate(dataloader):
 
-            targets = self._get_target(data, stats)
+            targets = self._get_target(data, self.stats)
             predict = self.model(data).detach()
 
             all_targets.append(targets)
