@@ -11,7 +11,7 @@ class MaskLevel(nn.Module):
     cutoffs can also be made learnable.
     """
     def __init__(self, num_rad_channels, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
-                 gaussian_mask=False, eps=1e-8, device=torch.device('cpu'), dtype=torch.float):
+                 gaussian_mask=False, eps=1e-3, device=torch.device('cpu'), dtype=torch.float):
         super(MaskLevel, self).__init__()
 
         self.gaussian_mask = gaussian_mask
