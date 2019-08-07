@@ -21,14 +21,35 @@ def expand_var_list(var, num_cg_levels):
         raise ValueError('Incorrect type {}'.format(type(var)))
     return var_list
 
+
 class Cormorant(nn.Module):
     """
-    Basic Cormorant Network
-    
+    Basic Cormorant Network.  The network consists of one or more MPNN layers, followed by one or more c
+
     Parameters
     ----------
-    num_cg_levels : int
+    num_cg_levels : ints
         Number of cg levels to use.
+    maxl : int or list of ints
+        Cutoff in CG operations in each layer.  Must be of length num_cg_levels.
+    max_sh : int or list of ints
+        Maximum number of Spherical Harmonics used for message passing in each layer.
+        Must be of length num_cg_levels.
+    num_channels : int or list of ints
+        Number of channels to use in each layer.
+    num_species : int
+        Number of species present in the network.
+    cutoff_type : str
+        Type of radial cutoff to use.
+    soft_cut_rad : scalar or list of scalars.
+        Cutoff radius for the soft cutoff.
+    
+
+    Notes
+    -----
+    TODO : Change the input to have the max_l, etc. exclusively take a list of ints.
+
+        
     """
     def __init__(self, num_cg_levels, maxl, max_sh, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
