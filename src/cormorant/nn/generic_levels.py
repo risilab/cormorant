@@ -56,7 +56,26 @@ class DotMatrix(nn.Module):
 ########### BasicMLP used throughout the network for various reasons ###########
 
 class BasicMLP(nn.Module):
-    """ Multilayer perceptron."""
+    """ 
+    Multilayer perceptron.  Operates only on the last axis of the data.
+
+    Parameters
+    ----------
+    num_in : int
+        Number of input channels
+    num_out : int
+        Number of output channels
+    num_hidden : int, optional
+        Number of hidden layers.
+    layer_width : int, optional
+        Width of each hidden layer (number of channels).
+    activation : string, optional
+        Type of nonlinearity to use
+    
+    Notes
+    -----
+    TODO: FINISH!
+    """
 
     def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):
         super(BasicMLP, self).__init__()

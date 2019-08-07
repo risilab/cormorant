@@ -24,7 +24,7 @@ def expand_var_list(var, num_cg_levels):
 
 class Cormorant(nn.Module):
     """
-    Basic Cormorant Network.  The network consists of one or more MPNN layers, followed by one or more c
+    A basic example of a Cormorant architecture, as used in ?????. The network consists of one or more MPNN layers, followed by one or more c
 
     Parameters
     ----------
@@ -48,7 +48,7 @@ class Cormorant(nn.Module):
     Notes
     -----
     TODO : Change the input to have the max_l, etc. exclusively take a list of ints.
-
+    TODO : Finish the documentation.
         
     """
     def __init__(self, num_cg_levels, maxl, max_sh, num_channels, num_species,
