@@ -2,40 +2,30 @@ import torch
 import torch.nn as nn
 from torch.nn import Module, Parameter, ParameterList
 
-#### DotMatrix -- a matrix of dot products as is used in the edge levels ###
 
 class DotMatrix(nn.Module):
     """
-    Constructs a matrix of dot-products between scalars of the same representation type.
+    Constructs a matrix of dot-products between scalars of the same representation type, as used in the edge levels.
     Input: Tensor of SO3-vectors psi_i. Each psi has the same tau.
     Output: Matrix of scalars (psi_i cdot psi_j)_c, where c is a channel index with |C| = \sum_\ell tau_\ell.
     """
-    def __init__(self, tau_in=None, cat=True, device=torch.device('cpu'), dtype=torch.float):
+    def __init__(self, tau_in, cat=True, device=torch.device('cpu'), dtype=torch.float):
         super(DotMatrix, self).__init__()
         self.tau_in = tau_in
         self.cat = cat
 
-        if self.tau_in is not None:
-            if cat:
-                self.tau_out = [sum(tau_in)] * len(tau_in)
-            else:
-                self.tau_out = [t for t in tau_in]
-            self.signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=device, dtype=dtype).unsqueeze(-1) for ell in range(len(tau_in)+1)]
-            self.conj = torch.tensor([1., -1.]).to(device=device, dtype=dtype)
+        if cat:
+            self.tau_out = [sum(tau_in)] * len(tau_in)
         else:
-            self.tau_out = None
-            self.signs = None
-
+            self.tau_out = [t for t in tau_in]
+        self.signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=device, dtype=dtype).unsqueeze(-1) for ell in range(len(tau_in)+1)]
+        self.conj = torch.tensor([1., -1.]).to(device=device, dtype=dtype)
 
     def forward(self, reps):
         assert((self.tau_in is None) or [part.shape[-3] for part in reps] == list(self.tau_in)), 'Incorrect input type specified!'
 
-        if self.tau_in is None:
-            signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=reps[0].device, dtype=reps[0].dtype).unsqueeze(-1) for ell in range(len(tau)+1)]
-            conj = torch.tensor([1., -1.], dtype=reps[0].dtype, device=reps[0].device)
-        else:
-            signs = self.signs
-            conj = self.conj
+        signs = self.signs
+        conj = self.conj
 
         reps1 = [part.unsqueeze(-4) for part in reps]
         reps2 = [part.unsqueeze(-5) for part in reps]
@@ -116,6 +106,7 @@ class BasicMLP(nn.Module):
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:
             self.linear[-1].bias *= scale
+
 
 def get_activation_fn(activation):
     activation = activation.lower()

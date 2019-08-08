@@ -68,7 +68,7 @@ class OutputLinear(nn.Module):
 
     def forward(self, scalars, ignore=True):
         s = scalars.shape
-        scalars = scalars.view((s[0], s[1], -1)).sum(1)
+        scalars = scalars.view((s[0], s[1], -1)).sum(1)  # No masking needed b/c summing over atoms
 
         predict = self.lin(scalars)
 
@@ -79,7 +79,7 @@ class OutputLinear(nn.Module):
 
 class OutputPMLP(nn.Module):
     """ Iterated MLP of the type used in KLT """
-    def __init__(self, num_scalars, num_mixed=64, num_hidden=1, layer_width=256, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):
+    def __init__(self, num_scalars, num_mixed=64, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):
         super(OutputPMLP, self).__init__()
 
         self.num_scalars = num_scalars
