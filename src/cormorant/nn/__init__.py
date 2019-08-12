@@ -5,7 +5,7 @@ from cormorant.nn.catmix_scalar_levels import MixRepsScalar, CatRepsScalar, CatM
 
 from cormorant.nn.generic_levels import BasicMLP, DotMatrix
 
-from cormorant.nn.input_levels import InputLinear, InputMPNN, InputMPNN_old
+from cormorant.nn.input_levels import InputLinear, InputMPNN
 from cormorant.nn.output_levels import OutputLinear, OutputPMLP, GetScalars
 
 from cormorant.nn.position_levels import RadialFilters
