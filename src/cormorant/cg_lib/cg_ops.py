@@ -2,8 +2,9 @@ import torch
 from torch.nn import Module, ModuleList, Parameter, ParameterList
 from math import sqrt, inf, pi
 
-from . import global_cg_dict
+from sortedcontainers import SortedDict
 
+from . import global_cg_dict
 
 class CGProduct(Module):
     """
@@ -48,9 +49,9 @@ class CGProduct(Module):
             assert(cg_dict.transpose==True and cg_dict.dtype == dtype and cg_dict.device == device)
 
     def forward(self, rep1, rep2):
-        tau1 = [p.shape[-3] for p in rep1 if p.nelement() > 0]
-        tau2 = [p.shape[-3] for p in rep2 if p.nelement() > 0]
-        assert len(set(tau1).union(set(tau2))) == 1, 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
+        tau1 = get_tau(rep1)
+        tau2 = get_tau(rep2)
+        assert (tau1.channels and tau2.channels) and (tau1[0] == tau2[0]), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
 
         return cg_product(self.cg_dict, rep1, rep2, maxl=self.maxl, minl=self.minl, aggregate=self.aggregate)
 
