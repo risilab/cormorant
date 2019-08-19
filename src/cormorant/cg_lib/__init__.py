@@ -1,9 +1,14 @@
 import sys
 
+# First need to import the CG dictionary
+from cormorant.cg_lib.cg_dict import CGDict
+
 # Module (not instance)-wide CG-dictionary solution based upon: https://stackoverflow.com/a/35904211
-from .cg_coefficients import CGDict
 this = sys.modules[__name__]
 this.global_cg_dict = CGDict()
+
+# First need to import the CG dictionary
+from cormorant.cg_lib.cg_module import CGModule
 
 # Now for your regularly scheduled imports
 from cormorant.cg_lib.cg_ops import CGProduct, cg_product, cg_product_tau
