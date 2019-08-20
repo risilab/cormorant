@@ -62,18 +62,6 @@ class CGModule(nn.Module):
                 raise ValueError('CG Module only takes internal data types of half/float/double. Got: {}'.format(dtype))
             self._dtype = dtype
 
-    @property
-    def device(self):
-        return self._device
-
-    @property
-    def dtype(self):
-        return self._dtype
-
-    @property
-    def maxl(self):
-        return self._maxl
-
     def _init_cg_dict(self, cg_dict, maxl):
         """
         Initialize the Clebsch-Gordan dictionary.
@@ -89,14 +77,17 @@ class CGModule(nn.Module):
         """
         # If cg_dict is defined, check it has the right properties
         if cg_dict is not None:
-            if self.cg_dict.dtype != self.dtype:
+            if cg_dict.dtype != self.dtype:
                 raise ValueError('CGDict dtype ({}) not match CGModule() dtype ({})'.format(cg_dict.dtype, self.dtype))
 
-            if self.cg_dict.device != self.device:
+            if cg_dict.device != self.device:
                 raise ValueError('CGDict device ({}) not match CGModule() device ({})'.format(cg_dict.device, self.device))
 
-            if maxl > self.cg_dict.maxl:
-                Warning('CGDict maxl ({}) is smaller than CGModule() maxl ({}). Updating!'.format(cg_dict.maxl, self.maxl))
+            if maxl is None:
+                Warning('maxl is not defined, setting maxl based upon CGDict maxl ({}!'.format(cg_dict.maxl))
+
+            elif maxl > cg_dict.maxl:
+                Warning('CGDict maxl ({}) is smaller than CGModule() maxl ({}). Updating!'.format(cg_dict.maxl, maxl))
                 cg_dict.update_maxl(maxl)
 
             self.cg_dict = cg_dict
@@ -111,6 +102,18 @@ class CGModule(nn.Module):
         else:
             self.cg_dict = None
             self._maxl = None
+
+    @property
+    def device(self):
+        return self._device
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    @property
+    def maxl(self):
+        return self._maxl
 
     def to(self, *args, **kwargs):
         super().to(*args, **kwargs)

@@ -2,17 +2,25 @@ import torch
 from torch.nn import Module, ModuleList, Parameter, ParameterList
 from math import sqrt, inf, pi
 
-from sortedcontainers import SortedDict
+from . import CGModule
 
-from . import global_cg_dict
+from . import cg_product_tau
 
-class CGProduct(Module):
-    """
+class CGProduct(CGModule):
+    r"""
     Create new CGproduct object. Takes two lists of type
-    [tau^1_{minl1}, tau^1_{minl1+1}, ..., tau^1_{maxl1}],
-    [tau^2_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
+
+    .. math::
+
+        [tau^1_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
+
+        [tau^2_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
     and outputs a new SO3 vector of type:
-    [tau_{minl}, tau_{minl+1}, ..., tau_{maxl}]
+
+    .. math::
+
+        [tau_{minl}, tau_{minl+1}, ..., tau_{maxl}]
+
     Each part can have an arbitrary number of batch dimensions. These batch
     dimensions must be broadcastable, unless the option :aggregate=True: is used.
 
@@ -27,30 +35,24 @@ class CGProduct(Module):
     :dtype: Data type to used if :cg_dict: has not be initialized.
     :device: Device to used if :cg_dict: has not be initialized.
     """
-    def __init__(self, tau1=None, tau2=None, maxl=inf, minl=0,
+    def __init__(self, tau1=None, tau2=None,
                  aggregate=False,
-                 cg_dict=None, dtype=torch.float, device=torch.device('cpu')):
-        super(CGProduct, self).__init__()
+                 minl=0, maxl=inf, cg_dict=None, dtype=None, device=None):
+        super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
 
-        if (minl > 0):
-            raise NotImplementedError('minl > 0 not yet implemented!')
-
-        self.maxl = maxl
-        self.minl = minl
         self.aggregate = aggregate
 
         self.tau1 = tau1
         self.tau2 = tau2
 
-        if not cg_dict:
-            self.cg_dict = global_cg_dict(maxl, transpose=True, split=False, dtype=dtype, device=device)
+        if (minl > 0):
+            raise NotImplementedError('minl > 0 not yet implemented!')
         else:
-            self.cg_dict = cg_dict
-            assert(cg_dict.transpose==True and cg_dict.dtype == dtype and cg_dict.device == device)
+            self.minl = 0
 
     def forward(self, rep1, rep2):
-        tau1 = get_tau(rep1)
-        tau2 = get_tau(rep2)
+        tau1 = so3tau.from_rep(rep1)
+        tau2 = so3tau.from_rep(rep2)
         assert (tau1.channels and tau2.channels) and (tau1[0] == tau2[0]), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
 
         return cg_product(self.cg_dict, rep1, rep2, maxl=self.maxl, minl=self.minl, aggregate=self.aggregate)
@@ -202,20 +204,3 @@ def complex_kron_product(z1, z2, aggregate=False):
     z = torch.matmul(z, zrot)
 
     return z
-
-def cg_product_tau(tau1, tau2, maxl=inf):
-    tau1 = list(tau1)
-    tau2 = list(tau2)
-
-    L1, L2 = len(tau1) - 1, len(tau2) - 1
-    L = min(L1 + L2, maxl)
-
-    tau = [0]*(L+1)
-
-    for l1 in range(L1+1):
-        for l2 in range(L2+1):
-            lmin, lmax = abs(l1-l2), min(l1+l2, maxl)
-            for l in range(lmin, lmax+1):
-                tau[l] += tau1[l1]*tau2[l2]
-
-    return tuple(tau)

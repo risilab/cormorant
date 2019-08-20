@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import CGModule
+from cormorant.cg_lib import CGModule, CGDict
 
 devices = [torch.device('cpu')]
 if torch.cuda.is_available():
@@ -43,6 +43,29 @@ class TestCGModule():
         assert cg_mod.maxl == maxl
         assert cg_mod.cg_dict
         assert cg_mod.cg_dict.maxl == maxl
+
+    ########## Check initialization.
+    # Check the cg_dict device works correctly if maxl is set.
+    @pytest.mark.parametrize('maxl', [None, 0, 1, 2])
+    @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    def test_cg_mod_set_from_cg_dict(self, maxl, dtype):
+
+        cg_dict = CGDict(maxl=1, dtype=torch.float)
+
+        if dtype in [torch.half, torch.double]:
+            # If data type in CGModule does not match CGDict, throw an errror
+            with pytest.raises(ValueError):
+                cg_mod = CGModule(maxl=maxl, dtype=dtype, cg_dict=cg_dict)
+        else:
+            cg_mod = CGModule(maxl=maxl, dtype=dtype, cg_dict=cg_dict)
+
+            assert cg_mod.dtype == torch.float if dtype is None else dtype
+            assert cg_mod.device == torch.device('cpu')
+            assert cg_mod.maxl == maxl if maxl is not None else 1
+            assert cg_mod.cg_dict
+            assert cg_mod.cg_dict.maxl == max(1, maxl) if maxl is not None else 1
+
+    ########### Test device/data types
 
     # Check that the module and cg_dict's data types can be moved correctly.
     @pytest.mark.parametrize('dtype1', [torch.half, torch.float, torch.double])

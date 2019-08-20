@@ -6,29 +6,42 @@ import logging
 logger = logging.getLogger(__name__)
 
 class CGDict():
-    """
-    A dictionary of Clebsch-Gordan coefficients to be used in CG operations.
+    r"""
+    A dictionary of Clebsch-Gordan (CG) coefficients to be used in CG operations.
+
+    The CG coefficients
+
+    .. math::
+        \langle \ell_1, m_1, l_2, m_2 | l, m \rangle
+    are used to decompose the tensor product of two
+    irreps of maximum weights :math:`\ell_1` and :math:`\ell_2` into a direct
+    sum of irreps with :math:`\ell = |\ell_1 -\ell_2|, \ldots, (\ell_1 + \ell_2)`.
+
+    The coefficients for each :math:`\ell_1` and :math:`\ell_2`
+    are stored as a :math:`D \times D` matrix :math:`C_{\ell_1,\ell_2}` ,
+    where :math:`D = (2\ell_1+1)\times(2\ell_2+1)`.
 
     The module has a dict-like interface with keys :math:`(l_1, l_2)` for
-    :math:`l_1, l_2 \\leq l_{\rm max}`. Each value is a matrix of shape
-    :math:`D x D`, where :math:`D = (2l_1+1)(2l_2+1)`. The matrix has elements
-    :math:`\\langle l_1, m_1, l_2, m_2 | l, m \\rangle`.
+    :math:`\ell_1, l_2 \leq l_{\rm max}`. Each value is a matrix of shape
+    :math:`D \times D`, where :math:`D = (2l_1+1)\times(2l_2+1)`.
+    The matrix has elements
+    .
 
     Parameters
     ==========
     maxl: int
         Maximum weight for which to calculate the Clebsch-Gordan coefficients.
-        This refers to the maximum weight for the `input tensors`, not the
+        This refers to the maximum weight for the ``input tensors``, not the
         output tensors.
 
-    transpose: bool
-        Transpose the CG coefficient matrix for each :(l1, l2):. Cannot be
-        modified after instantiation.
+    transpose: bool, optional
+        Transpose the CG coefficient matrix for each :math:`(\ell_1, \ell_2)`.
+        This cannot be modified after instantiation.
 
-    device: torch.device
+    device: torch.device, optional
         Device of CG dictionary.
 
-    dtype: torch.dtype
+    dtype: torch.dtype, optional
         Data type of CG dictionary.
     """
 
@@ -43,12 +56,12 @@ class CGDict():
         if maxl is not None:
             self.update_maxl(maxl)
 
-    @property
-    def transpose(self):
-        """
-        Use "transposed" version of CG coefficients.
-        """
-        return self._transpose
+    # @property
+    # def transpose(self):
+    #     """
+    #     Use "transposed" version of CG coefficients.
+    #     """
+    #     return self._transpose
 
     @property
     def maxl(self):
@@ -83,7 +96,7 @@ class CGDict():
         old_maxl = self.maxl if self else 0
 
         # Otherwise, update the CG coefficients.
-        cg_dict_new = gen_cg_dict(new_maxl, transpose=self.transpose, existing_keys=self._cg_dict.keys())
+        cg_dict_new = _gen_cg_dict(new_maxl, transpose=self.transpose, existing_keys=self._cg_dict.keys())
 
         # Ensure elements of new CG dict are on correct device.
         cg_dict_new = {key: val.to(device=self.device, dtype=self.dtype) for key, val in cg_dict_new.items()}
@@ -140,7 +153,7 @@ class CGDict():
         return self.maxl is not None
 
 
-def gen_cg_dict(maxl, transpose=False, existing_keys={}):
+def _gen_cg_dict(maxl, transpose=False, existing_keys={}):
     """
     Generate all Clebsch-Gordan coefficients for a weight up to maxl.
 
@@ -173,7 +186,7 @@ def gen_cg_dict(maxl, transpose=False, existing_keys={}):
                     for m2 in range(-l2, l2+1):
                         for m in range(-l, l+1):
                             if m == m1 + m2:
-                                cg_mat[l1+m1, l2+m2, l+m+l_off] = clebsch(l1, l2, l, m1, m2, m)
+                                cg_mat[l1+m1, l2+m2, l+m+l_off] = _clebsch(l1, l2, l, m1, m2, m)
 
             cg_mat = cg_mat.view(N, N)
             if transpose:
@@ -218,7 +231,7 @@ def gen_cg_dict(maxl, transpose=False, existing_keys={}):
 #    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###############################################################################
 
-def clebsch(j1, j2, j3, m1, m2, m3):
+def _clebsch(j1, j2, j3, m1, m2, m3):
     """Calculates the Clebsch-Gordon coefficient
     for coupling (j1,m1) and (j2,m2) to give (j3,m3).
 

@@ -10,8 +10,11 @@ this.global_cg_dict = CGDict()
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_module import CGModule
 
+#Import SO3Tau
+from cormorant.cg_lib.so3tau import SO3Tau, cg_product_tau
+
 # Now for your regularly scheduled imports
-from cormorant.cg_lib.cg_ops import CGProduct, cg_product, cg_product_tau
+from cormorant.cg_lib.cg_ops import CGProduct, cg_product
 
 from cormorant.cg_lib.spherical_harmonics import spherical_harmonics, spherical_harmonics_rel, pos_to_rep, rep_to_pos
 from cormorant.cg_lib.spherical_harmonics import SphericalHarmonics, SphericalHarmonicsRel
