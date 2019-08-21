@@ -2,9 +2,9 @@ import torch
 import numpy as np
 
 # 3D cartesian rotation matrices
-Rx = lambda theta: torch.Tensor([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0,np.sin(theta),np.cos(theta)]])
-Ry = lambda theta: torch.Tensor([[np.cos(theta),0,np.sin(theta)],[0,1,0],[-np.sin(theta),0,np.cos(theta)]])
-Rz = lambda theta: torch.Tensor([[np.cos(theta),-np.sin(theta),0],[np.sin(theta),np.cos(theta),0],[0,0,1]])
+Rx = lambda theta: torch.tensor([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0,np.sin(theta),np.cos(theta)]], dtype=torch.double)
+Ry = lambda theta: torch.tensor([[np.cos(theta),0,np.sin(theta)],[0,1,0],[-np.sin(theta),0,np.cos(theta)]], dtype=torch.double)
+Rz = lambda theta: torch.tensor([[np.cos(theta),-np.sin(theta),0],[np.sin(theta),np.cos(theta),0],[0,0,1]], dtype=torch.double)
 EulerRot = lambda alpha, beta, gamma: Rz(alpha) @ Ry(beta) @ Rz(gamma)
 
 

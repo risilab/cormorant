@@ -99,7 +99,7 @@ class TestCGProduct():
 
 def _gen_rot(angles, maxl):
     alpha, beta, gamma = angles
-    D = rot.WignerD_list(maxl, alpha, beta, gamma)
+    D = rot.WignerD_list(maxl, alpha, beta, gamma, dtype=torch.double)
     R = rot.EulerRot(alpha, beta, gamma)
 
     return D, R
