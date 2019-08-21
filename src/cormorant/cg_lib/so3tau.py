@@ -41,7 +41,7 @@ def cg_product_tau(tau1, tau2, maxl=inf):
             for l in range(lmin, lmax+1):
                 tau[l] += tau1[l1]*tau2[l2]
 
-    return tuple(tau)
+    return SO3Tau(tau)
 
 
 class SO3Tau():
@@ -59,7 +59,7 @@ class SO3Tau():
         if type(tau) is SO3Tau:
             tau = list(tau)
 
-        assert type(tau) is list and all(type(t) == int for t in tau), 'Input must be list of ints! {} {}'.format(type(tau), [type(t) for t in tau])
+        assert type(tau) in [list, tuple] and all(type(t) == int for t in tau), 'Input must be list or tuple of ints! {} {}'.format(type(tau), [type(t) for t in tau])
 
         self._tau = tau
 
@@ -126,6 +126,8 @@ class SO3Tau():
     def __str__(self):
         return str(list(self._tau))
 
+    __repr__ = __str__
+
     def __add__(self, other):
         return SO3Tau(list(self) + list(other))
 
@@ -136,7 +138,6 @@ class SO3Tau():
         if type(other) is int:
             return self
         return SO3Tau(list(other) + list(self))
-
 
     @staticmethod
     def from_rep(rep):
@@ -151,16 +152,16 @@ class SO3Tau():
         """
         assert type(rep) is list and all(type(irrep) == torch.Tensor for irrep in rep), 'Input must be list of torch.Tensors! {} {}'.format(type(rep), [type(irrep) for irrep in rep])
 
-        ells = [(irrep[0][-2] - 1) // 2 for irrep in rep]
+        ells = [(irrep[0].shape[-2] - 1) // 2 for irrep in rep]
 
         minl, maxl = ells[0], ells[-1]
 
-        assert len(rep) == maxl - minl + 1
+        assert ells == list(range(minl, maxl+1)), 'Rep must be continuous from minl to maxl'
 
-        if minl == 0:
-            tau = [irrep.shape[-3] for irrep in tau]
-        else:
-            tau = [0]*minl + tau
+        if minl > 0:
+            raise NotImplementedError()
+
+        tau = [irrep.shape[-3] for irrep in rep]
 
         return SO3Tau(tau)
 

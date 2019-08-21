@@ -56,12 +56,12 @@ class CGDict():
         if maxl is not None:
             self.update_maxl(maxl)
 
-    # @property
-    # def transpose(self):
-    #     """
-    #     Use "transposed" version of CG coefficients.
-    #     """
-    #     return self._transpose
+    @property
+    def transpose(self):
+        """
+        Use "transposed" version of CG coefficients.
+        """
+        return self._transpose
 
     @property
     def maxl(self):
@@ -142,7 +142,7 @@ class CGDict():
         return self._cg_dict.items()
 
     def __getitem__(self, idx):
-        if  self.maxl is None:
+        if  not self:
             raise ValueError('CGDict() not initialized. Either set maxl, or use update_maxl()')
         return self._cg_dict[idx]
 

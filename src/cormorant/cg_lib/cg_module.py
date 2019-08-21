@@ -30,7 +30,7 @@ class CGModule(nn.Module):
         Maximum weight to initialize the Clebsch-Gordan dictionary.
     device : torch.device, optional
         Device to initialize the module and Clebsch-Gordan dictionary to.
-    dtype : torch.device, optional
+    dtype : torch.dtype, optional
         Data type to initialize the module and Clebsch-Gordan dictionary to.
     """
     def __init__(self, cg_dict=None, maxl=None, device=None, dtype=None, *args, **kwargs):

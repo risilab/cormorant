@@ -4,11 +4,14 @@ from math import sqrt, inf, pi
 
 from . import CGModule
 
-from . import cg_product_tau
+from . import SO3Tau, cg_product_tau
 
 class CGProduct(CGModule):
     r"""
-    Create new CGproduct object. Takes two lists of type
+    Create new CGproduct object. Inherits from CGModule, and has access
+    to the CGDict related features.
+
+    Takes two lists of type
 
     .. math::
 
@@ -24,23 +27,41 @@ class CGProduct(CGModule):
     Each part can have an arbitrary number of batch dimensions. These batch
     dimensions must be broadcastable, unless the option :aggregate=True: is used.
 
-    If :aggregate=True: is used, a "matrix-vector" product is set, a "matrix-vector"
-    product of Clebsch-Gordan operators is applied.
+    Parameters
+    ----------
+    rep1 : list of torch.Tensors
+        SO3Vector
+    rep2 : list of torch.Tensors
+        SO3Vector
 
-    :maxl: Maximum value of l in tensor product to include.
-    :minl: Minimum value of l in tensor product to include.
+    minl : int
+        Minimum weight to include in CG Product
+    maxl : int
+        Minimum weight to include in CG Product
+    aggregate : bool, optional
+        Apply an "aggregation" operation, or a pointwise convolution
+        with a SO3Vector as a filter.
+    cg_dict : CGDict, optional
+        Specify a Clebsch-Gordan dictionary. If not specified, one will be
+        generated automatically at runtime based upon maxl.
+    device : torch.device, optional
+        Device to initialize the module and Clebsch-Gordan dictionary to.
+    dtype : torch.dtype, optional
+        Data type to initialize the module and Clebsch-Gordan dictionary to.
 
-    :aggregate: Perform batched matrix-vector Clebsch-Gordan operation.
-
-    :dtype: Data type to used if :cg_dict: has not be initialized.
-    :device: Device to used if :cg_dict: has not be initialized.
     """
     def __init__(self, tau1=None, tau2=None,
                  aggregate=False,
                  minl=0, maxl=inf, cg_dict=None, dtype=None, device=None):
-        super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
 
         self.aggregate = aggregate
+
+        if (maxl == inf) and cg_dict:
+            maxl = cg_dict.maxl
+        elif (maxl == inf) and (tau1 and tau2):
+            maxl = max(len(tau1), len(tau2))
+        elif (maxl == inf):
+            raise ValueError('maxl is not defined, and was unable to retrieve get maxl from cg_dict or tau1 and tau2')
 
         self.tau1 = tau1
         self.tau2 = tau2
@@ -50,10 +71,14 @@ class CGProduct(CGModule):
         else:
             self.minl = 0
 
+        super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
+
     def forward(self, rep1, rep2):
-        tau1 = so3tau.from_rep(rep1)
-        tau2 = so3tau.from_rep(rep2)
-        assert (tau1.channels and tau2.channels) and (tau1[0] == tau2[0]), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
+        if self.tau1 is not None and self.tau1 != SO3Tau.from_rep(rep1):
+            raise ValueError('Input rep1 does not have predefined tau!')
+
+        if self.tau2 is not None and self.tau2 != SO3Tau.from_rep(rep2):
+            raise ValueError('Input rep2 does not have predefined tau!')
 
         return cg_product(self.cg_dict, rep1, rep2, maxl=self.maxl, minl=self.minl, aggregate=self.aggregate)
 
@@ -61,68 +86,72 @@ class CGProduct(CGModule):
     def tau_out(self):
         if not(self.tau1) or not(self.tau2):
             raise ValueError('Module not intialized with input type!')
-        tau1 = [1 if t > 0 else 0 for t in self.tau1]
-        tau2 = [1 if t > 0 else 0 for t in self.tau2]
-        nchan = set([t for t in self.tau1+self.tau2 if t > 0]).pop()
-        tau_out = cg_product_tau(tau1, tau2, maxl=self.maxl)
-        return [nchan*t for t in tau_out]
+        tau_out = cg_product_tau(self.tau1, self.tau2, maxl=self.maxl)
+        return tau_out
 
     @property
     def tau1(self):
-        try:
-            return self._tau1
-        except AttributeError:
-            return None
+        getattr(self, '_tau1', None)
 
     @tau1.setter
     def tau1(self, tau1):
-        if tau1 is None:
-            self._tau1 = None
-        elif type(tau1) in [list, tuple]:
-            self._tau1 = list(tau1)
-        else:
-            raise ValueError('Tau must be None, list, or tuple! {}'.format(tau1))
-        self.check_taus()
+        self._tau1 = None if tau1 else SO3Tau(tau1)
+        self._check_taus()
 
     @property
     def tau2(self):
-        try:
-            return self._tau2
-        except AttributeError:
-            return None
+        getattr(self, '_tau2', None)
 
     @tau2.setter
     def tau2(self, tau2):
-        if tau2 is None:
-            self._tau2 = None
-        elif type(tau2) in [list, tuple]:
-            self._tau2 = list(tau2)
-        else:
-            raise ValueError('Tau must be None, list, or tuple! {}'.format(tau2))
-        self.check_taus()
+        self._tau2 = None if tau2 else SO3Tau(tau2)
+        self._check_taus()
 
-    def check_taus(self):
+    def _check_taus(self):
         if self.tau2 and self.tau1:
-            chan1 = set([t for t in self.tau1 if t > 0])
-            chan2 = set([t for t in self.tau2 if t > 0])
-            assert(chan1 == chan2 and len(chan1) == 1), 'Can only have single non-zero channel in tau1 and tau2! {} {}'.format(self.tau1, self.tau2)
+            assert self.tau1.channels and (self.tau1.channels == self.tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
 
 
 def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
     """
-    Explicit function to calculate the Clebsch-Gordan product. See the documentation for CGProduct for more information.
+    Explicit function to calculate the Clebsch-Gordan product.
+    See the documentation for CGProduct for more information.
+
+    rep1 : list of torch.Tensors
+        First SO3Vector in the CG product
+    rep2 : list of torch.Tensors
+        First SO3Vector in the CG product
+    minl : int
+        Minimum weight to include in CG Product
+    maxl : int
+        Minimum weight to include in CG Product
+    aggregate : bool, optional
+        Apply an "aggregation" operation, or a pointwise convolution
+        with a SO3Vector as a filter.
+    cg_dict : CGDict, optional
+        Specify a Clebsch-Gordan dictionary. If not specified, one will be
+        generated automatically at runtime based upon maxl.
     """
-    assert(cg_dict.transpose), 'This uses transposed CG coefficients!'
-    L1 = (rep1[-1].shape[-2] - 1)//2
-    L2 = (rep2[-1].shape[-2] - 1)//2
+    tau1 = SO3Tau.from_rep(rep1)
+    tau2 = SO3Tau.from_rep(rep2)
+    assert tau1.channels and (tau1.channels == tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
+
+    ells1 = [(part.shape[-2] - 1)//2 for part in rep1]
+    ells2 = [(part.shape[-2] - 1)//2 for part in rep2]
+
+    L1 = max(ells1)
+    L2 = max(ells2)
+
+    if (cg_dict.maxl < maxl) or (cg_dict.maxl < L1) or (cg_dict.maxl < L2):
+        raise ValueError('CG Dictionary maxl ({}) not sufficiently large for (maxl, L1, L2) = ({} {} {})'.format(cg_dict.maxl, maxl, L1, L2))
+    assert(cg_dict.transpose), 'This operation uses transposed CG coefficients!'
 
     maxL = min(L1 + L2, maxl)
 
     new_rep = [[] for _ in range(maxL + 1)]
 
-    for part1 in rep1:
-        for part2 in rep2:
-            l1, l2 = (part1.shape[-2] - 1)//2, (part2.shape[-2] - 1)//2
+    for l1, part1 in zip(ells1, rep1):
+        for l2, part2 in zip(ells2, rep2):
             lmin, lmax = max(abs(l1 - l2), minl), min(l1 + l2, maxL)
             if lmin > lmax: continue
 

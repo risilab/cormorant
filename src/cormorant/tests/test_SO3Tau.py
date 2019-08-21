@@ -76,3 +76,14 @@ class TestSO3Tau():
         tau = SO3Tau([3]*2)
 
         assert tau.channels == 3
+
+    @pytest.mark.parametrize('batch', [(1,), (3,), (1, 1), (3, 3)])
+    @pytest.mark.parametrize('tau0', [(1,), (1, 2), (2, 2)])
+    def test_from_rep(self, batch, tau0):
+        rand_rep = lambda tau, batch: [torch.rand(batch + (t, 2*l+1, 2)).double() for l, t in enumerate(tau)]
+
+        rep = rand_rep(tau0, batch)
+        tau = SO3Tau.from_rep(rep)
+
+        assert type(tau) == SO3Tau
+        assert list(tau) == list(tau0)

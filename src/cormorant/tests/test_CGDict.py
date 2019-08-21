@@ -66,26 +66,3 @@ class TestCGDict():
 
         assert cg_dict.maxl == maxl
         assert set(cg_dict.keys()) == {(l1, l2) for l1 in range(maxl+1) for l2 in range(maxl+1)}
-
-
-
-
-
-
-
-
-
-# print(cg_dict.maxl, cg_dict.items())
-#
-# cg_dict.update_maxl(2)
-#
-# print(cg_dict.maxl, cg_dict.items())
-#
-# cg_dict1 = CGDict(maxl=2, device=torch.device('cpu'), dtype=torch.float)
-#
-# print(cg_dict.keys() == cg_dict1.keys())
-# print({key: (cg_dict[key] == cg_dict1[key]).all().item() for key in cg_dict.keys()})
-#
-# cg_dict = cg_dict.to(dtype=torch.double)
-#
-# print({key: val.dtype for key, val in cg_dict.items()})
