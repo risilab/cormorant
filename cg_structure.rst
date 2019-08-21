@@ -1,5 +1,6 @@
-Clebsch-Gordan Base Library
-===========================
+Basic Clebsch-Gordan Structure
+==============================
+
 
 Clebsch-Gordan Dictionary
 -------------------------
