@@ -61,6 +61,40 @@ class TestCGProductInitialization():
             assert cg_prod.cg_dict
             assert cg_prod.cg_dict.maxl == max(1, maxl) if maxl is not None else 1
 
+    # Check the cg_dict device works correctly if maxl is set.
+    @pytest.mark.parametrize('maxl1', [0, 1, 2])
+    @pytest.mark.parametrize('maxl2', [0, 1, 2])
+    @pytest.mark.parametrize('chan1', [1, 2])
+    @pytest.mark.parametrize('chan2', [1, 2])
+    @pytest.mark.parametrize('set_tau1', [True, False])
+    @pytest.mark.parametrize('set_tau2', [True, False])
+    def test_cg_prod_tau_check(self, maxl1, maxl2, chan1, chan2, set_tau1, set_tau2):
+        rand_rep = lambda tau, nbatch: [torch.rand(nbatch + (t, 2*l+1, 2)).double() for l, t in enumerate(tau)]
+
+        tau1 = [chan1] * (maxl1 + 1)
+        tau2 = [chan2] * (maxl2 + 1)
+
+        rep1 = rand_rep(tau1, (2,))
+        rep2 = rand_rep(tau2, (2,))
+
+        tau1_in = tau1 if set_tau1 else None
+        tau2_in = tau2 if set_tau2 else None
+
+        if (set_tau1 and set_tau2) and chan1 != chan2:
+            with pytest.raises(ValueError) as e:
+                cg_prod = CGProduct(tau1_in, tau2_in, maxl=2)
+            return
+        else:
+            cg_prod = CGProduct(tau1_in, tau2_in, maxl=2)
+
+        if set_tau1 and set_tau2:
+            tau_out = cg_prod.tau_out
+        else:
+            with pytest.raises(ValueError) as e:
+                tau_out = cg_prod.tau_out
+
+
+
 # Test actual CG Product properties inherited from CG Module
 
 class TestCGProductInheritedFromCGModule():

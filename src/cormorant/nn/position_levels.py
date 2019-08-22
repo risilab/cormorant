@@ -51,8 +51,6 @@ class RadPolyTrig(nn.Module):
     def __init__(self, max_sh, basis_set, num_channels, mix=False, device=torch.device('cpu'), dtype=torch.float):
         super(RadPolyTrig, self).__init__()
 
-        print('WARNING: does not satisfy all sanity checks yet!')
-
         trig_basis, rpow = basis_set
         self.rpow = rpow
         self.max_sh = max_sh

@@ -63,15 +63,14 @@ class CGProduct(CGModule):
         elif (maxl == inf):
             raise ValueError('maxl is not defined, and was unable to retrieve get maxl from cg_dict or tau1 and tau2')
 
-        self.tau1 = tau1
-        self.tau2 = tau2
+        super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
+
+        self.set_taus(tau1, tau2)
 
         if (minl > 0):
             raise NotImplementedError('minl > 0 not yet implemented!')
         else:
             self.minl = 0
-
-        super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
 
     def forward(self, rep1, rep2):
         if self.tau1 is not None and self.tau1 != SO3Tau.from_rep(rep1):
@@ -91,25 +90,21 @@ class CGProduct(CGModule):
 
     @property
     def tau1(self):
-        getattr(self, '_tau1', None)
-
-    @tau1.setter
-    def tau1(self, tau1):
-        self._tau1 = None if tau1 else SO3Tau(tau1)
-        self._check_taus()
+        return self._tau1
 
     @property
     def tau2(self):
-        getattr(self, '_tau2', None)
+        return self._tau2
 
-    @tau2.setter
-    def tau2(self, tau2):
-        self._tau2 = None if tau2 else SO3Tau(tau2)
-        self._check_taus()
+    def set_taus(self, tau1=None, tau2=None):
+        self._tau1 = SO3Tau(tau1) if tau1 else None
+        self._tau2 = SO3Tau(tau2) if tau2 else None
 
-    def _check_taus(self):
-        if self.tau2 and self.tau1:
-            assert self.tau1.channels and (self.tau1.channels == self.tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
+        if self._tau1 and self._tau2:
+            if not self.tau1.channels or (self.tau1.channels != self.tau2.channels):
+                raise ValueError('The number of fragments must be same for each part! '
+                                 '{} {}'.format(self.tau1, self.tau2))
+
 
 
 def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):

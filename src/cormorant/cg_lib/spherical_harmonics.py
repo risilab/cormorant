@@ -215,6 +215,12 @@ def rep_to_pos(rep):
     r"""
     Convert a tensor of l=1 spherical tensors to cartesian position vectors.
 
+    Warning
+    -------
+    The input spherical tensor must satisfy :math:`F_{-m} = (-1)^m F_{m}^*`,
+    so the output cartesian tensor is explicitly real. If this is not satisfied
+    an error will be thrown.
+
     Parameters
     ----------
     rep : torch.Tensor
@@ -235,7 +241,8 @@ def rep_to_pos(rep):
     pos_z = rep_0
 
     imag_part = [pos_x[..., 1].abs().mean(), pos_y[..., 0].abs().mean(), pos_z[..., 1].abs().mean()]
-    assert(all([p < 1e-6 for p in imag_part])), 'Imaginary part not zero! {}'.format(imag_part)
+    if (any([p > 1e-6 for p in imag_part])):
+        raise ValueError('Imaginary part not zero! {}'.format(imag_part))
 
     pos = torch.stack([pos_x[..., 0], pos_y[..., 1], pos_z[..., 0]], dim=-1)
 

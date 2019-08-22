@@ -139,8 +139,12 @@ class CGModule(nn.Module):
         """
         if name in super().__dict__.keys():
             return super().__getattr__(name)
+        elif name in self.__dict__:
+                return self.__dict__[name]
         else:
-            return self.__dict__[name]
+            raise AttributeError("'{}' object has no attribute '{}'".format(
+                        type(self).__name__, name))
+
 
     def __setattr__(self, name, value):
         """
