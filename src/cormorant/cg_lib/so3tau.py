@@ -158,9 +158,6 @@ class SO3Tau():
 
         assert ells == list(range(minl, maxl+1)), 'Rep must be continuous from minl to maxl'
 
-        if minl > 0:
-            raise NotImplementedError()
-
         tau = [irrep.shape[-3] for irrep in rep]
 
         return SO3Tau(tau)

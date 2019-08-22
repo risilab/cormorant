@@ -32,7 +32,7 @@ class SphericalHarmonics(CGModule):
     device : :obj:`torch.device`
         Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
     """
-    def __init__(self, maxl, normalize=False, sh_norm='qm',
+    def __init__(self, maxl, normalize=True, sh_norm='qm',
                  cg_dict=None, dtype=None, device=None):
 
         self.normalize = normalize
@@ -126,7 +126,7 @@ class SphericalHarmonicsRel(CGModule):
         return spherical_harmonics_rel(self.cg_dict, pos1, pos2, self.maxl, self.normalize, self.sh_norm)
 
 
-def spherical_harmonics(cg_dict, pos, maxsh, normalize=False, sh_norm='qm'):
+def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='qm'):
     r"""
     Functional form of the Spherical Harmonics. See documentation of
     :obj:`SphericalHarmonics` for details.
