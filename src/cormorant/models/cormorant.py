@@ -3,7 +3,7 @@ import torch.nn as nn
 
 import logging
 
-from cormorant.cg_lib import SphericalHarmonicsRel
+from cormorant.cg_lib import CGModule, SphericalHarmonicsRel
 
 from cormorant.models.cormorant_levels import CormorantAtomLevel, CormorantEdgeLevel
 
@@ -21,7 +21,7 @@ def expand_var_list(var, num_cg_levels):
         raise ValueError('Incorrect type {}'.format(type(var)))
     return var_list
 
-class Cormorant(nn.Module):
+class Cormorant(CGModule):
     """
     Basic Cormorant Network
 
@@ -30,22 +30,14 @@ class Cormorant(nn.Module):
     num_cg_levels : int
         Number of cg levels to use.
     """
-    def __init__(self, num_cg_levels, maxl, max_sh, num_channels, num_species,
+    def __init__(self, maxl, max_sh, num_cg_levels, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  weight_init, level_gain, charge_power, basis_set,
                  charge_scale, gaussian_mask,
                  top, input, num_mpnn_layers, activation='leakyrelu',
-                 device=torch.device('cpu'), dtype=torch.float):
-        super(Cormorant, self).__init__()
+                 device=None, dtype=None):
 
         logging.info('Initializing network!')
-
-        self.num_cg_levels = num_cg_levels
-        self.maxl = maxl
-        self.max_sh = max_sh
-
-        self.device = device
-        self.dtype = dtype
 
         level_gain = expand_var_list(level_gain, num_cg_levels)
 
@@ -57,6 +49,10 @@ class Cormorant(nn.Module):
         max_sh = expand_var_list(max_sh, num_cg_levels)
         num_channels = expand_var_list(num_channels, num_cg_levels)
 
+        super().__init__(maxl=max(maxl+max_sh))
+        device, dtype = self.device, self.dtype
+
+        self.num_cg_levels = num_cg_levels
         self.num_channels = num_channels
         self.charge_power = charge_power
         self.charge_scale = charge_scale
@@ -70,7 +66,7 @@ class Cormorant(nn.Module):
         logging.info('num_channels: {}'.format(num_channels))
 
         # Set up spherical harmonics
-        self.spherical_harmonics_rel = SphericalHarmonicsRel(max(self.max_sh), sh_norm='unit', device=device, dtype=dtype)
+        self.spherical_harmonics_rel = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict, sh_norm='unit')
 
         # Set up position functions, now independent of spherical harmonics
         self.position_functions = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels, device=device, dtype=dtype)
@@ -99,13 +95,13 @@ class Cormorant(nn.Module):
             # First add the edge, since the output type determines the next level
             edge_lvl = CormorantEdgeLevel(tau_edge, tau_in, tau_pos[level], num_channels[level],
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
-                                      gaussian_mask=gaussian_mask, device=device, dtype=dtype)
+                                      gaussian_mask=gaussian_mask, cg_dict=self.cg_dict)
             edge_levels.append(edge_lvl)
             tau_edge = edge_lvl.tau_out
 
             # Now add the NBody level
             atom_lvl = CormorantAtomLevel(tau_in, tau_edge, maxl[level], num_channels[level], level_gain[level], weight_init,
-                                        device=device, dtype=dtype)
+                                        cg_dict=self.cg_dict)
             atom_levels.append(atom_lvl)
             tau_in = atom_lvl.tau_out
 
@@ -130,7 +126,6 @@ class Cormorant(nn.Module):
             raise ValueError('Improper choice of top of network! {}'.format(top))
 
         logging.info('Model initialized. Number of parameters: {}'.format(sum([p.nelement() for p in self.parameters()])))
-
 
     def forward(self, data, covariance_test=False):
         """
