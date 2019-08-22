@@ -47,7 +47,7 @@ class Cormorant(CGModule):
 
         maxl = expand_var_list(maxl, num_cg_levels)
         max_sh = expand_var_list(max_sh, num_cg_levels)
-        num_channels = expand_var_list(num_channels, num_cg_levels)
+        num_channels = expand_var_list(num_channels, num_cg_levels+1)
 
         super().__init__(maxl=max(maxl+max_sh))
         device, dtype = self.device, self.dtype
@@ -100,7 +100,7 @@ class Cormorant(CGModule):
             tau_edge = edge_lvl.tau_out
 
             # Now add the NBody level
-            atom_lvl = CormorantAtomLevel(tau_in, tau_edge, maxl[level], num_channels[level], level_gain[level], weight_init,
+            atom_lvl = CormorantAtomLevel(tau_in, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
                                         cg_dict=self.cg_dict)
             atom_levels.append(atom_lvl)
             tau_in = atom_lvl.tau_out
@@ -110,7 +110,6 @@ class Cormorant(CGModule):
         self.atom_levels = atom_levels
         self.edge_levels = edge_levels
 
-        self.tau_levels_all = [level.taus for level in atom_levels]
         self.tau_levels_out = [level.tau_out for level in atom_levels]
 
         self.scalar_func = GetScalars(self.tau_levels_out, device=device, dtype=dtype)

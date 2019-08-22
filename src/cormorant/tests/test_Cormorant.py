@@ -7,7 +7,7 @@ class TestCormorant():
 
     @pytest.mark.parametrize('maxl', [1, 2])
     @pytest.mark.parametrize('max_sh', [1, 2])
-    @pytest.mark.parametrize('num_channels', [1, 2, 5, [1, 2]])
+    @pytest.mark.parametrize('num_channels', [1, 2, 5, [1, 2], [2, 1, 3, 4]])
     @pytest.mark.parametrize('level_gain', [1, 10])
     def test_Cormorant_init(self, maxl, max_sh, num_channels, level_gain):
         num_cg_levels = 3
