@@ -39,7 +39,7 @@ def cg_product_tau(tau1, tau2, maxl=inf):
         for l2 in range(L2+1):
             lmin, lmax = abs(l1-l2), min(l1+l2, maxl)
             for l in range(lmin, lmax+1):
-                tau[l] += tau1[l1]*tau2[l2]
+                tau[l] += tau1[l1]
 
     return SO3Tau(tau)
 
@@ -88,6 +88,15 @@ class SO3Tau():
         """
         self._tau[idx] = val
 
+    def __eq__(self, other):
+        """
+        Check equality of two :math:`SO3Tau` objects or :math:`SO3Tau` and
+        a list.
+        """
+        self_tau = list(self._tau)
+        other_tau = list(other)
+
+        return self_tau == other_tau
 
     @staticmethod
     def cat(tau1, tau2):

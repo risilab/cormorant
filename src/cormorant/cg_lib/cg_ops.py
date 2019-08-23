@@ -73,11 +73,11 @@ class CGProduct(CGModule):
             self.minl = 0
 
     def forward(self, rep1, rep2):
-        if self.tau1 is not None and self.tau1 != SO3Tau.from_rep(rep1):
-            raise ValueError('Input rep1 does not have predefined tau!')
+        if self.tau1 and self.tau1 != SO3Tau.from_rep(rep1):
+            raise ValueError('Input rep1 does not match predefined tau!')
 
-        if self.tau2 is not None and self.tau2 != SO3Tau.from_rep(rep2):
-            raise ValueError('Input rep2 does not have predefined tau!')
+        if self.tau2 and self.tau2 != SO3Tau.from_rep(rep2):
+            raise ValueError('Input rep2 does not match predefined tau!')
 
         return cg_product(self.cg_dict, rep1, rep2, maxl=self.maxl, minl=self.minl, aggregate=self.aggregate)
 

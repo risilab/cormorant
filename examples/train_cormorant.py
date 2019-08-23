@@ -35,9 +35,6 @@ def main():
     # Initialize device and data type
     device, dtype = init_cuda(args)
 
-    # Initializing CG coefficients
-    global_cg_dict(maxl=max(args.maxl+args.max_sh), dtype=dtype, device=device)
-
     # Initialize dataloder
     args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset,
                                                                     force_download=args.force_download, subtract_thermo=args.subtract_thermo
@@ -52,7 +49,7 @@ def main():
                          for split, dataset in datasets.items()}
 
     # Initialize model
-    model = Cormorant(args.num_cg_levels, args.maxl, args.max_sh, args.num_channels, num_species,
+    model = Cormorant(args.maxl, args.max_sh, args.num_cg_levels, args.num_channels, num_species,
                         args.cutoff_type, args.hard_cut_rad, args.soft_cut_rad, args.soft_cut_width,
                         args.weight_init, args.level_gain, args.charge_power, args.basis_set,
                         charge_scale, args.gaussian_mask,

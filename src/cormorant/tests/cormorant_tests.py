@@ -19,7 +19,7 @@ def covariance_test(model, data):
 	targets_rotout, outputs_rotin = [], []
 
 	angles = torch.rand(3)
-	D, R = _gen_rot(data, angles, max(model.maxl))
+	D, R = _gen_rot(data, angles, model.maxl)
 
 	data_rotout = data
 

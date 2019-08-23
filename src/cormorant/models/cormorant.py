@@ -147,7 +147,7 @@ class Cormorant(CGModule):
         input_scalars, atom_mask, atom_positions, edge_mask = self.prepare_input(data)
 
         spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
-        rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0))
+        rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0).byte())
 
         atom_reps = [self.input_func(input_scalars, atom_mask, edge_mask, norms)]
         edge_net = [torch.tensor([]).to(self.device, self.dtype)]
