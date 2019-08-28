@@ -11,10 +11,10 @@ def cg_product_tau(tau1, tau2, maxl=inf):
 
     Parameters
     ==========
-    tau1 : :obj:`list` of ``int`` or :obj:`SO3Tau`
+    tau1 : :obj:`list` of ``int``, :obj:`SO3Tau`.
         Multiplicity of first representation.
 
-    tau2 : :obj:`list` of ``int`` or :obj:`SO3Tau`
+    tau2 : :obj:`list` of ``int``, :obj:`SO3Tau`.
         Multiplicity of second representation.
 
     maxl : int
@@ -23,14 +23,14 @@ def cg_product_tau(tau1, tau2, maxl=inf):
     Return
     ======
 
-    tau : :obj:`list` of ``int`` or :obj:`SO3Tau`
+    tau : :obj:`SO3Tau`
         Multiplicity of output representation.
 
     """
-    tau1 = list(tau1)
-    tau2 = list(tau2)
+    tau1 = SO3Tau(tau1)
+    tau2 = SO3Tau(tau2)
 
-    L1, L2 = len(tau1) - 1, len(tau2) - 1
+    L1, L2 = tau1.maxl, tau2.maxl
     L = min(L1 + L2, maxl)
 
     tau = [0]*(L+1)
@@ -52,16 +52,20 @@ class SO3Tau():
     Parameters
     ----------
 
-    tau : :obj:`list` of ``int`` or :obj:`SO3Tau`
+    tau : :obj:`list` of `int`, :obj:`SO3Tau`, or object with `.tau` property.
         Multiplicity of a SO(3) vector.
     """
     def __init__(self, tau):
-        if type(tau) is SO3Tau:
-            tau = list(tau)
+        if type(tau) in [list, tuple]:
+            if not all(type(t) == int for t in tau):
+                raise ValueError('Input must be list or tuple of ints! {} {}'.format(type(tau), [type(t) for t in tau]))
+        else:
+            try:
+                tau = tau.tau
+            except e:
+                raise ValueError('Input does not have a defined .tau property!')
 
-        assert type(tau) in [list, tuple] and all(type(t) == int for t in tau), 'Input must be list or tuple of ints! {} {}'.format(type(tau), [type(t) for t in tau])
-
-        self._tau = tau
+        self._tau = tuple(tau)
 
     def __iter__(self):
         """
