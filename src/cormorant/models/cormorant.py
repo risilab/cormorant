@@ -75,54 +75,28 @@ class Cormorant(CGModule):
         num_scalars_in = self.num_species * (self.charge_power + 1)
         num_scalars_out = num_channels[0]
 
-        input = input.lower()
-        if input == 'linear':
-            self.input_func = InputLinear(num_scalars_in, num_scalars_out, device=self.device, dtype=self.dtype)
-        elif input == 'mpnn':
-            self.input_func = InputMPNN(num_scalars_in, num_scalars_out, num_mpnn_layers, soft_cut_rad[0], soft_cut_width[0], hard_cut_rad[0], activation=activation, device=self.device, dtype=self.dtype)
-        else:
-            raise ValueError('Improper choice of input featurization of network! {}'.format(input))
+        self.input_func_atom = None
+        self.input_func_edge = None
 
-        tau_in = [num_scalars_out]
+        tau_in_atom = self.input_func_atom.tau
+        tau_in_edge = self.input_func_edge.tau
 
-        tau_edge = [0]
+        self.cormorant_cg = CormorantMain(maxl, tau_in_atom, tau_in_edge, tau_pos,
+                     num_channels, level_gain, weight_init,
+                     cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
+                     cat=True, gaussian_mask=False,
+                     device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
-        logging.info('{} {}'.format(tau_in, tau_edge))
+        tau_cg_levels_atom = self.cormorant_cg.tau_levels_atom
+        tau_cg_levels_edge = self.cormorant_cg.tau_levels_edge
 
-        atom_levels = nn.ModuleList()
-        edge_levels = nn.ModuleList()
-        for level in range(self.num_cg_levels):
-            # First add the edge, since the output type determines the next level
-            edge_lvl = CormorantEdgeLevel(tau_edge, tau_in, tau_pos[level], num_channels[level],
-                                      cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
-                                      gaussian_mask=gaussian_mask, cg_dict=self.cg_dict)
-            edge_levels.append(edge_lvl)
-            tau_edge = edge_lvl.tau_out
+        self.get_scalars_atom = GetScalarsAtom(tau_cg_levels_atom, device=device, dtype=dtype)
+        self.get_scalars_edge = GetScalarsEdge(tau_cg_levels_atom, device=device, dtype=dtype)
+        num_scalars_atom = self.get_scalars_atom.num_scalars
+        num_scalars_edge = self.get_scalars_edge.num_scalars
 
-            # Now add the NBody level
-            atom_lvl = CormorantAtomLevel(tau_in, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
-                                        cg_dict=self.cg_dict)
-            atom_levels.append(atom_lvl)
-            tau_in = atom_lvl.tau_out
-
-            logging.info('{} {}'.format(tau_in, tau_edge))
-
-        self.atom_levels = atom_levels
-        self.edge_levels = edge_levels
-
-        self.tau_levels_out = [level.tau_out for level in atom_levels]
-
-        self.scalar_func = GetScalars(self.tau_levels_out, device=device, dtype=dtype)
-
-        num_scalars = self.scalar_func.num_scalars
-
-        top = top.lower()
-        if top == 'linear':
-            self.top_func = OutputLinear(num_scalars, bias=True, device=self.device, dtype=self.dtype)
-        elif top == 'pmlp':
-            self.top_func = OutputPMLP(num_scalars, activation=activation, device=self.device, dtype=self.dtype)
-        else:
-            raise ValueError('Improper choice of top of network! {}'.format(top))
+        self.output_layer_atom = None
+        self.output_layer_edge = None
 
         logging.info('Model initialized. Number of parameters: {}'.format(sum([p.nelement() for p in self.parameters()])))
 
@@ -144,27 +118,21 @@ class Cormorant(CGModule):
 
 
         """
-        input_scalars, atom_mask, atom_positions, edge_mask = self.prepare_input(data)
+        atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions = self.prepare_input(data)
 
         spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
         rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0).byte())
 
-        atom_reps = [self.input_func(input_scalars, atom_mask, edge_mask, norms)]
-        edge_net = [torch.tensor([]).to(self.device, self.dtype)]
+        atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
+        edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
 
-        # Construct iterated multipoles
-        atoms_all = []
-        edges_all = []
+        atoms_all, edges_all = self.cg_level(atom_reps_in, atom_mask, edge_net_in, edge_mask,
+                                             rad_funcs, norms, spherical_harmonics)
 
-        for idx, (atom_level, edge_level) in enumerate(zip(self.atom_levels, self.edge_levels)):
-            edge_net = edge_level(edge_net, atom_reps, rad_func_levels[idx], edge_mask, atom_mask, norms, spherical_harmonics)
-            edge_reps = [scalar_mult_rep(edge, sph_harm) for (edge, sph_harm) in zip(edge_net, spherical_harmonics)]
-            atom_reps = atom_level(atom_reps, edge_reps, atom_mask)
-            atoms_all.append(atom_reps)
-            edges_all.append(edge_net)
+        atom_scalars = self.get_scalars_atom(atoms_all)
+        edge_scalars = self.get_scalars_edge(edges_all)
 
         # Construct scalars for network output
-        scalars = self.scalar_func(atoms_all)
         prediction = self.top_func(scalars, atom_mask)
 
         # Covariance test
