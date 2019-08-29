@@ -9,8 +9,8 @@ from cormorant.nn import MaskLevel
 from cormorant.nn import CatMixReps, CatMixRepsScalar, DotMatrix
 
 
-class CormorantMain(CGModule):
-    def __init__(self, maxl, tau_in, tau_edge, tau_pos, num_channels,
+class CormorantCG(CGModule):
+    def __init__(self, maxl, atom_in, edge_in, pos_in, num_channels,
                  level_gain, weight_init,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  cat=True, gaussian_mask=False,
@@ -18,25 +18,31 @@ class CormorantMain(CGModule):
         super().__init__(device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype = self.device, self.dtype
 
-        logging.info('{} {}'.format(tau_in, tau_edge))
+        tau_atom_in = atom_in.tau if type(atom_in) is CGModule else atom_in
+        tau_edge_in = edge_in.tau if type(edge_in) is CGModule else edge_in
+
+        logging.info('{} {}'.format(tau_atom_in, tau_edge_in))
 
         atom_levels = nn.ModuleList()
         edge_levels = nn.ModuleList()
+
+        tau_atom, tau_edge = tau_atom_in, tau_edge_in
+
         for level in range(self.num_cg_levels):
             # First add the edge, since the output type determines the next level
-            edge_lvl = CormorantEdgeLevel(tau_edge, tau_in, tau_pos[level], num_channels[level],
+            edge_lvl = CormorantEdgeLevel(tau_atom, tau_edge, tau_pos[level], num_channels[level],
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
                                       gaussian_mask=gaussian_mask, cg_dict=self.cg_dict)
             edge_levels.append(edge_lvl)
             tau_edge = edge_lvl.tau_out
 
             # Now add the NBody level
-            atom_lvl = CormorantAtomLevel(tau_in, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
+            atom_lvl = CormorantAtomLevel(tau_atom, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
                                         cg_dict=self.cg_dict)
             atom_levels.append(atom_lvl)
-            tau_in = atom_lvl.tau_out
+            tau_atom = atom_lvl.tau_out
 
-            logging.info('{} {}'.format(tau_in, tau_edge))
+            logging.info('{} {}'.format(tau_atom, tau_edge))
 
         self.atom_levels = atom_levels
         self.edge_levels = edge_levels

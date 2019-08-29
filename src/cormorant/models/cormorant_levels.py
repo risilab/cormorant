@@ -7,7 +7,7 @@ from cormorant.nn import MaskLevel
 from cormorant.nn import CatMixReps, CatMixRepsScalar, DotMatrix
 
 class CormorantEdgeLevel(CGModule):
-    def __init__(self, tau_edge, tau_in, tau_rad, nout,
+    def __init__(self, tau_atom, tau_edge, tau_rad, nout,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  cat=True, gaussian_mask=False,
                  device=None, dtype=None, cg_dict=None):
@@ -15,7 +15,7 @@ class CormorantEdgeLevel(CGModule):
         device, dtype = self.device, self.dtype
 
         # Set up type of edge network depending on specified input operations
-        self.dot_matrix = DotMatrix(tau_in, cat=cat, device=self.device, dtype=self.dtype)
+        self.dot_matrix = DotMatrix(tau_atom, cat=cat, device=self.device, dtype=self.dtype)
         tau_dot = self.dot_matrix.tau_out
 
         # Set up mixing layer

@@ -66,11 +66,11 @@ class Cormorant(CGModule):
         logging.info('num_channels: {}'.format(num_channels))
 
         # Set up spherical harmonics
-        self.spherical_harmonics_rel = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict, sh_norm='unit')
+        self.sph_harms = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict, sh_norm='unit')
 
         # Set up position functions, now independent of spherical harmonics
-        self.position_functions = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels, device=device, dtype=dtype)
-        tau_pos = self.position_functions.tau
+        self.rad_funcs = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels, device=device, dtype=dtype)
+        tau_pos = self.rad_funcs.tau
 
         num_scalars_in = self.num_species * (self.charge_power + 1)
         num_scalars_out = num_channels[0]
@@ -81,7 +81,7 @@ class Cormorant(CGModule):
         tau_in_atom = self.input_func_atom.tau
         tau_in_edge = self.input_func_edge.tau
 
-        self.cormorant_cg = CormorantMain(maxl, tau_in_atom, tau_in_edge, tau_pos,
+        self.cormorant_cg = CormorantCG(maxl, tau_in_atom, tau_in_edge, tau_pos,
                      num_channels, level_gain, weight_init,
                      cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                      cat=True, gaussian_mask=False,
@@ -120,14 +120,14 @@ class Cormorant(CGModule):
         """
         atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions = self.prepare_input(data)
 
-        spherical_harmonics, norms = self.spherical_harmonics_rel(atom_positions, atom_positions)
-        rad_func_levels = self.position_functions(norms, edge_mask * (norms > 0).byte())
+        spherical_harmonics, norms = self.sph_harms(atom_positions, atom_positions)
+        rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0).byte())
 
         atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
         edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
 
-        atoms_all, edges_all = self.cg_level(atom_reps_in, atom_mask, edge_net_in, edge_mask,
-                                             rad_funcs, norms, spherical_harmonics)
+        atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask,
+                                                 rad_funcs, norms, spherical_harmonics)
 
         atom_scalars = self.get_scalars_atom(atoms_all)
         edge_scalars = self.get_scalars_edge(edges_all)
