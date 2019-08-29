@@ -2,9 +2,7 @@ import torch
 from torch.nn import Module, ModuleList, Parameter, ParameterList
 from math import sqrt, inf, pi
 
-from . import CGModule
-
-from . import SO3Tau, cg_product_tau
+from cormorant.cg_lib import CGModule, SO3Tau, cg_product_tau
 
 class CGProduct(CGModule):
     r"""
@@ -87,6 +85,8 @@ class CGProduct(CGModule):
             raise ValueError('Module not intialized with input type!')
         tau_out = cg_product_tau(self.tau1, self.tau2, maxl=self.maxl)
         return tau_out
+
+    tau = tau_out
 
     @property
     def tau1(self):

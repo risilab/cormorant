@@ -3,15 +3,14 @@ import sys
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_dict import CGDict
 
-# Module (not instance)-wide CG-dictionary solution based upon: https://stackoverflow.com/a/35904211
-this = sys.modules[__name__]
-this.global_cg_dict = CGDict()
-
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_module import CGModule
 
 #Import SO3Tau
-from cormorant.cg_lib.so3tau import SO3Tau, cg_product_tau
+from cormorant.cg_lib.so3tau import SO3Tau
+
+# Import tau calculation for cg_ops
+from cormorant.cg_lib.cg_ops_tau import cg_product_tau
 
 # Now for your regularly scheduled imports
 from cormorant.cg_lib.cg_ops import CGProduct, cg_product
