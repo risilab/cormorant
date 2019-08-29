@@ -6,8 +6,14 @@ from cormorant.cg_lib.cg_dict import CGDict
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_module import CGModule
 
-#Import SO3Tau
-from cormorant.cg_lib.so3tau import SO3Tau
+# Import some basic complex utilities
+from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+
+#Import SO3Vec and related classes
+from cormorant.cg_lib.so3_tau import SO3Tau
+from cormorant.cg_lib.so3_tensor import SO3Tensor
+from cormorant.cg_lib.so3_vec import SO3Vec
+from cormorant.cg_lib.so3_scalar import SO3Scalar
 
 # Import tau calculation for cg_ops
 from cormorant.cg_lib.cg_ops_tau import cg_product_tau

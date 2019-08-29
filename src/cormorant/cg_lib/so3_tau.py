@@ -84,13 +84,6 @@ class SO3Tau():
         tau : :obj:`SO3Tau`
             Output type of direct sum of ``rep1`` and ``rep2``
 
-        Example
-        -------
-        >>> tau1 = SO3Tau([1, 2, 3])
-        >>> tau2 = SO3Tau([1, 1])
-        >>> tau = tau1 & tau2
-        >>> print(tau)
-
         """
         return SO3Tau([t1 + t2 for t1, t2 in zip_longest(tau1, tau2, fillvalue=0)])
 
