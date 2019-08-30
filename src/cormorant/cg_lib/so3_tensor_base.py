@@ -1,0 +1,209 @@
+import torch
+
+from abc import ABC, abstractmethod
+from itertools import zip_longest
+
+from cormorant.cg_lib import SO3Tau
+
+class SO3TensorBase(ABC):
+    """
+    Core class for creating and tracking SO3 Vectors (aka SO3 representations).
+
+    Parameters
+    ----------
+
+    data : iterable of of `torch.Tensor` with appropriate shape
+        Input of a SO(3) vector.
+    """
+    def __init__(self, data):
+        self.check_data(data)
+
+        self._data = data
+
+    @abstractmethod
+    def check_data(self, data):
+        """
+        Implement a data checking method.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def bdim(self):
+        """
+        Define the batch dimension for each part.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def cdim(self):
+        """
+        Define the tau (channels) dimension for each part.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def rdim(self):
+        """
+        Define the representation (2*l+1) dimension for each part.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def zdim(self):
+        """
+        Define the complex dimension for each part.
+        """
+        pass
+
+    def __len__(self):
+        """
+        Length of SO3Vec.
+        """
+        return len(self._data)
+
+    @property
+    def maxl(self):
+        """
+        Maximum weight (maxl) of SO3 object.
+
+        Returns
+        -------
+        int
+        """
+        return len(self._data) - 1
+
+    @property
+    def tau(self):
+        """
+        Multiplicity of each weight if SO3 object.
+
+        Returns
+        -------
+        :obj:`SO3Tau`
+        """
+        return SO3Tau([part.shape[self.cdim] for part in self])
+
+    @property
+    def channels(self):
+        """
+        Constructs :obj:`SO3Tau`, and then gets the corresponding `SO3Tau.channels`
+        method.
+        """
+        return self.tau.channels
+
+    def keys(self):
+        return range(len(self))
+
+    def values(self):
+        return iter(self._data)
+
+    def items(self):
+        return zip(self._data, range(len(self)))
+
+    def __iter__(self):
+        """
+        Loop over SO3Vec
+        """
+        for t in self._data:
+            yield t
+
+    def __getitem__(self, idx):
+        """
+        Get item of SO3Vec.
+        """
+        if type(idx) is slice:
+            return self.__class__(self._data[idx])
+        else:
+            return self._data[idx]
+
+    def __setitem__(self, idx, val):
+        """
+        Set index of SO3Vec.
+        """
+        self._data[idx] = val
+
+    def __eq__(self, other):
+        """
+        Check equality of two :math:`SO3Vec` compatible objects.
+        """
+        if len(self) != len(other):
+            return False
+        return all((part1 == part2).all() for part1, part2 in zip(self, other))
+
+    @staticmethod
+    def allclose(rep1, rep2, **kwargs):
+        """
+        Check equality of two :obj:`SO3Tensor` compatible objects.
+        """
+        if len(self) != len(other):
+            raise ValueError('')
+        return all(torch.allclose(part1, part2, **kwargs) for part1, part2 in zip(rep1, rep2))
+
+
+    def __and__(self, other):
+        return self.cat([self, other])
+
+    def __rand__(self, other):
+        return self.cat([other, self])
+
+    def __str__(self):
+        return str(list(self._data))
+
+    __datar__ = __str__
+
+    @classmethod
+    def requires_grad(cls):
+        return cls([t.requires_grad() for t in self._data])
+
+    def requires_grad_(self, requires_grad=True):
+        self._data = [t.requires_grad_(requires_grad) for t in self._data]
+        return self
+
+    def to(self, *args, **kwargs):
+        self._data = [t.to(*args, **kwargs) for t in self._data]
+        return self
+
+    def cpu(self):
+        self._data = [t.cpu() for t in self._data]
+        return self
+
+    def cuda(self, **kwargs):
+        self._data = [t.cuda(**kwargs) for t in self._data]
+        return self
+
+    def long(self):
+        self._data = [t.long() for t in self._data]
+        return self
+
+    def byte(self):
+        self._data = [t.byte() for t in self._data]
+        return self
+
+    def bool(self):
+        self._data = [t.bool() for t in self._data]
+        return self
+
+    def half(self):
+        self._data = [t.half() for t in self._data]
+        return self
+
+    def float(self):
+        self._data = [t.float() for t in self._data]
+        return self
+
+    def double(self):
+        self._data = [t.double() for t in self._data]
+        return self
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    @classmethod
+    def grad(cls):
+        return cls([t.grad for t in self._data])

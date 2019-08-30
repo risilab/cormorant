@@ -21,15 +21,19 @@ class SO3Vec(SO3Tensor):
         Input of a SO(3) vector.
     """
 
+    @property
     def bdim(self):
         return slice(0, -3)
 
-    def cdim(self):
+    @property
+    def rdim(self):
         return -3
 
-    def rdim(self):
+    @property
+    def cdim(self):
         return -2
 
+    @property
     def zdim(self):
         return -1
 
@@ -46,29 +50,45 @@ class SO3Vec(SO3Tensor):
         zdims = [shape[self.zdim] for shape in shapes]
 
         if not all([rdim == 2*l+1 for l, rdim in enumerate(rdims)]):
-            raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, list(eumerate(rdims))))
+            raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, list(enumerate(rdims))))
 
         if not all([zdim == 2 for zdim in zdims]):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
 
-    def __mul__(self, other):
-        """
-        Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
-        or a :obj:`SO3Scalar`.
-        """
+    @staticmethod
+    def _mul_type_check(type1, type2):
+        if type1 == SO3Vec and type2 == SO3Vec:
+            raise ValueError('Cannot multiply two SO3Vecs!')
 
-        if type(other) in [float, int]:
-            mul = [other*part for part in self]
-        elif type(other) is torch.Tensor and (other.numel() == 1):
-            mul = [other*part for part in self]
-        elif type(other) is torch.Tensor:
-            raise NotImplementedError('Multiplication by a non-scalar tensor'
-                                      'not yet implemented!')
-        elif issubclass(SO3Scalar, other):
-            if self.maxl != other.maxl:
-                raise ValueError('SO3Vec and SO3Scalar do not have the same maxl! {} {}'.format(self.maxl, other.maxl))
-            mul = [mul_zscalar_zirrep(scalar, part, cdim=self.cdim, zdim=self.zdim) for scalar, part in zip(self, other)]
-        else:
-            raise NotImplementedError()
-
-        return self.__class__(mul)
+    # def mul(self, other):
+    #     """
+    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
+    #     or a :obj:`SO3Scalar`.
+    #     """
+    #     if type(other) in [float, int]:
+    #         mul = [other*part for part in self]
+    #     elif torch.is_tensor(other) is torch.Tensor:
+    #         raise NotImplementedError('Multiplication by a single '
+    #                                   'torch.Tensor not yet implemented!')
+    #     elif issubclass(SO3Scalar, other):
+    #         if self.maxl != other.maxl:
+    #             raise ValueError('SO3Vec and SO3Scalar do not have the same maxl! {} {}'.format(self.maxl, other.maxl))
+    #         mul = [mul_zscalar_zirrep(scalar, part, cdim=self.cdim, zdim=self.zdim) for scalar, part in zip(self, other)]
+    #     else:
+    #         return NotImplemented
+    #
+    #     return self.__class__(mul)
+    #
+    # def __mul__(self, other):
+    #     """
+    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
+    #     or a :obj:`SO3Scalar`.
+    #     """
+    #     return self.mul(other)
+    #
+    # def __rmul__(self, other):
+    #     """
+    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
+    #     or a :obj:`SO3Scalar`.
+    #     """
+    #     return self.mul(other)

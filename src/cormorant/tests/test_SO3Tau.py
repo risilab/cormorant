@@ -28,8 +28,9 @@ class TestSO3Tau():
     def test_cat(self):
         tau1 = SO3Tau([1, 2, 3])
         tau2 = SO3Tau([1, 1])
+        tau3 = SO3Tau([0, 0, 2])
 
-        tau = SO3Tau.cat(tau1, tau2)
+        tau = SO3Tau.cat([tau1, tau2])
         assert list(tau) == [2, 3, 3]
 
         assert type(tau) == SO3Tau
@@ -41,6 +42,10 @@ class TestSO3Tau():
 
         tau1 &= tau2
         assert list(tau1) == [2, 3, 3]
+
+        tau123 = (tau1 & tau2) & tau3
+
+        assert SO3Tau.cat([tau1, tau2, tau3]) == tau123
 
     # Test list-like addition
     def test_add(self):

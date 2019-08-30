@@ -2,7 +2,7 @@ import torch
 
 from cormorant.cg_lib import SO3Tensor, SO3Tau
 
-class SO3Scalar(SO3Tensor):
+class SO3Weight(SO3Tensor):
     """
     Core class for creating and tracking SO(3) Scalars that
     are used to part-wise multiply :obj:`SO3Vec`.
@@ -22,7 +22,7 @@ class SO3Scalar(SO3Tensor):
     """
 
     def bdim(self):
-        return slice(0, -2)
+        return None
 
     def cdim(self):
         return -2
@@ -35,10 +35,6 @@ class SO3Scalar(SO3Tensor):
 
     def check_data(self, data):
         shapes = set(part.shape for part in data)
-        if len(shapes) > 1:
-            raise ValueError('All parts (torch.Tensors) must have same number of'
-                             'batch dimensions! {}'.format(part.shape for part in data))
-
         shapes = shapes.pop()
 
         if not shapes[self.zdim] == 2:

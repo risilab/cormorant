@@ -28,6 +28,15 @@ class SO3Tau():
 
         self._tau = tuple(tau)
 
+    def keys(self):
+        return range(len(self))
+
+    def values(self):
+        return self._tau
+
+    def items(self):
+        return zip(self._tau, range(len(self)))
+
     def __iter__(self):
         """
         Loop over SO3Tau
@@ -67,31 +76,31 @@ class SO3Tau():
         return self_tau == other_tau
 
     @staticmethod
-    def cat(tau1, tau2):
+    def cat(tau_list):
         """
-        Return the :obj:`SO3Tau` corresponding to the concatenation of two tensors.
+        Return the multiplicity :obj:`SO3Tau` corresponding to the concatenation
+        (direct sum) of a list of :obj:`SO3Tensor`s.
 
         Parameters
         ----------
-        tau1 : :obj:`SO3Tau` or list of ints
-            Multiplicity of :rep1:
-        tau2 : :obj:`SO3Tau` or list of ints
-            Multiplicity of :rep2:
+        tau_list : :obj:`list` of :obj:`SO3Tau` or :obj:`list` of :obj:`ints`
+            List of multiplicites of input :obj:`SO3Tensors`.
 
         Return
         ------
 
         tau : :obj:`SO3Tau`
-            Output type of direct sum of ``rep1`` and ``rep2``
+            Output tau of direct sum of input :obj:`SO3Tensor`s.
 
         """
-        return SO3Tau([t1 + t2 for t1, t2 in zip_longest(tau1, tau2, fillvalue=0)])
+        return SO3Tau([sum(taus) for taus in zip_longest(*tau_list, fillvalue=0)])
+
 
     def __and__(self, other):
-        return SO3Tau.cat(self, other)
+        return SO3Tau.cat([self, other])
 
     def __rand__(self, other):
-        return SO3Tau.cat(self, other)
+        return SO3Tau.cat([self, other])
 
     def __str__(self):
         return str(list(self._tau))

@@ -9,11 +9,18 @@ from cormorant.cg_lib.cg_module import CGModule
 # Import some basic complex utilities
 from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
 
-#Import SO3Vec and related classes
+#Import SO3Tensor and related classes
 from cormorant.cg_lib.so3_tau import SO3Tau
+
+# Set up
+from cormorant.cg_lib.so3_tensor_base import SO3TensorBase
+from cormorant.cg_lib import so3_torch
+from cormorant.cg_lib.so3_torch import add, mul, cat, mix, cat_mix
 from cormorant.cg_lib.so3_tensor import SO3Tensor
-from cormorant.cg_lib.so3_vec import SO3Vec
+
+
 from cormorant.cg_lib.so3_scalar import SO3Scalar
+from cormorant.cg_lib.so3_vec import SO3Vec
 
 # Import tau calculation for cg_ops
 from cormorant.cg_lib.cg_ops_tau import cg_product_tau

@@ -2,94 +2,191 @@ import torch
 import torch.nn as nn
 from torch.nn import Module, Parameter, ParameterList
 
-from .utils import init_mix_reps_weights, mix_rep
+from functools import reduce
+from itertools import zip_longest
+
+from cormorant.nn.utils import init_mix_reps_weights, mix_rep
+from cormorant.cg_lib import SO3Tau, CGModule
 
 ############# Modules to mix/cat reps #############
 
-class MixReps(Module):
-    """ Weight mixing module for Representation that will include a type and error checking. """
-    def __init__(self, tau_in, tau_out, weight_init='randn', real=False, gain=1, device=torch.device('cpu'), dtype=torch.float):
-        super(MixReps, self).__init__()
+class MixReps(CGModule):
+    """
+    Module to linearly mix a representation from an input type `tau_in` to an
+    output type `tau_out`.
 
-        # Remove extra tailing zeros in input/output type
-        while not tau_in[-1]: tau_in.pop()
+    Input must have pre-defined types `tau_in` and `tau_out`.
 
+    Parameters
+    ----------
+    tau_in : :obj:`SO3Tau` (or compatible object).
+        Input tau of representation.
+    tau_out : :obj:`SO3Tau` (or compatible object), or :obj:`int`.
+        Input tau of representation. If an :obj:`int` is input,
+        the output type will be set to `tau_out` for each
+        parameter in the network.
+    real : :obj:`bool`, optional
+        Use purely real mixing weights.
+    weight_init : :obj:`str`, optional
+        String to set type of weight initialization.
+    gain : :obj:`float`, optional
+        Gain to scale initialized weights to.
+
+    device : :obj:`torch.device`, optional
+        Device to initialize weights to.
+    dtype : :obj:`torch.dtype`, optional
+        Data type to initialize weights to.
+
+    """
+    def __init__(self, tau_in, tau_out, real=False, weight_init='randn', gain=1,
+                 device=None, dtype=None):
+        super().__init__(device=device, dtype=dtype)
+
+        # Allow one to set the output tau to a pre-specified number of output channels.
         if type(tau_out) is int:
             tau_out = [tau_out] * len(tau_in)
-        else:
-            while not tau_out[-1]: tau_out.pop()
 
-        self.tau_in = list(tau_in)
-        self.tau_out = list(tau_out)
+        self.tau_in = SO3Tau(tau_in)
+        self.tau_out = SO3Tau(tau_out)
         self.real = real
 
-        weights = init_mix_reps_weights(tau_out, tau_in, weight_init, real=real, gain=gain, device=device, dtype=dtype)
+        weights = init_mix_reps_weights(self.tau_out, self.tau_in, weight_init, real=real, gain=gain, device=device, dtype=dtype)
         self.weights = ParameterList([Parameter(weight) for weight in weights])
 
     def forward(self, rep):
-        assert([part.shape[-3] for part in rep] == self.tau_in), 'Input rep must have same type as initialized tau! rep: {} tau: {}'.format([part.shape[-3] for part in rep], self.tau_in)
+        """
+        Linearly mix a represention.
+
+        Parameters
+        ----------
+        rep : :obj:`list` of :obj:`torch.Tensor`
+            Representation to mix.
+
+        Returns
+        -------
+        rep : :obj:`list` of :obj:`torch.Tensor`
+            Mixed representation.
+        """
+        if SO3Tau.from_rep(rep) != self.tau_in:
+            raise ValueError('Tau of input rep does not match initialized tau!'
+                            ' rep: {} tau: {}'.format(SO3Tau.from_rep(rep), self.tau_in))
 
         return mix_rep(self.weights, rep, real=self.real)
 
+    @property
+    def tau(self):
+        return self.tau_out
+
 
 class CatReps(Module):
-    """ Module to concanteate a set of reps with initial type error checking. """
-    def __init__(self, taus, minl=None, maxl=None, scalars_only=False):
-        super(CatReps, self).__init__()
+    """
+    Module to concanteate a list of reps. Specify input type for error checking
+    and to allow network to fit into main architecture.
 
-        if scalars_only:
-            if (maxl or minl):
-                raise ValueError('Cannot set scalars_only with maxl or minl!')
-            maxl = minl = 0
-        else:
-            if minl is None:
-                minl = 0
-            if maxl is None:
-                maxl = max([len(tau) for tau in taus]) - 1
+    Parameters
+    ----------
+    taus_in : :obj:`list` of :obj:`SO3Tau` or compatible.
+        List of taus of input reps.
+    maxl : :obj:`bool`, optional
+        Maximum weight to include in concatenation.
+    """
+    def __init__(self, taus_in, maxl=None):
+        super().__init__()
 
-        assert(minl==0), 'minl=0 not implemented yet!'
+        self.taus_in = taus_in = [SO3Tau(tau) for tau in taus]
 
+        if maxl is None:
+            maxl = max([tau.maxl for tau in taus_in])
         self.maxl = maxl
-        self.minl = minl
-        self.scalars_only = scalars_only
 
-        self.taus_in = taus
-        self.tau_out = [sum([tau[l] for tau in taus if len(tau) >= l+1]) if l >= minl else 0 for l in range(maxl+1)]
-        self.all_ls = list(range(self.minl, min(self.maxl+1, len(self.tau_out))))
+        self.tau_out = reduce(lambda x,y: x & y, taus_in)[:self.maxl+1]
 
     def forward(self, reps):
-        reps_taus = [[part.shape[-3] for part in rep] for rep in reps]
-        reps_ls = [[(part.shape[-2]-1)//2 for part in rep] for rep in reps]
-        assert(reps_taus == self.taus_in), 'Tau of input reps does not match predefined version! {} {}'.format(reps_taus, self.taus_in)
+        """
+        Concatenate a list of reps
 
-        reps_cat = [[part[l] for (part, ls) in zip(reps, reps_ls) if l in ls] for l in self.all_ls]
-        return [torch.cat(reps, dim=-3) for reps in reps_cat if len(reps) > 0]
+        Parameters
+        ----------
+        reps : :obj:`list` of :obj:`list` of :obj:`torch.Tensor`
+            List of representations to concatenate.
 
+        Returns
+        -------
+        reps_cat : :obj:`list` of :obj:`torch.Tensor`
 
-class CatMixReps(Module):
-    """ Module to concanteate a set of reps and then apply a mixing matrix. """
-    def __init__(self, taus, tau_out, minl=None, maxl=None, scalars_only=False,
-                 weight_init='randn', real=False, gain=1, device=torch.device('cpu'), dtype=torch.float):
-        super(CatMixReps, self).__init__()
+        """
+        # Error checking
+        reps_taus_in = [SO3Tau.from_rep(rep) for rep in reps]
+        if reps_taus_in != self.taus_in:
+            raise ValueError('Tau of input reps does not match predefined version!'
+                                'got: {} expected: {}'.format(reps_taus_in, self.taus_in))
 
-        self.cat_reps = CatReps(taus, minl=minl, maxl=maxl, scalars_only=scalars_only)
-        tau_cat = self.cat_reps.tau_out
-        self.mix_reps = MixReps(tau_cat, tau_out, weight_init=weight_init, real=real, gain=gain, device=device, dtype=dtype)
-        tau_mix = self.mix_reps.tau_out
-        if type(tau_out) is int:
-            tau_out = tau_mix
-        else:
-            assert(tau_mix == tau_out), 'Something went wrong with expected type! Could it be minl/maxl? {} {}'.format(tau_mix, tau_out)
+        return SO3Vec.cat(reps)
 
-        self.taus = taus
-        self.tau_cat = tau_cat
-        self.tau_out = tau_out
+    @property
+    def tau(self):
+        return self.tau_out
+
+class CatMixReps(CGModule):
+    """
+    Module to concatenate mix a list of representation representations using
+    :obj:`cormorant.nn.CatReps`, and then linearly mix them using
+    :obj:`cormorant.nn.MixReps`.
+
+    Parameters
+    ----------
+    taus_in : List of :obj:`SO3Tau` (or compatible object).
+        List of input tau of representation.
+    tau_out : :obj:`SO3Tau` (or compatible object), or :obj:`int`.
+        Input tau of representation. If an :obj:`int` is input,
+        the output type will be set to `tau_out` for each
+        parameter in the network.
+    maxl : :obj:`bool`, optional
+        Maximum weight to include in concatenation.
+    real : :obj:`bool`, optional
+        Use purely real mixing weights.
+    weight_init : :obj:`str`, optional
+        String to set type of weight initialization.
+    gain : :obj:`float`, optional
+        Gain to scale initialized weights to.
+
+    device : :obj:`torch.device`, optional
+        Device to initialize weights to.
+    dtype : :obj:`torch.dtype`, optional
+        Data type to initialize weights to.
+
+    """
+    def __init__(self, taus_in, tau_out, maxl=None,
+                 real=False, weight_init='randn', gain=1,
+                 device=None, dtype=None):
+        super().__init__(device=device, dtype=dtype)
+
+        self.cat_reps = CatReps(taus, maxl=maxl)
+        self.mix_reps = MixReps(self.cat_reps, tau_out,
+                                real=real, weight_init=weight_init, gain=gain,
+                                device=device, dtype=dtype)
+
+        self.tau_out = SO3Tau(self.mix_reps)
 
     def forward(self, reps_in):
+        """
+        Concatenate and linearly mix a list of representations.
+
+        Parameters
+        ----------
+        reps_in : :obj:`list` of :obj:`list` of :obj:`torch.Tensors`
+            List of input representations.
+
+        Returns
+        -------
+        reps_out : :obj:`list` of :obj:`torch.Tensors`
+            Representation as a result of combining and mixing input reps.
+        """
         reps_cat = self.cat_reps(reps_in)
         reps_out = self.mix_reps(reps_cat)
 
         return reps_out
 
-    def scale_weights(self, scale):
-        self.mix_reps.scale_weights(scale)
+    @property
+    def tau(self):
+        return self.tau_out
