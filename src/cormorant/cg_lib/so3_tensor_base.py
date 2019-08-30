@@ -95,6 +95,20 @@ class SO3TensorBase(ABC):
         """
         return self.tau.channels
 
+    @property
+    def device(self):
+        if any(self._data[0].device != part.device for part in self._data):
+            raise ValueError('Not all parts on same device!')
+
+        return self._data[0].device
+
+    @property
+    def dtype(self):
+        if any(self._data[0].dtype != part.dtype for part in self._data):
+            raise ValueError('Not all parts using same data type!')
+
+        return self._data[0].dtype
+
     def keys(self):
         return range(len(self))
 

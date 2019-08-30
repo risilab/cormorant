@@ -4,32 +4,36 @@ from cormorant.cg_lib import SO3Tensor, SO3Tau
 
 class SO3Weight(SO3Tensor):
     """
-    Core class for creating and tracking SO(3) Scalars that
-    are used to part-wise multiply :obj:`SO3Vec`.
+    Core class for creating and tracking SO(3) Weights that
+    are used to part-wise mix a :obj:`SO3Vec`.
 
-    At the core of each :obj:`SO3Scalar` is a list of :obj:`torch.Tensors` with
-    shape `(B, C, 2)`, where:
+    At the core of each :obj:`SO3Weight` is a list of :obj:`torch.Tensors` with
+    shape `(C_{out}, C_{in}, 2)`, where:
 
-    * `B` is some number of batch dimensions.
-    * `C` is the channels/multiplicity (tau) of each irrep.
+    * `C_{in}` is the channels/multiplicity (tau) of the input :obj:`SO3Vec`.
+    * `C_{out}` is the channels/multiplicity (tau) of the output :obj:`SO3Vec`.
     * `2` corresponds to the real/imaginary parts of the complex dimension.
 
     Parameters
     ----------
 
     data : List of of `torch.Tensor` with appropriate shape
-        Input of a SO(3) Scalar.
+        Input of a SO(3) Weight object.
     """
 
+    @property
     def bdim(self):
         return None
 
+    @property
     def cdim(self):
         return -2
 
+    @property
     def rdim(self):
         return None
 
+    @property
     def zdim(self):
         return -1
 
