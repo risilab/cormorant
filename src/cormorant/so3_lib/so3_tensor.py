@@ -3,9 +3,9 @@ import torch
 from abc import ABC, abstractmethod
 from itertools import zip_longest
 
-from cormorant.cg_lib import SO3Tau
+from cormorant.so3_lib import SO3Tau
 
-from cormorant.cg_lib import so3_torch
+from cormorant.so3_lib import so3_torch
 
 class SO3Tensor(ABC):
     """

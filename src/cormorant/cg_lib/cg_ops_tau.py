@@ -2,7 +2,7 @@ import torch
 from torch.nn import Module, ModuleList, Parameter, ParameterList
 from math import sqrt, inf, pi
 
-from cormorant.cg_lib import SO3Tau
+from cormorant.so3_lib import SO3Tau
 
 def cg_product_tau(tau1, tau2, maxl=inf):
     """

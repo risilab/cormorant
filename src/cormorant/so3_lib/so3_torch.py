@@ -2,13 +2,13 @@ import torch
 
 from itertools import zip_longest
 
-from cormorant.cg_lib import SO3Tau
-from cormorant.cg_lib import so3_tensor, so3_vec, so3_scalar
+from cormorant.so3_lib import SO3Tau
+from cormorant.so3_lib import so3_tensor, so3_vec, so3_scalar
 
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Vec = so3_vec.SO3Vec
 
-from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
 
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):

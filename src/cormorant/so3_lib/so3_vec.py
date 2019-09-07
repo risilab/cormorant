@@ -1,6 +1,6 @@
 import torch
 
-from cormorant.cg_lib import so3_tau, so3_tensor, so3_scalar
+from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar
 
 # Hack to avoid circular imports
 SO3Tau = so3_tau.SO3Tau

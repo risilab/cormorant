@@ -1,6 +1,6 @@
 import torch
 
-from cormorant.cg_lib import so3_tensor, SO3Tau
+from cormorant.so3_lib import so3_tensor, SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 
 class SO3Weight(SO3Tensor):

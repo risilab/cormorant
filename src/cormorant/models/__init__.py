@@ -1,1 +1,1 @@
-from .cormorant import Cormorant
+from cormorant.models.cormorant import Cormorant

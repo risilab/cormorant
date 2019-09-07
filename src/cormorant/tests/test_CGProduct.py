@@ -3,7 +3,8 @@ import pytest
 
 from cormorant.cg_lib import CGProduct, cg_product
 from cormorant.cg_lib import CGDict
-from cormorant.cg_lib import SO3Tau, cg_product_tau
+from cormorant.cg_lib import cg_product_tau
+from cormorant.so3_lib import SO3Tau
 
 devices = [torch.device('cpu')]
 if torch.cuda.is_available():

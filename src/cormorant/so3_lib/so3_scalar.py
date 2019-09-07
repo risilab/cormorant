@@ -1,7 +1,7 @@
 import torch
 
-from cormorant.cg_lib import SO3Tau
-from cormorant.cg_lib import so3_tensor
+from cormorant.so3_lib import SO3Tau
+from cormorant.so3_lib import so3_tensor
 
 SO3Tensor = so3_tensor.SO3Tensor
 

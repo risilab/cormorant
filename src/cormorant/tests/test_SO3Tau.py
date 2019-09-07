@@ -1,8 +1,8 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import CGModule, CGDict
-from cormorant.cg_lib import SO3Tau
+from cormorant.so3_lib import CGModule, CGDict
+from cormorant.so3_lib import SO3Tau
 
 devices = [torch.device('cpu')]
 if torch.cuda.is_available():

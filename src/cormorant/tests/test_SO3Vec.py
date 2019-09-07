@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import SO3Tau, SO3Vec, SO3Scalar
+from cormorant.so3_lib import SO3Tau, SO3Vec, SO3Scalar
 
 rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
 

@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import SO3Tau, SO3Scalar, SO3Scalar
+from cormorant.so3_lib import SO3Tau, SO3Scalar, SO3Scalar
 
 rand_scalar = lambda batch, tau: SO3Scalar([torch.rand(batch + (t, 2)) for l, t in enumerate(tau)])
 

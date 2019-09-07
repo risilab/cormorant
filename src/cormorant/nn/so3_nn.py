@@ -1,9 +1,10 @@
 import torch
+from torch.nn import Module
 
 from itertools import zip_longest
 
 from cormorant.cg_lib import CGModule
-from cormorant.cg_lib import so3_torch, SO3Weights
+from cormorant.so3_lib import so3_torch, SO3Weight
 
 class MixReps(CGModule):
     """

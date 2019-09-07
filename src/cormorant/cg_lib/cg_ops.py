@@ -2,7 +2,8 @@ import torch
 from torch.nn import Module, ModuleList, Parameter, ParameterList
 from math import sqrt, inf, pi
 
-from cormorant.cg_lib import CGModule, SO3Tau, cg_product_tau
+from cormorant.cg_lib import CGModule, cg_product_tau
+from cormorant.so3_lib import SO3Tau, SO3Vec
 
 class CGProduct(CGModule):
     r"""

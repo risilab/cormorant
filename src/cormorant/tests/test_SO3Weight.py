@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import SO3Tau, SO3Vec, SO3Scalar
+from cormorant.so3_lib import SO3Tau, SO3Vec, SO3Scalar
 
 rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
 
@@ -67,7 +67,7 @@ class TestSO3Vec():
     @pytest.mark.parametrize('channels', range(1, 4))
     def test_SO3Vec_check_rep_fail(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
-        rand_vec = [torch.rand(batch + (2*l, t, 2)) for l, t in enumerate(tau)]
+        rand_vec = [torch.rand(batch + (2*l+2, t, 2)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Vec(rand_vec)
