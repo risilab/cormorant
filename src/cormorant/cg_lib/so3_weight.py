@@ -1,6 +1,7 @@
 import torch
 
-from cormorant.cg_lib import SO3Tensor, SO3Tau
+from cormorant.cg_lib import so3_tensor, SO3Tau
+SO3Tensor = so3_tensor.SO3Tensor
 
 class SO3Weight(SO3Tensor):
     """
@@ -27,7 +28,7 @@ class SO3Weight(SO3Tensor):
 
     @property
     def cdim(self):
-        return -2
+        return None
 
     @property
     def rdim(self):
@@ -35,9 +36,22 @@ class SO3Weight(SO3Tensor):
 
     @property
     def zdim(self):
-        return -1
+        return 2
+
+    @property
+    def tau_in(self):
+        return SO3Tau([part.shape[1] for part in self])
+
+    @property
+    def tau_out(self):
+        return SO3Tau([part.shape[0] for part in self])
+
+    tau = tau_out
 
     def check_data(self, data):
+        if any(part.numel() == 0 for part in data):
+            raise NotImplementedError('Non-zero parts in SO3Weights not currrently enabled!')
+
         shapes = set(part.shape for part in data)
         shapes = shapes.pop()
 

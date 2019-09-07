@@ -1,58 +1,68 @@
 import torch
 
 from itertools import zip_longest
-from cormorant.cg_lib import SO3Tau, SO3TensorBase
+
+from cormorant.cg_lib import SO3Tau
+from cormorant.cg_lib import so3_tensor, so3_vec, so3_scalar
+
+SO3Tensor = so3_tensor.SO3Tensor
+SO3Vec = so3_vec.SO3Vec
 
 from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
 
-def mul(val1, val2, same_maxl=True):
+def _check_maxl(val1, val2):
+    if len(val1) != len(val2):
+        raise ValueError('Two SO3Tensor subclasses have different maxl values '
+                         '({} {})!'.format(len(val1), len(val2)))
+
+def _dispatch_op(op, val1, val2):
+    """
+    Used to dispatch a binary operator where at least one of the two inputs is a
+    SO3Tensor.
+    """
+
     # Both va1 and val2 are instances of SO3Tensor
-    if isinstance(val1, SO3TensorBase) and isinstance(val2, SO3TensorBase):
+    if isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
+        _check_maxl(val1, val2)
         val1._mul_type_check(type(val1), type(val2))
         val2._mul_type_check(type(val1), type(val2))
-        if same_maxl and val1.maxl != val2.maxl:
-            raise ValueError('Two SO3Tensors have different maxl values ({} {}), '
-                             'but same_maxl=True! Try directly calling '
-                             'SO3Tensor.mul() with same_maxl=False'.format(val1.maxl, val2.maxl))
-        return val2.__class__([part1 * part2 for part1, part2 in zip_longest([val1, val2], fillvalue=1)])
+        applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
+        output_class = type(val2)
     # Multiply val1 with a list/tuple
-    elif isinstance(val1, SO3TensorBase) and type(val2) in [list, tuple]:
-        return val1.__class__([part1 * part2 for part1, part2 in zip(val1, val2)])
+    elif isinstance(val1, SO3Tensor) and type(val2) in [list, tuple]:
+        _check_maxl(val1, val2)
+        applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
+        output_class = type(val1)
     # Multiply val1 with something else
-    elif isinstance(val1, SO3TensorBase) and not isinstance(val2, SO3TensorBase):
-        return val1.__class__([part1 * val2 for part1 in val1])
+    elif isinstance(val1, SO3Tensor) and not isinstance(val2, SO3Tensor):
+        applied_op = [op(val2, part1) for part1 in val1]
+        output_class =  type(val1)
     # Multiply val2 with a list/tuple
-    elif not isinstance(val1, SO3TensorBase) and type(val1) in [list, tuple]:
-        return val2.__class__([part1 * part2 for part1, part2 in zip(val1, val2)])
+    elif not isinstance(val1, SO3Tensor) and type(val1) in [list, tuple]:
+        _check_maxl(val1, val2)
+        applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
+        output_class = type(val1)
     # Multiply val2 with something else
-    elif not isinstance(val1, SO3TensorBase) and isinstance(val2, SO3TensorBase):
-        return val2.__class__([val1 * part2 for part2 in val2])
+    elif not isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
+        applied_op = [op(val1, part2) for part2 in val2]
+        output_class = type(val2)
     else:
         raise ValueError('Neither class inherits from SO3Tensor!')
 
+    return output_class(applied_op)
 
-def add(val1, val2, same_maxl=True):
-    # Both va1 and val2 are instances of SO3Tensor, and same_maxl=True
-    if isinstance(val1, SO3TensorBase) and isinstance(val2, SO3TensorBase):
-        if val1.maxl != val2.maxl and same_maxl:
-            raise ValueError('Two SO3Tensors have different maxl values ({} {}), '
-                             'but same_maxl=True! Try directly calling '
-                             'SO3Tensor.mul() with same_maxl=False'.format(val1.maxl, val2.maxl))
-        return val2.__class__([part1 + part2 for part1, part2 in zip_longest([val1, val2], fillvalue=0)])
-    # Add val1 with a list/tuple
-    elif isinstance(val1, SO3TensorBase) and type(val2) in [list, tuple]:
-        return val1.__class__([part1 + part2 for part1, part2 in zip(val1, val2)])
-    # Add val1 with something else
-    elif isinstance(val1, SO3TensorBase) and not isinstance(val2, SO3TensorBase):
-        return val1.__class__([part1 + val2 for part1 in val1])
-    # Add val2 with a list/tuple
-    elif not isinstance(val1, SO3TensorBase) and type(val1) in [list, tuple]:
-        return val2.__class__([part1 + part2 for part1, part2 in zip(val1, val2)])
-    # Add val2 with something else
-    elif not isinstance(val1, SO3TensorBase) and isinstance(val2, SO3TensorBase):
-        return val2.__class__([val1 + part2 for part2 in val2])
-    else:
-        raise ValueError('Neither class inherits from SO3Tensor!')
+
+def mul(val1, val2):
+    return _dispatch_op(torch.mul, val1, val2)
+
+def add(val1, val2):
+    return _dispatch_op(torch.add, val1, val2)
+
+def sub(val1, val2):
+    return _dispatch_op(torch.sub, val1, val2)
+
+def div(val1, val2):
+    return _dispatch_op(torch.div, val1, val2)
 
 
 def cat(reps_list):
@@ -61,7 +71,7 @@ def cat(reps_list):
 
     Parameters
     ----------
-    reps_list : :obj:`list` of :obj:`SO3Tensor` or compatible
+    reps_list : :obj:`list` of :obj:`SO3Tensor`
 
     Return
     ------

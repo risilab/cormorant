@@ -1,26 +1,24 @@
-import sys
+# First import SO3-related modules and classes
+
+# Import some basic complex utilities
+from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+
+# Begin input of SO3-related utilities
+from cormorant.cg_lib.so3_tau import SO3Tau
+
+# This is necessary to avoid ImportErrors with circular dependencies
+from cormorant.cg_lib import so3_torch, so3_tensor, so3_vec, so3_scalar, so3_weight
+
+from cormorant.cg_lib.so3_vec import SO3Vec
+from cormorant.cg_lib.so3_scalar import SO3Scalar
+from cormorant.cg_lib.so3_weight import SO3Weight
+from cormorant.cg_lib.so3_torch import cat, mix, cat_mix
 
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_dict import CGDict
 
 # First need to import the CG dictionary
 from cormorant.cg_lib.cg_module import CGModule
-
-# Import some basic complex utilities
-from cormorant.cg_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
-
-#Import SO3Tensor and related classes
-from cormorant.cg_lib.so3_tau import SO3Tau
-
-# Set up
-from cormorant.cg_lib.so3_tensor_base import SO3TensorBase
-from cormorant.cg_lib import so3_torch
-from cormorant.cg_lib.so3_torch import add, mul, cat, mix, cat_mix
-from cormorant.cg_lib.so3_tensor import SO3Tensor
-
-
-from cormorant.cg_lib.so3_scalar import SO3Scalar
-from cormorant.cg_lib.so3_vec import SO3Vec
 
 # Import tau calculation for cg_ops
 from cormorant.cg_lib.cg_ops_tau import cg_product_tau

@@ -1,6 +1,11 @@
 import torch
 
-from cormorant.cg_lib import SO3Tensor, SO3Tau, SO3Scalar
+from cormorant.cg_lib import so3_tau, so3_tensor, so3_scalar
+
+# Hack to avoid circular imports
+SO3Tau = so3_tau.SO3Tau
+SO3Tensor = so3_tensor.SO3Tensor
+SO3Scalar = so3_scalar.SO3Scalar
 
 class SO3Vec(SO3Tensor):
     """
@@ -38,6 +43,9 @@ class SO3Vec(SO3Tensor):
         return -1
 
     def check_data(self, data):
+        if any(part.numel() == 0 for part in data):
+            raise NotImplementedError('Non-zero parts in SO3Vec not currrently enabled!')
+
         bdims = set(part.shape[self.bdim] for part in data)
         if len(bdims) > 1:
             raise ValueError('All parts (torch.Tensors) must have same number of'

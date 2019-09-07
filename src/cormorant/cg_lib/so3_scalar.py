@@ -1,6 +1,10 @@
 import torch
 
-from cormorant.cg_lib import SO3Tensor, SO3Tau
+from cormorant.cg_lib import SO3Tau
+from cormorant.cg_lib import so3_tensor
+
+SO3Tensor = so3_tensor.SO3Tensor
+
 
 class SO3Scalar(SO3Tensor):
     """
@@ -21,25 +25,29 @@ class SO3Scalar(SO3Tensor):
         Input of a SO(3) Scalar.
     """
 
+    @property
     def bdim(self):
         return slice(0, -2)
 
+    @property
     def cdim(self):
         return -2
 
+    @property
     def rdim(self):
         return None
 
+    @property
     def zdim(self):
         return -1
 
     def check_data(self, data):
-        shapes = set(part.shape for part in data)
+        if any(part.numel() == 0 for part in data):
+            raise NotImplementedError('Non-zero parts in SO3Scalars not currrently enabled!')
+
+        shapes = set(part.shape[self.bdim] for part in data)
         if len(shapes) > 1:
-            raise ValueError('All parts (torch.Tensors) must have same number of'
-                             'batch dimensions! {}'.format(part.shape for part in data))
+            raise ValueError('Batch dimensions are not identical!')
 
-        shapes = shapes.pop()
-
-        if not shapes[self.zdim] == 2:
+        if any(part.shape[self.zdim] != 2 for part in data):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, shapes[self.zdim]))
