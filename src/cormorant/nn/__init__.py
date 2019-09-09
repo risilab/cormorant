@@ -1,5 +1,7 @@
 from cormorant.nn.utils import scalar_mult_rep, cat_reps, mix_rep, init_mix_reps_weights
 
+from cormorant.nn.utils import NoLayer
+
 # from cormorant.nn.catmix_cg_levels import MixReps, CatReps, CatMixReps
 # from cormorant.nn.catmix_scalar_levels import MixRepsScalar, CatRepsScalar, CatMixRepsScalar
 

@@ -14,7 +14,7 @@ class TestSO3Scalar():
 
         tau_list = [channels]*(maxl+1)
 
-        test_vec = rand_scalar(batch, tau_list)
+        test_vec = SO3Scalar.rand(batch, tau_list)
 
         assert test_vec.tau == tau_list
 
@@ -25,7 +25,7 @@ class TestSO3Scalar():
 
         tau_list = torch.randint(1, channels+1, [maxl+1])
 
-        test_vec = rand_scalar(batch, tau_list)
+        test_vec = SO3Scalar.rand(batch, tau_list)
 
         assert test_vec.tau == tau_list
 
@@ -38,7 +38,7 @@ class TestSO3Scalar():
 
         tau = torch.randint(1, channels+1, [maxl+1])
 
-        rand_scalar = [torch.rand(b + (t, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
+        rand_scalar = [torch.rand(b + (t, 1, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
 
         if len(set(batch)) == 1:
             SO3Scalar(rand_scalar)
@@ -54,7 +54,7 @@ class TestSO3Scalar():
 
         tau = torch.randint(1, channels+1, [maxl+1])
 
-        rand_scalar = [torch.rand(b + (t, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
+        rand_scalar = [torch.rand(b + (t, 1, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
 
         if len(set(batch)) == 1:
             SO3Scalar(rand_scalar)
@@ -68,12 +68,12 @@ class TestSO3Scalar():
     @pytest.mark.parametrize('channels', range(1, 4))
     def test_SO3Scalar_check_cplx_fail(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
-        rand_scalar = [torch.rand(batch + (2*l+1, t, 1)) for l, t in enumerate(tau)]
+        rand_scalar = [torch.rand(batch + (t, 1, 1)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Scalar(rand_scalar)
 
-        rand_scalar = [torch.rand(batch + (2*l+1, t, 3)) for l, t in enumerate(tau)]
+        rand_scalar = [torch.rand(batch + (t, 1, 3)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Scalar(rand_scalar)
@@ -85,7 +85,7 @@ class TestSO3Scalar():
     def test_SO3Scalar_mul_scalar(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Scalar([torch.rand(batch + (t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Scalar([torch.rand(batch + (t, 1, 2)) for l, t in enumerate(tau)])
 
         vec1 = 2 * vec0
         assert all(torch.allclose(2*part0, part1) for part0, part1 in zip(vec0, vec1))
@@ -99,7 +99,7 @@ class TestSO3Scalar():
     def test_SO3Scalar_mul_list(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Scalar([torch.rand(batch + (t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Scalar([torch.rand(batch + (t, 1, 2)) for l, t in enumerate(tau)])
 
         scalar = [torch.rand(1).item() for _ in vec0]
 
@@ -115,7 +115,7 @@ class TestSO3Scalar():
     def test_SO3Scalar_add_list(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Scalar([torch.rand(batch + (t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Scalar([torch.rand(batch + (t, 1, 2)) for l, t in enumerate(tau)])
 
         scalar = [torch.rand(1).item() for _ in vec0]
 

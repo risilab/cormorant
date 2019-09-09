@@ -3,6 +3,29 @@ import torch.nn as nn
 from torch.nn import Module, Parameter, ParameterList
 
 
+class NoLayer(nn.Module):
+    """
+    Layer that does nothing in the Cormorant architecture.
+
+    This exists just to demonstrate the structure one would want if edge
+    features were desired at the input/output.
+    """
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def forward(self, *args, **kwargs):
+        pass
+
+    @property
+    def tau(self):
+        return None
+
+    @property
+    def num_scalars(self):
+        return None
+
+
+
 ### Multiply a representation by a list of scalars
 
 def scalar_mult_rep(scalar, rep):

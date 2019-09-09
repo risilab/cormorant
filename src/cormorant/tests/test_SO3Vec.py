@@ -3,7 +3,7 @@ import pytest
 
 from cormorant.so3_lib import SO3Tau, SO3Vec, SO3Scalar
 
-rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
+rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (t, 2*l+1, 2)) for l, t in enumerate(tau)])
 
 class TestSO3Vec():
 
@@ -14,7 +14,7 @@ class TestSO3Vec():
 
         tau_list = [channels]*(maxl+1)
 
-        test_vec = rand_vec(batch, tau_list)
+        test_vec = SO3Vec.rand(batch, tau_list)
 
         assert test_vec.tau == tau_list
 
@@ -25,7 +25,7 @@ class TestSO3Vec():
 
         tau_list = torch.randint(1, channels+1, [maxl+1])
 
-        test_vec = rand_vec(batch, tau_list)
+        test_vec = SO3Vec.rand(batch, tau_list)
 
         assert test_vec.tau == tau_list
 
@@ -38,7 +38,7 @@ class TestSO3Vec():
 
         tau = torch.randint(1, channels+1, [maxl+1])
 
-        rand_vec = [torch.rand(b + (2*l+1, t, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
+        rand_vec = [torch.rand(b + (t, 2*l+1, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
 
         if len(set(batch)) == 1:
             SO3Vec(rand_vec)
@@ -54,7 +54,7 @@ class TestSO3Vec():
 
         tau = torch.randint(1, channels+1, [maxl+1])
 
-        rand_vec = [torch.rand(b + (2*l+1, t, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
+        rand_vec = [torch.rand(b + (t, 2*l+1, 2)) for l, (b, t) in enumerate(zip(batch, tau))]
 
         if len(set(batch)) == 1:
             SO3Vec(rand_vec)
@@ -67,12 +67,12 @@ class TestSO3Vec():
     @pytest.mark.parametrize('channels', range(1, 4))
     def test_SO3Vec_check_rep_fail(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
-        rand_vec = [torch.rand(batch + (2*l+2, t, 2)) for l, t in enumerate(tau)]
+        rand_vec = [torch.rand(batch + (t, 2*l+2, 2)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Vec(rand_vec)
 
-        rand_vec = [torch.rand(batch + (1, t, 2)) for l, t in enumerate(tau)]
+        rand_vec = [torch.rand(batch + (t, 1, 2)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Vec(rand_vec)
@@ -87,12 +87,12 @@ class TestSO3Vec():
     @pytest.mark.parametrize('channels', range(1, 4))
     def test_SO3Vec_check_cplx_fail(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
-        rand_vec = [torch.rand(batch + (2*l+1, t, 1)) for l, t in enumerate(tau)]
+        rand_vec = [torch.rand(batch + (t, 2*l+1, 1)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Vec(rand_vec)
 
-        rand_vec = [torch.rand(batch + (2*l+1, t, 3)) for l, t in enumerate(tau)]
+        rand_vec = [torch.rand(batch + (t, 2*l+1, 3)) for l, t in enumerate(tau)]
 
         with pytest.raises(ValueError) as e:
             SO3Vec(rand_vec)
@@ -104,7 +104,7 @@ class TestSO3Vec():
     def test_SO3Vec_mul_scalar(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Vec([torch.rand(batch + (t, 2*l+1, 2)) for l, t in enumerate(tau)])
 
         vec1 = 2 * vec0
         assert all(torch.allclose(2*part0, part1) for part0, part1 in zip(vec0, vec1))
@@ -118,7 +118,7 @@ class TestSO3Vec():
     def test_SO3Vec_mul_list(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Vec([torch.rand(batch + (t, 2*l+1, 2)) for l, t in enumerate(tau)])
 
         scalar = [torch.rand(1).item() for _ in vec0]
 
@@ -134,7 +134,7 @@ class TestSO3Vec():
     def test_SO3Vec_add_list(self, batch, maxl, channels):
         tau = [channels] * (maxl+1)
 
-        vec0 = SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
+        vec0 = SO3Vec([torch.rand(batch + (t, 2*l+1, 2)) for l, t in enumerate(tau)])
 
         scalar = [torch.rand(1).item() for _ in vec0]
 

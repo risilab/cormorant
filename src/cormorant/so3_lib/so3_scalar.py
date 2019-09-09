@@ -1,9 +1,9 @@
 import torch
 
-from cormorant.so3_lib import SO3Tau
-from cormorant.so3_lib import so3_tensor
+from cormorant.so3_lib import so3_tau, so3_tensor
 
 SO3Tensor = so3_tensor.SO3Tensor
+SO3Tau = so3_tau.SO3Tau
 
 
 class SO3Scalar(SO3Tensor):
@@ -27,26 +27,30 @@ class SO3Scalar(SO3Tensor):
 
     @property
     def bdim(self):
-        return slice(0, -2)
+        return slice(0, -3)
 
     @property
     def cdim(self):
-        return -2
+        return -3
 
     @property
     def rdim(self):
-        return None
+        return -2
 
     @property
     def zdim(self):
         return -1
 
+    @staticmethod
+    def _get_shape(batch, weight, channels):
+        return tuple(batch) + (channels, 1, 2)
+
     def check_data(self, data):
         if any(part.numel() == 0 for part in data):
             raise NotImplementedError('Non-zero parts in SO3Scalars not currrently enabled!')
 
-        shapes = set(part.shape[self.bdim] for part in data)
-        if len(shapes) > 1:
+        shapes = [part.shape[self.bdim] for part in data]
+        if len(set(shapes)) > 1:
             raise ValueError('Batch dimensions are not identical!')
 
         if any(part.shape[self.zdim] != 2 for part in data):

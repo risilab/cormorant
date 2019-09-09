@@ -2,9 +2,9 @@ import torch
 
 from itertools import zip_longest
 
-from cormorant.so3_lib import SO3Tau
-from cormorant.so3_lib import so3_tensor, so3_vec, so3_scalar
+from cormorant.so3_lib import so3_tau, so3_tensor, so3_vec, so3_scalar
 
+SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Vec = so3_vec.SO3Vec
 

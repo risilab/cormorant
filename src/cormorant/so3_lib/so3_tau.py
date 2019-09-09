@@ -4,7 +4,6 @@ from math import inf
 
 from itertools import zip_longest
 
-
 class SO3Tau():
     """
     Class for keeping track of multiplicity (number of channels) of a SO(3)
@@ -125,10 +124,15 @@ class SO3Tau():
 
         Parameters
         ----------
-        rep : :obj:`list` of :obj:`torch.Tensors`
+        rep : :obj:`SO3Tensor` :obj:`list` of :obj:`torch.Tensors`
             Input representation.
 
         """
+        from cormorant.so3_lib.so3_tensor import SO3Tensor
+
+        if isinstance(SO3Tensor, rep):
+            return rep.tau
+
         assert type(rep) is list and all(type(irrep) == torch.Tensor for irrep in rep), 'Input must be list of torch.Tensors! {} {}'.format(type(rep), [type(irrep) for irrep in rep])
 
         ells = [(irrep[0].shape[-2] - 1) // 2 for irrep in rep]

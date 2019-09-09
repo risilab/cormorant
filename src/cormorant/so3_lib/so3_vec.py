@@ -31,16 +31,20 @@ class SO3Vec(SO3Tensor):
         return slice(0, -3)
 
     @property
-    def rdim(self):
+    def cdim(self):
         return -3
 
     @property
-    def cdim(self):
+    def rdim(self):
         return -2
 
     @property
     def zdim(self):
         return -1
+
+    @staticmethod
+    def _get_shape(batch, l, channels):
+        return tuple(batch) + (channels, 2*l+1, 2)
 
     def check_data(self, data):
         if any(part.numel() == 0 for part in data):

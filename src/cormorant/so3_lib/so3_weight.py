@@ -1,6 +1,7 @@
 import torch
 
-from cormorant.so3_lib import so3_tensor, SO3Tau
+from cormorant.so3_lib import so3_tensor, so3_tau
+SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 
 class SO3Weight(SO3Tensor):
@@ -37,6 +38,10 @@ class SO3Weight(SO3Tensor):
     @property
     def zdim(self):
         return 2
+
+    @staticmethod
+    def _get_shape(batch, t_out, t_in):
+        return tuple(batch) + (t, t_out, t_in)
 
     @property
     def tau_in(self):

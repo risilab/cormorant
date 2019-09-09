@@ -3,9 +3,10 @@ import torch
 from abc import ABC, abstractmethod
 from itertools import zip_longest
 
-from cormorant.so3_lib import SO3Tau
 
-from cormorant.so3_lib import so3_torch
+from cormorant.so3_lib import so3_torch, so3_tau
+
+SO3Tau = so3_tau.SO3Tau
 
 class SO3Tensor(ABC):
     """
@@ -18,6 +19,9 @@ class SO3Tensor(ABC):
         Input of a SO(3) vector.
     """
     def __init__(self, data):
+        if isinstance(data, type(self)):
+            data = data.data
+
         self.check_data(data)
 
         self._data = data
@@ -58,6 +62,15 @@ class SO3Tensor(ABC):
     def zdim(self):
         """
         Define the complex dimension for each part.
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _get_shape(batch, weight, channels):
+        """
+        Generate the shape of part based upon a batch size, multiplicity/number
+        of channels, and weight.
         """
         pass
 
@@ -118,7 +131,7 @@ class SO3Tensor(ABC):
         return iter(self._data)
 
     def items(self):
-        return zip(self._data, range(len(self)))
+        return zip(range(len(self)), self._data)
 
     def __iter__(self):
         """
@@ -215,6 +228,14 @@ class SO3Tensor(ABC):
         self._data = [t.double() for t in self._data]
         return self
 
+    @classmethod
+    def clone(cls):
+        return cls([t.clone() for t in self._data])
+
+    @classmethod
+    def detach(cls):
+        return cls([t.detach() for t in self._data])
+
     @property
     def data(self):
         return self._data
@@ -257,3 +278,47 @@ class SO3Tensor(ABC):
         Reverse add, includes type checker to deal with sum([])
         """
         return so3_torch.mul(self, other)
+
+    @classmethod
+    def rand(cls, batch, tau, device=None, dtype=None, requires_grad=False):
+        """
+        Factory method to create a new random :obj:`SO3Vec`.
+        """
+
+        shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
+
+        return cls([torch.rand(shape, device=device, dtype=dtype,
+                          requires_grad=requires_grad) for shape in shapes])
+
+    @classmethod
+    def randn(cls, tau, batch, device=None, dtype=None, requires_grad=False):
+        """
+        Factory method to create a new random :obj:`SO3Vec`.
+        """
+
+        shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
+
+        return cls([torch.randn(shape, device=device, dtype=dtype,
+                          requires_grad=requires_grad) for shape in shapes])
+
+    @classmethod
+    def zeros(cls, tau, batch, device=None, dtype=None, requires_grad=False):
+        """
+        Factory method to create a new random :obj:`SO3Vec`.
+        """
+
+        shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
+
+        return cls([torch.zeros(shape, device=device, dtype=dtype,
+                          requires_grad=requires_grad) for shape in shapes])
+
+    @classmethod
+    def ones(cls, tau, batch, device=None, dtype=None, requires_grad=False):
+        """
+        Factory method to create a new random :obj:`SO3Vec`.
+        """
+
+        shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
+
+        return cls([torch.ones(shape, device=device, dtype=dtype,
+                          requires_grad=requires_grad) for shape in shapes])

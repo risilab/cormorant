@@ -5,6 +5,8 @@ from math import sqrt, inf, pi
 from cormorant.cg_lib import CGModule
 from cormorant.cg_lib import cg_product
 
+from cormorant.so3_lib import SO3Tau, SO3Vec
+
 class SphericalHarmonics(CGModule):
     r"""
     Calculate a list of spherical harmonics :math:`Y^\ell_m(\hat{\bf r})`
@@ -32,7 +34,7 @@ class SphericalHarmonics(CGModule):
     device : :obj:`torch.device`
         Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
     """
-    def __init__(self, maxl, normalize=True, sh_norm='qm',
+    def __init__(self, maxl, normalize=True, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
 
         self.normalize = normalize
@@ -95,7 +97,7 @@ class SphericalHarmonicsRel(CGModule):
     device : :obj:`torch.device`
         Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
     """
-    def __init__(self, maxl, normalize=False, sh_norm='qm',
+    def __init__(self, maxl, normalize=False, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
 
         self.normalize = normalize
@@ -126,7 +128,7 @@ class SphericalHarmonicsRel(CGModule):
         return spherical_harmonics_rel(self.cg_dict, pos1, pos2, self.maxl, self.normalize, self.sh_norm)
 
 
-def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='qm'):
+def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='unit'):
     r"""
     Functional form of the Spherical Harmonics. See documentation of
     :obj:`SphericalHarmonics` for details.
@@ -170,9 +172,9 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='qm'):
     else:
         raise ValueError('Incorrect choice of spherial harmonic normalization!')
 
-    return sph_harms
+    return SO3Vec(sph_harms)
 
-def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, sh_norm='qm'):
+def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, sh_norm='unit'):
     r"""
     Functional form of the relative Spherical Harmonics. See documentation of
     :obj:`SphericalHarmonicsRel` for details.

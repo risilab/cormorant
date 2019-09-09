@@ -1,9 +1,9 @@
 import torch
 import pytest
 
-from cormorant.cg_lib import CGProduct, cg_product
+from cormorant.cg_lib import CGProduct, cg_product, cg_product_tau
 from cormorant.cg_lib import CGDict
-from cormorant.cg_lib import SO3Tau, cg_product_tau
+from cormorant.so3_lib import SO3Tau, SO3Vec
 import cormorant.cg_lib.rotations as rot
 
 # Test cg_product runs and aggregate=True works
@@ -18,12 +18,11 @@ class TestCGProduct():
     @pytest.mark.parametrize('maxl_prod', range(2))
     def test_cg_product_dict_maxl(self, maxl_dict, maxl_prod, maxl1, maxl2, chan, batch):
         cg_dict = CGDict(maxl=maxl_dict, dtype=torch.double)
-        rand_rep = lambda tau, nbatch: [torch.rand(nbatch + (t, 2*l+1, 2)).double() for l, t in enumerate(tau)]
 
         tau1, tau2 = [chan]*(maxl1+1), [chan]*(maxl2+1)
 
-        rep1 = rand_rep(tau1, batch)
-        rep2 = rand_rep(tau2, batch)
+        rep1 = SO3Vec.rand(tau1, batch, dtype=torch.double)
+        rep2 = SO3Vec.rand(tau2, batch, dtype=torch.double)
 
         if all(maxl_dict >= maxl for maxl in [maxl_prod, maxl1, maxl2]):
             cg_prod = cg_product(cg_dict, rep1, rep2, maxl=maxl_prod)
@@ -32,7 +31,7 @@ class TestCGProduct():
             with pytest.raises(ValueError) as e_info:
                 cg_prod = cg_product(cg_dict, rep1, rep2, maxl=maxl_prod)
 
-                tau_out = SO3Tau.from_rep(cg_prod)
+                tau_out = cg_prod.tau
                 tau_pred = cg_product_tau(tau1, tau2)
 
                 # Test to make sure the output type matches the expected output type

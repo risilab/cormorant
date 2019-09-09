@@ -128,15 +128,14 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
         Specify a Clebsch-Gordan dictionary. If not specified, one will be
         generated automatically at runtime based upon maxl.
     """
-    tau1 = SO3Tau.from_rep(rep1)
-    tau2 = SO3Tau.from_rep(rep2)
+    rep1 = SO3Vec(rep1)
+    rep2 = SO3Vec(rep2)
+    tau1, tau2 = rep1.tau, rep2.tau
+
     assert tau1.channels and (tau1.channels == tau2.channels), 'The number of fragments must be same for each part! {} {}'.format(tau1, tau2)
 
-    ells1 = [(part.shape[-2] - 1)//2 for part in rep1]
-    ells2 = [(part.shape[-2] - 1)//2 for part in rep2]
-
-    L1 = max(ells1)
-    L2 = max(ells2)
+    L1 = rep1.maxl
+    L2 = rep2.maxl
 
     if (cg_dict.maxl < maxl) or (cg_dict.maxl < L1) or (cg_dict.maxl < L2):
         raise ValueError('CG Dictionary maxl ({}) not sufficiently large for (maxl, L1, L2) = ({} {} {})'.format(cg_dict.maxl, maxl, L1, L2))
@@ -146,8 +145,8 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
 
     new_rep = [[] for _ in range(maxL + 1)]
 
-    for l1, part1 in zip(ells1, rep1):
-        for l2, part2 in zip(ells2, rep2):
+    for l1, part1 in rep1.items():
+        for l2, part2 in rep2.items():
             lmin, lmax = max(abs(l1 - l2), minl), min(l1 + l2, maxL)
             if lmin > lmax: continue
 
@@ -165,7 +164,7 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
 
     new_rep = [torch.cat(part, dim=-3) for part in new_rep if len(part) > 0]
 
-    return new_rep
+    return SO3Vec(new_rep)
 
 
 def complex_kron_product(z1, z2, aggregate=False):

@@ -11,6 +11,7 @@ from cormorant.nn import RadialFilters
 from cormorant.nn import InputLinear, InputMPNN
 from cormorant.nn import OutputLinear, OutputPMLP, GetScalars
 from cormorant.nn import scalar_mult_rep
+from cormorant.nn import NoLayer
 
 def expand_var_list(var, num_cg_levels):
     if type(var) is list:
@@ -66,17 +67,19 @@ class Cormorant(CGModule):
         logging.info('num_channels: {}'.format(num_channels))
 
         # Set up spherical harmonics
-        self.sph_harms = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict, sh_norm='unit')
+        self.sph_harms = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict)
 
         # Set up position functions, now independent of spherical harmonics
-        self.rad_funcs = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels, device=device, dtype=dtype)
+        self.rad_funcs = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels,
+                                       device=self.device, dtype=self.dtype)
         tau_pos = self.rad_funcs.tau
 
         num_scalars_in = self.num_species * (self.charge_power + 1)
         num_scalars_out = num_channels[0]
 
-        self.input_func_atom = None
-        self.input_func_edge = None
+        self.input_func_atom = InputLinear(num_scalars_in, num_scalars_out,
+                                           device=self.device, dtype=self.dtype)
+        self.input_func_edge = NoLayer()
 
         tau_in_atom = self.input_func_atom.tau
         tau_in_edge = self.input_func_edge.tau
@@ -90,15 +93,19 @@ class Cormorant(CGModule):
         tau_cg_levels_atom = self.cormorant_cg.tau_levels_atom
         tau_cg_levels_edge = self.cormorant_cg.tau_levels_edge
 
-        self.get_scalars_atom = GetScalarsAtom(tau_cg_levels_atom, device=device, dtype=dtype)
-        self.get_scalars_edge = GetScalarsEdge(tau_cg_levels_atom, device=device, dtype=dtype)
+        self.get_scalars_atom = GetScalarsAtom(tau_cg_levels_atom,
+                                               device=self.device, dtype=self.dtype)
+        self.get_scalars_edge = NoLayer()
+
         num_scalars_atom = self.get_scalars_atom.num_scalars
         num_scalars_edge = self.get_scalars_edge.num_scalars
 
-        self.output_layer_atom = None
-        self.output_layer_edge = None
+        self.output_layer_atom = OutputLinear(num_scalars, bias=True,
+                                              device=self.device, dtype=self.dtype)
+        self.output_layer_edge = NoLayer()
 
-        logging.info('Model initialized. Number of parameters: {}'.format(sum([p.nelement() for p in self.parameters()])))
+        logging.info('Model initialized. Number of parameters: {}'.format(
+            sum([p.nelement() for p in self.parameters()])))
 
     def forward(self, data, covariance_test=False):
         """
@@ -106,34 +113,40 @@ class Cormorant(CGModule):
 
         Parameters
         ----------
-        data : ?????
-            Data input into the layer.
-        covariance_test : boolean, optional
+        data : :ojb:`dict`
+            Dictionary of data to pass to the network.
+        covariance_test : :obj:`bool`, optional
             If true, returns all of the atom-level representations twice.
 
         Returns
         -------
-        prediction : ?????
+        prediction : :obj:`torch.Tensor`
             The output of the layer
 
 
         """
+        # Get and prepare the data
         atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions = self.prepare_input(data)
 
+        # Calculate spherical harmonics and radial functions
         spherical_harmonics, norms = self.sph_harms(atom_positions, atom_positions)
         rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0).byte())
 
+        # Prepare the input reps for both the atom and edge network
         atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
         edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
 
+        # Clebsch-Gordan layers central to the network
         atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask,
                                                  rad_funcs, norms, spherical_harmonics)
 
+        # Construct scalars for network output
         atom_scalars = self.get_scalars_atom(atoms_all)
         edge_scalars = self.get_scalars_edge(edges_all)
 
-        # Construct scalars for network output
-        prediction = self.top_func(scalars, atom_mask)
+        # Prediction in this case will depend only on the atom_scalars. Can make
+        # it more general here.
+        prediction = self.top_func(atom_scalars, atom_mask)
 
         # Covariance test
         if covariance_test:
@@ -152,14 +165,14 @@ class Cormorant(CGModule):
 
         Returns
         -------
-        scalars : ?????
-            ?????
-        atom_mask : ?????
-            ?????
-        atom_positions: ?????
+        atom_scalars : :obj:`torch.Tensor`
+            Tensor of scalars for each atom.
+        atom_mask : :obj:`torch.Tensor`
+            Mask used for batching data.
+        atom_positions: :obj:`torch.Tensor`
             Positions of the atoms
-        edge_mask: ?????
-            ?????
+        edge_mask: :obj:`torch.Tensor`
+            Mask used for batching data.
         """
         charge_power, charge_scale, device, dtype = self.charge_power, self.charge_scale, self.device, self.dtype
 
@@ -172,6 +185,6 @@ class Cormorant(CGModule):
 
         charge_tensor = (charges.unsqueeze(-1)/charge_scale).pow(torch.arange(charge_power+1., device=device, dtype=dtype))
         charge_tensor = charge_tensor.view(charges.shape + (1, charge_power+1))
-        scalars = (one_hot.unsqueeze(-1) * charge_tensor).view(charges.shape[:2] + (-1,))
+        atom_scalars = (one_hot.unsqueeze(-1) * charge_tensor).view(charges.shape[:2] + (-1,))
 
-        return scalars, atom_mask, atom_positions, edge_mask
+        return atom_scalars, atom_mask, atom_positions, edge_mask
