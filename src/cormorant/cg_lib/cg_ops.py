@@ -108,25 +108,28 @@ class CGProduct(CGModule):
 
 
 
-def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
+def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False, ignore_check=False):
     """
     Explicit function to calculate the Clebsch-Gordan product.
     See the documentation for CGProduct for more information.
 
-    rep1 : list of torch.Tensors
-        First SO3Vector in the CG product
-    rep2 : list of torch.Tensors
-        First SO3Vector in the CG product
-    minl : int
+    rep1 : list of :obj:`torch.Tensors`
+        First :obj:`SO3Vector` in the CG product
+    rep2 : list of :obj:`torch.Tensors`
+        First :obj:`SO3Vector` in the CG product
+    minl : :obj:`int`
         Minimum weight to include in CG Product
-    maxl : int
+    maxl : :obj:`int`
         Minimum weight to include in CG Product
-    aggregate : bool, optional
+    aggregate : :obj:`bool`, optional
         Apply an "aggregation" operation, or a pointwise convolution
-        with a SO3Vector as a filter.
-    cg_dict : CGDict, optional
+        with a :obj:`SO3Vector` as a filter.
+    cg_dict : :obj:`CGDict`, optional
         Specify a Clebsch-Gordan dictionary. If not specified, one will be
         generated automatically at runtime based upon maxl.
+    ignore_check : :obj:`bool`
+        Ignore SO3Vec initialization check. Necessary for current implementation
+        of :obj:`spherical_harmonics`. Use with caution.
     """
     tau1 = SO3Tau.from_rep(rep1)
     tau2 = SO3Tau.from_rep(rep2)
@@ -166,7 +169,8 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False):
 
     new_rep = [torch.cat(part, dim=-3) for part in new_rep if len(part) > 0]
 
-    return SO3Vec(new_rep)
+    # TODO: Rewrite so ignore_check not necessary
+    return SO3Vec(new_rep, ignore_check=ignore_check)
 
 
 def complex_kron_product(z1, z2, aggregate=False):

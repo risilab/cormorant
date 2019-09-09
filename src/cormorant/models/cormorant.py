@@ -13,14 +13,6 @@ from cormorant.nn import OutputLinear, OutputPMLP, GetScalarsAtom
 from cormorant.nn import scalar_mult_rep
 from cormorant.nn import NoLayer
 
-def expand_var_list(var, num_cg_levels):
-    if type(var) is list:
-        var_list = var + (num_cg_levels-len(var))*[var[-1]]
-    elif type(var) in [float, int]:
-        var_list = [var] * num_cg_levels
-    else:
-        raise ValueError('Incorrect type {}'.format(type(var)))
-    return var_list
 
 class Cormorant(CGModule):
     """
@@ -138,7 +130,7 @@ class Cormorant(CGModule):
 
         # Clebsch-Gordan layers central to the network
         atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask,
-                                                 rad_funcs, norms, spherical_harmonics)
+                                                 rad_func_levels, norms, spherical_harmonics)
 
         # Construct scalars for network output
         atom_scalars = self.get_scalars_atom(atoms_all)
@@ -190,3 +182,12 @@ class Cormorant(CGModule):
         edge_scalars = torch.tensor([])
 
         return atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions
+
+def expand_var_list(var, num_cg_levels):
+    if type(var) is list:
+        var_list = var + (num_cg_levels-len(var))*[var[-1]]
+    elif type(var) in [float, int]:
+        var_list = [var] * num_cg_levels
+    else:
+        raise ValueError('Incorrect type {}'.format(type(var)))
+    return var_list

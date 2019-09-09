@@ -27,15 +27,15 @@ class SO3Scalar(SO3Tensor):
 
     @property
     def bdim(self):
-        return slice(0, -3)
+        return slice(0, -2)
 
     @property
     def cdim(self):
-        return -3
+        return -2
 
     @property
     def rdim(self):
-        return -2
+        return None
 
     @property
     def zdim(self):
@@ -43,7 +43,7 @@ class SO3Scalar(SO3Tensor):
 
     @staticmethod
     def _get_shape(batch, weight, channels):
-        return tuple(batch) + (channels, 1, 2)
+        return tuple(batch) + (channels, 2)
 
     def check_data(self, data):
         if any(part.numel() == 0 for part in data):

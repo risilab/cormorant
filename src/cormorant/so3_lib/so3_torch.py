@@ -7,8 +7,9 @@ from cormorant.so3_lib import so3_tau, so3_tensor, so3_vec, so3_scalar
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Vec = so3_vec.SO3Vec
+SO3Scalar = so3_scalar.SO3Scalar
 
-from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar, mix_zweight_zirrep
 
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):
@@ -21,8 +22,20 @@ def _dispatch_op(op, val1, val2):
     SO3Tensor.
     """
 
-    # Both va1 and val2 are instances of SO3Tensor
-    if isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
+    # Hack to make SO3Vec/SO3Scalar multiplication work
+    # TODO: Figure out better way of doing this?
+    if isinstance(val1, SO3Scalar) and isinstance(val2, SO3Vec):
+        _check_maxl(val1, val2)
+        applied_op = [op(part1.unsqueeze(val2.rdim), part2)
+                      for part1, part2 in zip(val1, val2)]
+        output_class = SO3Vec
+    elif isinstance(val1, SO3Vec) and isinstance(val2, SO3Scalar):
+        _check_maxl(val1, val2)
+        applied_op = [op(part1, part2.unsqueeze(val1.rdim))
+                      for part1, part2 in zip(val1, val2)]
+        output_class = SO3Vec
+    # Both va1 and val2 are other instances of SO3Tensor
+    elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
         _check_maxl(val1, val2)
         val1._bin_op_type_check(type(val1), type(val2))
         val2._bin_op_type_check(type(val1), type(val2))
@@ -83,7 +96,7 @@ def cat(reps_list):
 
     return reps_list[0].__class__(reps_cat)
 
-def mix(rep, weights):
+def mix(weights, rep):
     """
     Linearly mix representation.
 
@@ -100,12 +113,12 @@ def mix(rep, weights):
     if len(rep) != len(weights):
         raise ValueError('Must have one mixing weight for each part of SO3Vec!')
 
-    rep_mix = SO3Vec([mul_zscalar_zirrep(weight, part) for weight, part in zip(weights, rep)])
+    rep_mix = SO3Vec([mix_zweight_zirrep(weight, part) for weight, part in zip(weights, rep)])
 
     return rep_mix
 
 
-def cat_mix(reps_list, weights):
+def cat_mix(weights, reps_list):
     """
     First concatenate (direct sum) and then linearly mix a :obj:`list` of
     :obj:`SO3Vec` objects with :obj:`SO3Weights` weights.
@@ -121,4 +134,4 @@ def cat_mix(reps_list, weights):
         Mixed direct sum of all :obj:`SO3Vec` in `reps_list`
     """
 
-    return weights @ cat(reps_list)
+    return mix(weights, cat(reps_list))

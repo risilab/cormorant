@@ -1,6 +1,25 @@
 import torch
 
-def mul_zscalar_zirrep(scalar, part, cdim=-2, zdim=-1):
+def mix_zweight_zirrep(scalar, part, zdim=-1):
+    """
+    Apply the linear matrix in :obj:`SO3Weight` and a part of a :obj:`SO3Vec`.
+
+    Parameters
+    ----------
+    scalar : :obj:`torch.Tensor`
+        A tensor of scalars to apply to `part`.
+    part : :obj:`torch.Tensor`
+        Part of :obj:`SO3Vec` to multiply by scalars.
+
+    """
+    scalar_r, scalar_i = scalar.unbind(zdim)
+    part_r, part_i = part.unbind(zdim)
+
+    return torch.stack([part_r@scalar_r - part_i@scalar_i, 
+                        part_r@scalar_i + part_i@scalar_r], dim=zdim)
+
+
+def mul_zscalar_zirrep(scalar, part, rdim=-2, zdim=-1):
     """
     Multiply the part of a :obj:`SO3Scalar` and a part of a :obj:`SO3Vec`.
 
@@ -12,8 +31,8 @@ def mul_zscalar_zirrep(scalar, part, cdim=-2, zdim=-1):
         Part of :obj:`SO3Vec` to multiply by scalars.
 
     """
-    scalar_r, scalar_i = scalar.unsqueeze(cdim).unbind(zdim)
-    part_r, part_i = rep.unbind(zdim)
+    scalar_r, scalar_i = scalar.unsqueeze(rdim).unbind(zdim)
+    part_r, part_i = part.unbind(zdim)
 
     return torch.stack([part_r*scalar_r - part_i*scalar_i, part_r*scalar_i + part_i*scalar_r], dim=zdim)
 

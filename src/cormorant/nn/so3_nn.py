@@ -53,6 +53,7 @@ class MixReps(CGModule):
 
         weights = SO3Weight.rand(self.tau_in, self.tau_out, device=device, dtype=dtype)
         weights = (2*weights - 1) / sqrt(gain)
+
         self.weights = weights.as_parameter()
 
     def forward(self, rep):
@@ -73,7 +74,7 @@ class MixReps(CGModule):
             raise ValueError('Tau of input rep does not match initialized tau!'
                             ' rep: {} tau: {}'.format(SO3Tau.from_rep(rep), self.tau_in))
 
-        return so3_torch.mix_rep(self.weights, rep, real=self.real)
+        return so3_torch.mix(self.weights, rep)
 
     @property
     def tau(self):
@@ -95,7 +96,7 @@ class CatReps(Module):
     def __init__(self, taus_in, maxl=None):
         super().__init__()
 
-        self.taus_in = taus_in = [SO3Tau(tau) for tau in taus_in]
+        self.taus_in = taus_in = [SO3Tau(tau) for tau in taus_in if tau]
 
         if maxl is None:
             maxl = max([tau.maxl for tau in taus_in])
@@ -109,7 +110,7 @@ class CatReps(Module):
 
         Parameters
         ----------
-        reps : :obj:`list` of :obj:`list` of :obj:`torch.Tensor`
+        reps : :obj:`list` of :obj:`SO3Tensor` subclasses
             List of representations to concatenate.
 
         Returns
@@ -117,8 +118,11 @@ class CatReps(Module):
         reps_cat : :obj:`list` of :obj:`torch.Tensor`
 
         """
+        # Drop Nones
+        reps = [rep for rep in reps if rep is not None]
+
         # Error checking
-        reps_taus_in = [SO3Tau.from_rep(rep) for rep in reps]
+        reps_taus_in = [rep.tau for rep in reps]
         if reps_taus_in != self.taus_in:
             raise ValueError('Tau of input reps does not match predefined version!'
                                 'got: {} expected: {}'.format(reps_taus_in, self.taus_in))

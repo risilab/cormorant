@@ -153,12 +153,11 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='unit'):
         psi1 = pos_to_rep(pos)
         psi1 *= sqrt(3/(4*pi))
         sph_harms.append(psi1)
-        psi1 = SO3Vec([psi1], ignore_check=True)
 
     if maxsh >= 2:
         new_psi = psi1
         for l in range(2, maxsh+1):
-            new_psi = cg_product(cg_dict, new_psi, psi1, minl=0, maxl=l)[-1]
+            new_psi = cg_product(cg_dict, [new_psi], [psi1], minl=0, maxl=l, ignore_check=True)[-1]
             ### Use equation Y^{m1}_{l1} \otimes Y^{m2}_{l2} = \sqrt((2*l1+1)(2*l2+1)/4*\pi*(2*l3+1)) <l1 0 l2 0|l3 0> <l1 m1 l2 m2|l3 m3> Y^{m3}_{l3}
             # cg_coeff = CGcoeffs[1*(CGmaxL+1) + l-1][5*(l-1)+1, 3*(l-1)+1] # 5*l-4 = (l)^2 -(l-2)^2 + (l-1) + 1, notice indexing starts at l=2
             cg_coeff = cg_dict[(1, l-1)][5*(l-1)+1, 3*(l-1)+1] # 5*l-4 = (l)^2 -(l-2)^2 + (l-1) + 1, notice indexing starts at l=2

@@ -5,7 +5,7 @@ from cormorant.nn.generic_levels import BasicMLP
 from cormorant.nn.position_levels import RadPolyTrig
 from cormorant.nn.mask_levels import MaskLevel
 
-from cormorant.so3_lib import SO3Tau
+from cormorant.so3_lib import SO3Tau, SO3Vec
 
 
 ############# Input to network #############
@@ -28,7 +28,7 @@ class InputLinear(nn.Module):
         out = torch.where(atom_mask, self.lin(input_scalars), self.zero)
         out = out.view(input_scalars.shape[0:2] + (self.num_out, 1, 2))
 
-        return out
+        return SO3Vec([out])
 
     @property
     def tau(self):
@@ -111,7 +111,7 @@ class InputMPNN(nn.Module):
         # The output are the MLP features reshaped into a set of complex numbers.
         out = features.view(s[0:2] + (self.channels_out, 1, 2))
 
-        return out
+        return SO3Vec([out])
 
     @property
     def tau(self):

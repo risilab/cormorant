@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import Module, Parameter, ParameterList
 
+from cormorant.so3_lib import SO3Tau
 
 class NoLayer(nn.Module):
     """
@@ -11,18 +12,19 @@ class NoLayer(nn.Module):
     features were desired at the input/output.
     """
     def __init__(self, *args, **kwargs):
+        super().__init__()
         pass
 
     def forward(self, *args, **kwargs):
-        pass
+        return None
 
     @property
     def tau(self):
-        return None
+        return SO3Tau([])
 
     @property
     def num_scalars(self):
-        return None
+        return 0
 
 
 

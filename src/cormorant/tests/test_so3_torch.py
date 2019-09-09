@@ -7,7 +7,6 @@ rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t
 
 class TestSO3Torch():
 
-
     @pytest.mark.parametrize('batch1', [(1,), (2,), (2, 2)])
     @pytest.mark.parametrize('batch2', [(1,), (2,), (2, 2)])
     @pytest.mark.parametrize('batch3', [(1,), (2,), (2, 2)])

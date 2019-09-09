@@ -3,6 +3,8 @@ import torch.nn as nn
 
 from math import pi
 
+from cormorant.so3_lib import SO3Tau, SO3Scalar
+
 class RadialFilters(nn.Module):
     """
     Generate a set of learnable scalar functions for the aggregation/point-wise
@@ -25,7 +27,7 @@ class RadialFilters(nn.Module):
 
         rad_funcs = [RadPolyTrig(max_sh[level], basis_set, num_channels_out[level], device=device, dtype=dtype) for level in range(self.num_levels)]
         self.rad_funcs = nn.ModuleList(rad_funcs)
-        self.tau = [rad_func.radial_types for rad_func in self.rad_funcs]
+        self.tau = [rad_func.tau for rad_func in self.rad_funcs]
 
         self.num_rad_channels = self.tau[0][0]
 
@@ -75,13 +77,13 @@ class RadPolyTrig(nn.Module):
         self.mix = mix
         if (mix == 'cplx') or (mix is True):
             self.linear = nn.ModuleList([nn.Linear(2*self.num_rad, 2*self.num_channels).to(device=device, dtype=dtype) for _ in range(max_sh+1)])
-            self.radial_types = (num_channels,) * (max_sh + 1)
+            self.tau = SO3Tau((num_channels,) * (max_sh + 1))
         elif mix == 'real':
             self.linear = nn.ModuleList([nn.Linear(2*self.num_rad, self.num_channels).to(device=device, dtype=dtype) for _ in range(max_sh+1)])
-            self.radial_types = (num_channels,) * (max_sh + 1)
+            self.tau = SO3Tau((num_channels,) * (max_sh + 1))
         elif (mix == 'none') or (mix is False):
             self.linear = None
-            self.radial_types = (self.num_rad,) * (max_sh + 1)
+            self.tau = SO3Tau((self.num_rad,) * (max_sh + 1))
         else:
             raise ValueError('Can only specify mix = real, cplx, or none! {}'.format(mix))
 
@@ -112,4 +114,4 @@ class RadPolyTrig(nn.Module):
         else:
             radial_functions = [rad_prod.view(s + (self.num_rad, 2))] * (self.max_sh + 1)
 
-        return radial_functions
+        return SO3Scalar(radial_functions)

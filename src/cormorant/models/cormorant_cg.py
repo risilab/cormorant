@@ -36,21 +36,21 @@ class CormorantCG(CGModule):
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
                                       gaussian_mask=gaussian_mask, cg_dict=self.cg_dict)
             edge_levels.append(edge_lvl)
-            tau_edge = edge_lvl.tau_out
+            tau_edge = edge_lvl.tau
 
             # Now add the NBody level
             atom_lvl = CormorantAtomLevel(tau_atom, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
                                         cg_dict=self.cg_dict)
             atom_levels.append(atom_lvl)
-            tau_atom = atom_lvl.tau_out
+            tau_atom = atom_lvl.tau
 
             logging.info('{} {}'.format(tau_atom, tau_edge))
 
         self.atom_levels = atom_levels
         self.edge_levels = edge_levels
 
-        self.tau_levels_atom = [level.tau_out for level in atom_levels]
-        self.tau_levels_edge = [level.tau_out for level in edge_levels]
+        self.tau_levels_atom = [level.tau for level in atom_levels]
+        self.tau_levels_edge = [level.tau for level in edge_levels]
 
     def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, spherical_harmonics):
         """
@@ -96,8 +96,9 @@ class CormorantCG(CGModule):
         edges_all = []
 
         for idx, (atom_level, edge_level) in enumerate(zip(self.atom_levels, self.edge_levels)):
-            edge_net = edge_level(edge_net, atom_reps, rad_func_levels[idx], edge_mask, atom_mask, norms, spherical_harmonics)
-            edge_reps = [scalar_mult_rep(edge, sph_harm) for (edge, sph_harm) in zip(edge_net, spherical_harmonics)]
+            edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, atom_mask, norms, spherical_harmonics)
+            # edge_reps = [scalar_mult_rep(edge, sph_harm) for (edge, sph_harm) in zip(edge_net, spherical_harmonics)]
+            edge_reps = edge_net * sph_harm
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)
             atoms_all.append(atom_reps)
             edges_all.append(edge_net)

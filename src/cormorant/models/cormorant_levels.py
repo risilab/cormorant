@@ -15,13 +15,15 @@ class CormorantEdgeLevel(CGModule):
         device, dtype = self.device, self.dtype
 
         # Set up type of edge network depending on specified input operations
-        self.dot_matrix = DotMatrix(tau_atom, cat=cat, device=self.device, dtype=self.dtype)
-        tau_dot = self.dot_matrix.tau_out
+        self.dot_matrix = DotMatrix(tau_atom, cat=cat,
+                                    device=self.device, dtype=self.dtype)
+        tau_dot = self.dot_matrix.tau
 
         # Set up mixing layer
         edge_taus = [tau for tau in (tau_edge, tau_dot, tau_rad) if tau is not None]
-        self.cat_mix = CatMixReps(edge_taus, nout, real=False, device=self.device, dtype=self.dtype)
-        self.tau_out = self.cat_mix.tau_out
+        self.cat_mix = CatMixReps(edge_taus, nout, real=False,
+                                  device=self.device, dtype=self.dtype)
+        self.tau = self.cat_mix.tau
 
         # Set up edge mask layer
         self.mask_layer = MaskLevel(nout, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
@@ -53,14 +55,18 @@ class CormorantAtomLevel(CGModule):
         self.tau_pos = tau_pos
 
         # Operations linear in input reps
-        self.cg_aggregate = CGProduct(tau_pos, tau_in, maxl=self.maxl, aggregate=True, device=self.device, dtype=self.dtype)
-        tau_ag = list(self.cg_aggregate.tau_out)
+        self.cg_aggregate = CGProduct(tau_pos, tau_in, maxl=self.maxl, aggregate=True,
+                                      device=self.device, dtype=self.dtype)
+        tau_ag = list(self.cg_aggregate.tau)
 
-        self.cg_power = CGProduct(tau_in, tau_in, maxl=self.maxl, device=self.device, dtype=self.dtype)
-        tau_sq = list(self.cg_power.tau_out)
+        self.cg_power = CGProduct(tau_in, tau_in, maxl=self.maxl,
+                                  device=self.device, dtype=self.dtype)
+        tau_sq = list(self.cg_power.tau)
 
-        self.cat_mix = CatMixReps([tau_ag, tau_in, tau_sq], num_channels, maxl=self.maxl, weight_init=weight_init, gain=level_gain, device=self.device, dtype=self.dtype)
-        self.tau_out = self.cat_mix.tau_out
+        self.cat_mix = CatMixReps([tau_ag, tau_in, tau_sq], num_channels,
+                                  maxl=self.maxl, weight_init=weight_init, gain=level_gain,
+                                  device=self.device, dtype=self.dtype)
+        self.tau = self.cat_mix.tau
 
     def forward(self, atom_reps, edge_reps, mask):
         # Aggregate information based upon edge reps

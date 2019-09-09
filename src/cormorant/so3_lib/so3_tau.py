@@ -134,10 +134,16 @@ class SO3Tau():
         """
         from cormorant.so3_lib.so3_tensor import SO3Tensor
 
+        if rep is None:
+            return SO3Tau([])
+
         if isinstance(rep, SO3Tensor):
             return rep.tau
 
-        assert type(rep) is list and all(type(irrep) == torch.Tensor for irrep in rep), 'Input must be list of torch.Tensors! {} {}'.format(type(rep), [type(irrep) for irrep in rep])
+        if torch.is_tensor(rep):
+            raise ValueError('Input not compatible with SO3Tensor')
+        elif type(rep) in [list, tuple] and any(type(irrep) != torch.Tensor for irrep in rep):
+            raise ValueError('Input not compatible with SO3Tensor')
 
         ells = [(irrep[0].shape[-2] - 1) // 2 for irrep in rep]
 
