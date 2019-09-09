@@ -254,14 +254,21 @@ class SO3Tensor(ABC):
         """
         return so3_torch.add(self, other)
 
-    def __radd__(self, other):
+    __radd__ = __add__
+
+    def sub(self, other):
+        return so3_torch.sub(self, other)
+
+    def __sub__(self, other):
         """
-        Reverse add, includes type checker to deal with sum([])
+        Subtract element wise `torch.Tensors`
         """
-        return so3_torch.add(other, self)
+        return so3_torch.sub(self, other)
+
+    __rsub__ = __sub__
 
     @staticmethod
-    def _mul_type_check(type1, type2):
+    def _bin_op_type_check(type1, type2):
         pass
 
     def mul(self, other):
@@ -273,11 +280,18 @@ class SO3Tensor(ABC):
         """
         return so3_torch.mul(self, other)
 
-    def __rmul__(self, other):
+    __rmul__ = __mul__
+
+    def div(self, other):
+        return so3_torch.div(self, other)
+
+    def __truediv__(self, other):
         """
-        Reverse add, includes type checker to deal with sum([])
+        Add element wise `torch.Tensors`
         """
-        return so3_torch.mul(self, other)
+        return so3_torch.div(self, other)
+
+    __rtruediv__ = __truediv__
 
     @classmethod
     def rand(cls, batch, tau, device=None, dtype=None, requires_grad=False):

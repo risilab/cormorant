@@ -5,9 +5,9 @@ from . import BasicMLP, cat_reps
 
 ############# Get Scalars #############
 
-class GetScalars(nn.Module):
+class GetScalarsAtom(nn.Module):
     def __init__(self, tau_levels, full_scalars=True, device=torch.device('cpu'), dtype=torch.float):
-        super(GetScalars, self).__init__()
+        super().__init__()
 
         self.device = device
         self.dtype = dtype

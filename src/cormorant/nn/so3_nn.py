@@ -1,10 +1,13 @@
 import torch
 from torch.nn import Module
 
+from math import sqrt
+
 from itertools import zip_longest
+from functools import reduce
 
 from cormorant.cg_lib import CGModule
-from cormorant.so3_lib import so3_torch, SO3Weight
+from cormorant.so3_lib import so3_torch, SO3Weight, SO3Tau
 
 class MixReps(CGModule):
     """
@@ -37,6 +40,8 @@ class MixReps(CGModule):
     def __init__(self, tau_in, tau_out, real=False, weight_init='randn', gain=1,
                  device=None, dtype=None):
         super().__init__(device=device, dtype=dtype)
+        tau_in = SO3Tau(tau_in)
+        tau_out = SO3Tau(tau_out) if type(tau_out) is not int else tau_out
 
         # Allow one to set the output tau to a pre-specified number of output channels.
         if type(tau_out) is int:
@@ -46,8 +51,9 @@ class MixReps(CGModule):
         self.tau_out = SO3Tau(tau_out)
         self.real = real
 
-        weights = init_mix_reps_weights(self.tau_out, self.tau_in, weight_init, real=real, gain=gain, device=device, dtype=dtype)
-        self.weights = ParameterList([Parameter(weight) for weight in weights])
+        weights = SO3Weight.rand(self.tau_in, self.tau_out, device=device, dtype=dtype)
+        weights = (2*weights - 1) / sqrt(gain)
+        self.weights = weights.as_parameter()
 
     def forward(self, rep):
         """
@@ -89,7 +95,7 @@ class CatReps(Module):
     def __init__(self, taus_in, maxl=None):
         super().__init__()
 
-        self.taus_in = taus_in = [SO3Tau(tau) for tau in taus]
+        self.taus_in = taus_in = [SO3Tau(tau) for tau in taus_in]
 
         if maxl is None:
             maxl = max([tau.maxl for tau in taus_in])
@@ -157,8 +163,8 @@ class CatMixReps(CGModule):
                  device=None, dtype=None):
         super().__init__(device=device, dtype=dtype)
 
-        self.cat_reps = CatReps(taus, maxl=maxl)
-        self.mix_reps = MixReps(self.cat_reps, tau_out,
+        self.cat_reps = CatReps(taus_in, maxl=maxl)
+        self.mix_reps = MixReps(self.cat_reps.tau, tau_out,
                                 real=real, weight_init=weight_init, gain=gain,
                                 device=device, dtype=dtype)
 

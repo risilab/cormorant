@@ -68,7 +68,7 @@ class SO3Vec(SO3Tensor):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
 
     @staticmethod
-    def _mul_type_check(type1, type2):
+    def _bin_op_type_check(type1, type2):
         if type1 == SO3Vec and type2 == SO3Vec:
             raise ValueError('Cannot multiply two SO3Vecs!')
 

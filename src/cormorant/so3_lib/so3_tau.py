@@ -27,6 +27,10 @@ class SO3Tau():
 
         self._tau = tuple(tau)
 
+    @property
+    def maxl(self):
+        return len(self._tau) - 1
+
     def keys(self):
         return range(len(self))
 

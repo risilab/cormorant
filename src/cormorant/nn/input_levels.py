@@ -5,6 +5,8 @@ from cormorant.nn.generic_levels import BasicMLP
 from cormorant.nn.position_levels import RadPolyTrig
 from cormorant.nn.mask_levels import MaskLevel
 
+from cormorant.so3_lib import SO3Tau
+
 
 ############# Input to network #############
 
@@ -27,6 +29,11 @@ class InputLinear(nn.Module):
         out = out.view(input_scalars.shape[0:2] + (self.num_out, 1, 2))
 
         return out
+
+    @property
+    def tau(self):
+        return SO3Tau([self.num_out])
+
 
 
 class InputMPNN(nn.Module):
@@ -105,3 +112,7 @@ class InputMPNN(nn.Module):
         out = features.view(s[0:2] + (self.channels_out, 1, 2))
 
         return out
+
+    @property
+    def tau(self):
+        return SO3Tau([self.num_out])

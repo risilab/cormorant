@@ -19,8 +19,8 @@ class CormorantEdgeLevel(CGModule):
         tau_dot = self.dot_matrix.tau_out
 
         # Set up mixing layer
-        edge_taus = [tau_edge, tau_dot, tau_rad]
-        self.cat_mix = CatMixRepsScalar(edge_taus, nout, real=False, device=self.device, dtype=self.dtype)
+        edge_taus = [tau for tau in (tau_edge, tau_dot, tau_rad) if tau is not None]
+        self.cat_mix = CatMixReps(edge_taus, nout, real=False, device=self.device, dtype=self.dtype)
         self.tau_out = self.cat_mix.tau_out
 
         # Set up edge mask layer

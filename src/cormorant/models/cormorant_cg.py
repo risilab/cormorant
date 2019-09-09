@@ -1,16 +1,18 @@
 import torch
 import torch.nn as nn
 
-from cormorant.cg_lib import CGProduct, CGModule
-
 from cormorant.models import CormorantAtomLevel, CormorantEdgeLevel
 
-from cormorant.nn import MaskLevel
-from cormorant.nn import CatMixReps, CatMixRepsScalar, DotMatrix
+from cormorant.nn import MaskLevel, DotMatrix
+from cormorant.nn import CatMixReps
+from cormorant.cg_lib import CGProduct, CGModule
+
+import logging
 
 
 class CormorantCG(CGModule):
-    def __init__(self, maxl, atom_in, edge_in, pos_in, num_channels,
+    def __init__(self, maxl, tau_in_atom, tau_in_edge, tau_pos,
+                 num_cg_levels, num_channels,
                  level_gain, weight_init,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  cat=True, gaussian_mask=False,
@@ -18,8 +20,8 @@ class CormorantCG(CGModule):
         super().__init__(device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype = self.device, self.dtype
 
-        tau_atom_in = atom_in.tau if type(atom_in) is CGModule else atom_in
-        tau_edge_in = edge_in.tau if type(edge_in) is CGModule else edge_in
+        tau_atom_in = atom_in.tau if type(tau_in_atom) is CGModule else tau_in_atom
+        tau_edge_in = edge_in.tau if type(tau_in_edge) is CGModule else tau_in_edge
 
         logging.info('{} {}'.format(tau_atom_in, tau_edge_in))
 
@@ -28,7 +30,7 @@ class CormorantCG(CGModule):
 
         tau_atom, tau_edge = tau_atom_in, tau_edge_in
 
-        for level in range(self.num_cg_levels):
+        for level in range(num_cg_levels):
             # First add the edge, since the output type determines the next level
             edge_lvl = CormorantEdgeLevel(tau_atom, tau_edge, tau_pos[level], num_channels[level],
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
@@ -47,7 +49,8 @@ class CormorantCG(CGModule):
         self.atom_levels = atom_levels
         self.edge_levels = edge_levels
 
-        self.tau_levels_out = [level.tau_out for level in atom_levels]
+        self.tau_levels_atom = [level.tau_out for level in atom_levels]
+        self.tau_levels_edge = [level.tau_out for level in edge_levels]
 
     def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, spherical_harmonics):
         """

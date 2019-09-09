@@ -5,11 +5,11 @@ import logging
 
 from cormorant.cg_lib import CGModule, SphericalHarmonicsRel
 
-from cormorant.models.cormorant_levels import CormorantAtomLevel, CormorantEdgeLevel
+from cormorant.models.cormorant_cg import CormorantCG
 
 from cormorant.nn import RadialFilters
 from cormorant.nn import InputLinear, InputMPNN
-from cormorant.nn import OutputLinear, OutputPMLP, GetScalars
+from cormorant.nn import OutputLinear, OutputPMLP, GetScalarsAtom
 from cormorant.nn import scalar_mult_rep
 from cormorant.nn import NoLayer
 
@@ -85,7 +85,7 @@ class Cormorant(CGModule):
         tau_in_edge = self.input_func_edge.tau
 
         self.cormorant_cg = CormorantCG(maxl, tau_in_atom, tau_in_edge, tau_pos,
-                     num_channels, level_gain, weight_init,
+                     num_cg_levels, num_channels, level_gain, weight_init,
                      cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                      cat=True, gaussian_mask=False,
                      device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
@@ -100,7 +100,7 @@ class Cormorant(CGModule):
         num_scalars_atom = self.get_scalars_atom.num_scalars
         num_scalars_edge = self.get_scalars_edge.num_scalars
 
-        self.output_layer_atom = OutputLinear(num_scalars, bias=True,
+        self.output_layer_atom = OutputLinear(num_scalars_atom, bias=True,
                                               device=self.device, dtype=self.dtype)
         self.output_layer_edge = NoLayer()
 
