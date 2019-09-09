@@ -187,4 +187,6 @@ class Cormorant(CGModule):
         charge_tensor = charge_tensor.view(charges.shape + (1, charge_power+1))
         atom_scalars = (one_hot.unsqueeze(-1) * charge_tensor).view(charges.shape[:2] + (-1,))
 
-        return atom_scalars, atom_mask, atom_positions, edge_mask
+        edge_scalars = torch.tensor([])
+
+        return atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions

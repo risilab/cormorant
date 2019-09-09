@@ -12,7 +12,6 @@ from cormorant.train import TrainCormorant
 from cormorant.train import init_argparse, init_file_paths, init_logger, init_cuda
 from cormorant.train import init_optimizer, init_scheduler
 from cormorant.data.utils import initialize_datasets
-from cormorant.cg_lib import global_cg_dict
 
 from cormorant.data.collate import collate_fn
 

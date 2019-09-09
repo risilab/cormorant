@@ -36,7 +36,7 @@ class TestSphericalHarmonics():
         pos1 = torch.rand(batch + (natoms1, 3), dtype=torch.double)
         pos2 = torch.rand(batch + (natoms2, 3), dtype=torch.double)
 
-        sh, norms = spherical_harmonics_rel(cg_dict, pos1, pos2, maxl)
+        sh, norms = spherical_harmonics_rel(cg_dict, pos1, pos2, maxl, sh_norm='qm')
 
         sh_sp, norms_sp = sph_harms_rel_from_scipy(pos1, pos2, maxl)
 

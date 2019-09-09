@@ -21,8 +21,8 @@ class TestCGProduct():
 
         tau1, tau2 = [chan]*(maxl1+1), [chan]*(maxl2+1)
 
-        rep1 = SO3Vec.rand(tau1, batch, dtype=torch.double)
-        rep2 = SO3Vec.rand(tau2, batch, dtype=torch.double)
+        rep1 = SO3Vec.rand(batch, tau1, dtype=torch.double)
+        rep2 = SO3Vec.rand(batch, tau2, dtype=torch.double)
 
         if all(maxl_dict >= maxl for maxl in [maxl_prod, maxl1, maxl2]):
             cg_prod = cg_product(cg_dict, rep1, rep2, maxl=maxl_prod)

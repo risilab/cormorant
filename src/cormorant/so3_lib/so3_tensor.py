@@ -18,11 +18,12 @@ class SO3Tensor(ABC):
     data : iterable of of `torch.Tensor` with appropriate shape
         Input of a SO(3) vector.
     """
-    def __init__(self, data):
+    def __init__(self, data, ignore_check=False):
         if isinstance(data, type(self)):
             data = data.data
 
-        self.check_data(data)
+        if not ignore_check:
+            self.check_data(data)
 
         self._data = data
 
@@ -101,6 +102,13 @@ class SO3Tensor(ABC):
         :obj:`SO3Tau`
         """
         return SO3Tau([part.shape[self.cdim] for part in self])
+
+    @property
+    def shapes(self):
+        """
+        Get a list of shapes of each :obj:`torch.Tensor`
+        """
+        return [p.shape for p in self]
 
     @property
     def channels(self):

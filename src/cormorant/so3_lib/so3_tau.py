@@ -134,7 +134,7 @@ class SO3Tau():
         """
         from cormorant.so3_lib.so3_tensor import SO3Tensor
 
-        if isinstance(SO3Tensor, rep):
+        if isinstance(rep, SO3Tensor):
             return rep.tau
 
         assert type(rep) is list and all(type(irrep) == torch.Tensor for irrep in rep), 'Input must be list of torch.Tensors! {} {}'.format(type(rep), [type(irrep) for irrep in rep])

@@ -42,6 +42,10 @@ class SO3Vec(SO3Tensor):
     def zdim(self):
         return -1
 
+    @property
+    def ells(self):
+        return [(shape[self.rdim] - 1)//2 for shape in self.shapes]
+
     @staticmethod
     def _get_shape(batch, l, channels):
         return tuple(batch) + (channels, 2*l+1, 2)
