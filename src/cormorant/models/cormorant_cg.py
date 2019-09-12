@@ -52,7 +52,7 @@ class CormorantCG(CGModule):
         self.tau_levels_atom = [level.tau for level in atom_levels]
         self.tau_levels_edge = [level.tau for level in edge_levels]
 
-    def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, spherical_harmonics):
+    def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, sph_harm):
         """
         Runs a forward pass of the Cormorant CG layers.
 
@@ -76,7 +76,7 @@ class CormorantCG(CGModule):
         edge_mask : :obj:`torch.Tensor`
             Matrix of the magnitudes of relative position vectors of pairs of atoms.
             :math:`(N_{batch}, N_{atom}, N_{atom})`.
-        spherical_harmonics : :obj:`list` of :obj:`torch.Tensor`
+        sph_harm : :obj:`list` of :obj:`torch.Tensor`
             Representation of spherical harmonics calculated from the relative
             position vectors of pairs of points. Each tensor has shape
             :math:`(N_{batch}, N_{atom}, N_{atom}, N_{channels}, 2*l+1, 2)`
@@ -96,7 +96,7 @@ class CormorantCG(CGModule):
         edges_all = []
 
         for idx, (atom_level, edge_level) in enumerate(zip(self.atom_levels, self.edge_levels)):
-            edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, atom_mask, norms, spherical_harmonics)
+            edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, atom_mask, norms, sph_harm)
             # edge_reps = [scalar_mult_rep(edge, sph_harm) for (edge, sph_harm) in zip(edge_net, spherical_harmonics)]
             edge_reps = edge_net * sph_harm
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)

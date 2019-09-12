@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from cormorant.so3_lib import SO3Scalar
+
 class MaskLevel(nn.Module):
     """
     Mask level for implementing hard and soft cutoffs. With the current
@@ -61,6 +63,6 @@ class MaskLevel(nn.Module):
 
         edge_mask = edge_mask.unsqueeze(-1)
 
-        edge_net = [edge*edge_mask for edge in edge_net]
+        edge_net = edge_net * edge_mask
 
         return edge_net
