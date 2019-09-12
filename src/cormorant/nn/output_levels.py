@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-from . import BasicMLP, cat_reps
+from cormorant.nn import BasicMLP
+from cormorant.so3_lib import cat
 
 ############# Get Scalars #############
 
@@ -33,7 +34,7 @@ class GetScalarsAtom(nn.Module):
 
     def forward(self, reps_levels):
 
-        reps = cat_reps(reps_levels)
+        reps = cat(reps_levels)
 
         scalars = reps[0]
 

@@ -51,8 +51,16 @@ class MixReps(CGModule):
         self.tau_out = SO3Tau(tau_out)
         self.real = real
 
-        weights = SO3Weight.rand(self.tau_in, self.tau_out, device=device, dtype=dtype)
-        weights = (2*weights - 1) / sqrt(gain)
+        if weight_init is 'randn':
+            weights = SO3Weight.randn(self.tau_in, self.tau_out, device=device, dtype=dtype)
+        elif weight_init is 'rand':
+            weights = SO3Weight.rand(self.tau_in, self.tau_out, device=device, dtype=dtype)
+            weights = 2*weights - 1
+        else:
+            raise NotImplementedError('weight_init can only be randn or rand for now')
+
+        gain = [gain / max(shape) for shape in weights.shapes]
+        weights = gain * weights
 
         self.weights = weights.as_parameter()
 

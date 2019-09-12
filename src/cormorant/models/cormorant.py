@@ -10,7 +10,6 @@ from cormorant.models.cormorant_cg import CormorantCG
 from cormorant.nn import RadialFilters
 from cormorant.nn import InputLinear, InputMPNN
 from cormorant.nn import OutputLinear, OutputPMLP, GetScalarsAtom
-from cormorant.nn import scalar_mult_rep
 from cormorant.nn import NoLayer
 
 
