@@ -78,7 +78,7 @@ class SO3Weight(SO3Tensor):
         Factory method to create a new random :obj:`SO3Weight`.
         """
 
-        shapes = [(t1, t2, 2) for t1, t2 in zip(tau_in, tau_out)]
+        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.rand(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])
@@ -89,7 +89,7 @@ class SO3Weight(SO3Tensor):
         Factory method to create a new random-normal :obj:`SO3Weight`.
         """
 
-        shapes = [(t1, t2, 2) for t1, t2 in zip(tau_in, tau_out)]
+        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.randn(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])
@@ -100,7 +100,7 @@ class SO3Weight(SO3Tensor):
         Factory method to create a new random :obj:`SO3Weight`.
         """
 
-        shapes = [(t1, t2, 2) for t1, t2 in zip(tau_in, tau_out)]
+        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.randn(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])
@@ -111,7 +111,7 @@ class SO3Weight(SO3Tensor):
         Factory method to create a new all-zeros :obj:`SO3Weight`.
         """
 
-        shapes = [(t1, t2, 2) for t1, t2 in zip(tau_in, tau_out)]
+        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.zeros(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])
@@ -122,7 +122,7 @@ class SO3Weight(SO3Tensor):
         Factory method to create a new all-ones :obj:`SO3Weight`.
         """
 
-        shapes = [(t1, t2, 2) for t1, t2 in zip(tau_in, tau_out)]
+        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.ones(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])

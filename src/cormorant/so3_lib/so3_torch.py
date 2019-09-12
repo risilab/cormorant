@@ -2,14 +2,16 @@ import torch
 
 from itertools import zip_longest
 
-from cormorant.so3_lib import so3_tau, so3_tensor, so3_vec, so3_scalar
+from cormorant.so3_lib import so3_tau, so3_tensor, so3_vec, so3_scalar, so3_weight
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Vec = so3_vec.SO3Vec
 SO3Scalar = so3_scalar.SO3Scalar
+SO3Weight = so3_weight.SO3Weight
 
-from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar, mix_zweight_zirrep
+from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar
 
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):
@@ -113,7 +115,16 @@ def mix(weights, rep):
     if len(rep) != len(weights):
         raise ValueError('Must have one mixing weight for each part of SO3Vec!')
 
-    rep_mix = SO3Vec([mix_zweight_zirrep(weight, part) for weight, part in zip(weights, rep)])
+    if isinstance(rep, SO3Vec):
+        rep_mix = SO3Vec([mix_zweight_zvec(weight, part) for weight, part in zip(weights, rep)])
+    elif isinstance(rep, SO3Scalar):
+        rep_mix = SO3Scalar([mix_zweight_zscalar(weight, part) for weight, part in zip(weights, rep)])
+    elif isinstance(rep, SO3Weight):
+        rep_mix = SO3Weight([mix_zweight_zvec(weight, part) for weight, part in zip(weights, rep)])
+    elif isinstance(rep, SO3Tensor):
+        raise NotImplementedError('Mixing for object {} not yet implemented!'.format(type(rep)))
+    else:
+        raise ValueError('Mixing only implemented for SO3Tensor subclasses!')
 
     return rep_mix
 
