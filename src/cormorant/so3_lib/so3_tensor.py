@@ -236,22 +236,19 @@ class SO3Tensor(ABC):
         self._data = [t.double() for t in self._data]
         return self
 
-    @classmethod
-    def clone(cls):
-        return cls([t.clone() for t in self._data])
+    def clone(self):
+        return type(self)([t.clone() for t in self])
 
-    @classmethod
-    def detach(cls):
-        return cls([t.detach() for t in self._data])
+    def detach(self):
+        return type(self)([t.detach() for t in self])
 
     @property
     def data(self):
         return self._data
 
     @property
-    @classmethod
-    def grad(cls):
-        return cls([t.grad for t in self._data])
+    def grad(self):
+        return type(self)([t.grad for t in self])
 
     def add(self, other):
         return so3_torch.add(self, other)
@@ -300,6 +297,35 @@ class SO3Tensor(ABC):
         return so3_torch.div(self, other)
 
     __rtruediv__ = __truediv__
+
+    def abs(self):
+        """
+        Calculate the element-wise absolute value of the :class:`torch.SO3Tensor`.
+
+        Warning
+        -------
+        Will break covariance!
+        """
+
+        return type(self)([part.abs() for part in self])
+
+    __abs__ = abs
+
+    def max(self):
+        """
+        Returns a list of maximum values of each part in the
+        :class:`torch.SO3Tensor`.
+        """
+
+        return [part.max() for part in self]
+
+    def min(self):
+        """
+        Returns a list of minimum values of each part in the
+        :class:`torch.SO3Tensor`.
+        """
+
+        return [part.min() for part in self]
 
     @classmethod
     def rand(cls, batch, tau, device=None, dtype=None, requires_grad=False):

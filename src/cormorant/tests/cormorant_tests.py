@@ -29,35 +29,30 @@ def covariance_test(model, data):
 	outputs_rotout, reps_rotout, _ = model(data_rotout, covariance_test=True)
 	outputs_rotin, reps_rotin, _ = model(data_rotin, covariance_test=True)
 
-	reps_rotout, reps_rotin = reps_rotout[0], reps_rotin[0]
-
-	invariance_test = (outputs_rotout - outputs_rotin).norm()
+	invariance_test = (outputs_rotout - outputs_rotin).norm().item()
 
 	reps_rotout = [rot.rotate_rep(D, reps) for reps in reps_rotout]
-	covariance_test_norm = [[(part_in - part_out).norm().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
-	covariance_test_mean = [[(part_in - part_out).abs().mean().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 
-	covariance_test_max = torch.cat([torch.tensor([(part_in - part_out).abs().max().item() for (part_in, part_out) in zip(level_in, level_out)]) for (level_in, level_out) in zip(reps_rotin, reps_rotout)])
-	covariance_test_max = covariance_test_max.max().item()
+	rep_diff = [(level_in - level_out).abs() for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 
-	if set([len(part) for part in reps_rotout]) == 1:
-		covariance_test_norm = torch.tensor(covariance_test_norm)
-		covariance_test_mean = torch.tensor(covariance_test_mean)
-	else:
-		covariance_test_norm = [torch.tensor(p) for p in covariance_test_norm]
-		covariance_test_mean = [torch.tensor(p) for p in covariance_test_mean]
+	covariance_test_norm = [torch.tensor([diff.norm() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
+	covariance_test_mean = [torch.tensor([diff.mean() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
+	covariance_test_max = [torch.tensor([diff.max() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
 
+	covariance_test_max_all = max([max(lvl) for lvl in covariance_test_max]).item()
 
 	logging.info('Rotation Invariance test: {:0.5g}'.format(invariance_test))
-	logging.info('Largest deviation in covariance test : {:0.5g}'.format(covariance_test_max))
+	logging.info('Largest deviation in covariance test : {:0.5g}'.format(covariance_test_max_all))
 
 	# If the largest deviation in the covariance test is greater than 1e-5,
 	# display l1 and l2 norms of each irrep along each level.
-	if covariance_test_max > 1e-5:
-		logging.warning('Largest deviation in covariance test {:0.5g} detected! Detailed summary:'.format(covariance_test_max))
-		for lvl_idx, (lvl_norm, lvl_mean) in enumerate(zip(covariance_test_norm, covariance_test_mean)):
-			for ell_idx, (ell_norm, ell_mean) in enumerate(zip(lvl_norm, lvl_mean)):
-				logging.warning('(lvl, ell) = ({}, {}) -> {:0.5g} (mean) {:0.5g} (max)'.format(lvl_idx, ell_idx, ell_norm, ell_mean))
+	if covariance_test_max_all > 1e-5:
+		logging.warning('Largest deviation in covariance test {:0.5g} detected! Detailed summary:'.format(covariance_test_max_all))
+		for lvl_idx, (lvl_norm, lvl_mean, lvl_max) in enumerate(zip(covariance_test_norm, covariance_test_mean, covariance_test_max)):
+			for ell_idx, (ell_norm, ell_mean, ell_max) in enumerate(zip(lvl_norm, lvl_mean, lvl_max)):
+				logging.warning('(lvl, ell) = ({}, {}) -> '
+							    '{:0.5g} (norm) {:0.5g} (mean) {:0.5g} (max)'\
+								.format(lvl_idx, ell_idx, ell_norm, ell_mean, ell_max))
 
 
 def permutation_test(model, data):
