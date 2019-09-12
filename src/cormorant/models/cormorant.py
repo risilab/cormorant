@@ -138,7 +138,7 @@ class Cormorant(CGModule):
 
         # Prediction in this case will depend only on the atom_scalars. Can make
         # it more general here.
-        prediction = self.top_func(atom_scalars, atom_mask)
+        prediction = self.output_layer_atom(atom_scalars, atom_mask)
 
         # Covariance test
         if covariance_test:
