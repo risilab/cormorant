@@ -135,6 +135,9 @@ class CatReps(Module):
             raise ValueError('Tau of input reps does not match predefined version!'
                                 'got: {} expected: {}'.format(reps_taus_in, self.taus_in))
 
+        if self.maxl is not None:
+            reps = [rep.truncate(self.maxl) for rep in reps]
+
         return so3_torch.cat(reps)
 
     @property
@@ -180,6 +183,7 @@ class CatMixReps(CGModule):
                                 real=real, weight_init=weight_init, gain=gain,
                                 device=device, dtype=dtype)
 
+        self.taus_in = taus_in
         self.tau_out = SO3Tau(self.mix_reps)
 
     def forward(self, reps_in):

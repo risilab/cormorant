@@ -92,6 +92,23 @@ class SO3Tensor(ABC):
         """
         return len(self._data) - 1
 
+    def truncate(self, maxl):
+        """
+        Update the maximum weight (`maxl`) by truncating parts of the
+        :class:`SO3Tensor` if they correspond to weights greater than `maxl`.
+
+        Parameters
+        ----------
+        maxl : :obj:`int`
+            Maximum weight to truncate the representation to.
+
+        Returns
+        -------
+        :class:`SO3Tensor` subclass
+            Truncated :class:`SO3Tensor`
+        """
+        return self[:maxl+1]
+
     @property
     def tau(self):
         """
