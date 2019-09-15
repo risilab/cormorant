@@ -6,7 +6,7 @@ from datetime import datetime
 from math import sqrt
 
 from cormorant.models import Cormorant
-from cormorant.tests import cormorant_tests
+from cormorant.models.autotest import cormorant_tests
 
 from cormorant.train import TrainCormorant
 from cormorant.train import init_argparse, init_file_paths, init_logger, init_cuda

@@ -19,18 +19,35 @@ class Cormorant(CGModule):
 
     Parameters
     ----------
-    num_cg_levels : int
+    maxl : :obj:`int` of :obj:`list` of :obj:`int`
+        Maximum weight in the output of CG products. (Expanded to list of
+        length :obj:`num_cg_levels`)
+    max_sh : :obj:`int` of :obj:`list` of :obj:`int`
+        Maximum weight in the output of the spherical harmonics  (Expanded to list of
+        length :obj:`num_cg_levels`)
+    num_cg_levels : :obj:`int`
         Number of cg levels to use.
+    num_channels : :obj:`int` of :obj:`list` of :obj:`int`
+        Number of channels that the output of each CG are mixed to (Expanded to list of
+        length :obj:`num_cg_levels`)
+    num_species : :obj:`int`
+        Number of species of atoms included in the input dataset.
+    cutoff_type : :obj:``
+
+    device : :obj:`torch.device`
+        Device to initialize the level to
+    dtype : :obj:`torch.dtype`
+        Data type to initialize the level to level to
+    cg_dict : :obj:`nn.cg_lib.CGDict`
     """
     def __init__(self, maxl, max_sh, num_cg_levels, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  weight_init, level_gain, charge_power, basis_set,
                  charge_scale, gaussian_mask,
                  top, input, num_mpnn_layers, activation='leakyrelu',
-                 device=None, dtype=None):
+                 device=None, dtype=None, cg_dict=None):
 
         logging.info('Initializing network!')
-
         level_gain = expand_var_list(level_gain, num_cg_levels)
 
         hard_cut_rad = expand_var_list(hard_cut_rad, num_cg_levels)
@@ -41,21 +58,23 @@ class Cormorant(CGModule):
         max_sh = expand_var_list(max_sh, num_cg_levels)
         num_channels = expand_var_list(num_channels, num_cg_levels+1)
 
-        super().__init__(maxl=max(maxl+max_sh))
-        device, dtype = self.device, self.dtype
-
-        self.num_cg_levels = num_cg_levels
-        self.num_channels = num_channels
-        self.charge_power = charge_power
-        self.charge_scale = charge_scale
-        self.num_species = num_species
-
         logging.info('hard_cut_rad: {}'.format(hard_cut_rad))
         logging.info('soft_cut_rad: {}'.format(soft_cut_rad))
         logging.info('soft_cut_width: {}'.format(soft_cut_width))
         logging.info('maxl: {}'.format(maxl))
         logging.info('max_sh: {}'.format(max_sh))
         logging.info('num_channels: {}'.format(num_channels))
+
+        super().__init__(maxl=max(maxl+max_sh), device=device, dtype=dtype, cg_dict=cg_dict)
+        device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
+
+        print('CGDICT', cg_dict.maxl)
+
+        self.num_cg_levels = num_cg_levels
+        self.num_channels = num_channels
+        self.charge_power = charge_power
+        self.charge_scale = charge_scale
+        self.num_species = num_species
 
         # Set up spherical harmonics
         self.sph_harms = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict)
@@ -75,8 +94,8 @@ class Cormorant(CGModule):
         tau_in_atom = self.input_func_atom.tau
         tau_in_edge = self.input_func_edge.tau
 
-        self.cormorant_cg = CormorantCG(maxl, tau_in_atom, tau_in_edge, tau_pos,
-                     num_cg_levels, num_channels, level_gain, weight_init,
+        self.cormorant_cg = CormorantCG(maxl, max_sh, tau_in_atom, tau_in_edge,
+                     tau_pos, num_cg_levels, num_channels, level_gain, weight_init,
                      cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                      cat=True, gaussian_mask=False,
                      device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)

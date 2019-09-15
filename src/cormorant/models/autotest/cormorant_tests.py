@@ -102,8 +102,6 @@ def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=
 	logging.info("Testing network for symmetries:")
 	model.eval()
 
-	charge_power, num_species = model.charge_power, model.num_species
-
 	data = next(iter(dataloader))
 
 	covariance_test(model, data)

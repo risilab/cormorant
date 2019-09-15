@@ -11,14 +11,16 @@ import logging
 
 
 class CormorantCG(CGModule):
-    def __init__(self, maxl, tau_in_atom, tau_in_edge, tau_pos,
+    def __init__(self, maxl, max_sh, tau_in_atom, tau_in_edge, tau_pos,
                  num_cg_levels, num_channels,
                  level_gain, weight_init,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
                  cat=True, gaussian_mask=False,
                  device=None, dtype=None, cg_dict=None):
         super().__init__(device=device, dtype=dtype, cg_dict=cg_dict)
-        device, dtype = self.device, self.dtype
+        device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
+
+        self.max_sh = max_sh
 
         tau_atom_in = atom_in.tau if type(tau_in_atom) is CGModule else tau_in_atom
         tau_edge_in = edge_in.tau if type(tau_in_edge) is CGModule else tau_in_edge
@@ -32,9 +34,9 @@ class CormorantCG(CGModule):
 
         for level in range(num_cg_levels):
             # First add the edge, since the output type determines the next level
-            edge_lvl = CormorantEdgeLevel(tau_atom, tau_edge, tau_pos[level], num_channels[level],
+            edge_lvl = CormorantEdgeLevel(tau_atom, tau_edge, tau_pos[level], num_channels[level], max_sh[level],
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
-                                      gaussian_mask=gaussian_mask, cg_dict=self.cg_dict)
+                                      gaussian_mask=gaussian_mask)
             edge_levels.append(edge_lvl)
             tau_edge = edge_lvl.tau
 
@@ -95,7 +97,7 @@ class CormorantCG(CGModule):
         atoms_all = []
         edges_all = []
 
-        for idx, (atom_level, edge_level) in enumerate(zip(self.atom_levels, self.edge_levels)):
+        for idx, (atom_level, edge_level, max_sh) in enumerate(zip(self.atom_levels, self.edge_levels, self.max_sh)):
             edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, atom_mask, norms, sph_harm)
             edge_reps = edge_net * sph_harm
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)

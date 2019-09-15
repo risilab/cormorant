@@ -16,7 +16,7 @@ from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):
         raise ValueError('Two SO3Tensor subclasses have different maxl values '
-                         '({} {})!'.format(len(val1), len(val2)))
+                         '({} {})!'.format(len(val1)-1, len(val2)-1))
 
 def _dispatch_op(op, val1, val2):
     """
