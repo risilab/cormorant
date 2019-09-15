@@ -14,9 +14,13 @@ RMSE = lambda x, y : sqrt(MSE(x, y))
 import logging
 logger = logging.getLogger(__name__)
 
-class TrainCormorant:
+class Engine:
     """
-    Class to train network. Includes checkpoints, optimizer, scheduler,
+    Class for both training and inference phasees of the Cormorant network.
+
+    Includes checkpoints, optimizer, scheduler.
+
+    Roughly based upon TorchNet
     """
     def __init__(self, args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype):
         self.args = args

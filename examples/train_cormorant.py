@@ -8,9 +8,9 @@ from math import sqrt
 from cormorant.models import Cormorant
 from cormorant.models.autotest import cormorant_tests
 
-from cormorant.train import TrainCormorant
-from cormorant.train import init_argparse, init_file_paths, init_logger, init_cuda
-from cormorant.train import init_optimizer, init_scheduler
+from cormorant.engine import Engine
+from cormorant.engine import init_argparse, init_file_paths, init_logger, init_cuda
+from cormorant.engine import init_optimizer, init_scheduler
 from cormorant.data.utils import initialize_datasets
 
 from cormorant.data.collate import collate_fn
@@ -66,7 +66,7 @@ def main():
     cormorant_tests(model, dataloaders['train'], args, charge_scale=charge_scale)
 
     # Instantiate the training class
-    trainer = TrainCormorant(args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype)
+    trainer = Engine(args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype)
 
     # Load from checkpoint file. If no checkpoint file exists, automatically does nothing.
     trainer.load_checkpoint()
