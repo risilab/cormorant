@@ -3,8 +3,6 @@ import pytest
 
 from cormorant.so3_lib import SO3Tau, SO3Vec, SO3Scalar, so3_torch
 
-rand_vec = lambda batch, tau: SO3Vec([torch.rand(batch + (2*l+1, t, 2)) for l, t in enumerate(tau)])
-
 class TestSO3Torch():
 
     @pytest.mark.parametrize('batch1', [(1,), (2,), (2, 2)])
@@ -24,9 +22,9 @@ class TestSO3Torch():
         tau12 = SO3Tau.cat([tau1, tau2])
         tau123 = SO3Tau.cat([tau1, tau2, tau3])
 
-        vec1 = SO3Vec([torch.rand(batch1 + (2*l+1, t, 2)) for l, t in enumerate(tau1)])
-        vec2 = SO3Vec([torch.rand(batch2 + (2*l+1, t, 2)) for l, t in enumerate(tau2)])
-        vec3 = SO3Vec([torch.rand(batch3 + (2*l+1, t, 2)) for l, t in enumerate(tau3)])
+        vec1 = SO3Vec.randn(tau1, batch1)
+        vec2 = SO3Vec.randn(tau2, batch2)
+        vec3 = SO3Vec.randn(tau3, batch3)
 
         if batch1 == batch2:
             vec12 = so3_torch.cat([vec1, vec2])

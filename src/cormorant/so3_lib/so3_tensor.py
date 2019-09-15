@@ -104,6 +104,18 @@ class SO3Tensor(ABC):
         return SO3Tau([part.shape[self.cdim] for part in self])
 
     @property
+    def bshape(self):
+        """
+        Get a list of shapes of each :obj:`torch.Tensor`
+        """
+        bshapes = [p.shape[self.bdim] for p in self]
+
+        if len(set(bshapes)) != 1:
+            raise ValueError('Every part must have the same shape! {}'.format(bshapes))
+
+        return bshape
+
+    @property
     def shapes(self):
         """
         Get a list of shapes of each :obj:`torch.Tensor`

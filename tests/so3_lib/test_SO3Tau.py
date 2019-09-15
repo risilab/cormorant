@@ -1,7 +1,6 @@
 import torch
 import pytest
 
-from cormorant.so3_lib import CGModule, CGDict
 from cormorant.so3_lib import SO3Tau
 
 devices = [torch.device('cpu')]
