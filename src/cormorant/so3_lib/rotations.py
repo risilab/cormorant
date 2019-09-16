@@ -1,9 +1,9 @@
 import torch
 import numpy as np
 
-from cormorant.so3_lib import so3_wigner_d
-
-SO3WignerD = so3_wigner_d.SO3WignerD
+# from cormorant.so3_lib import so3_wigner_d
+#
+# SO3WignerD = so3_wigner_d.SO3WignerD
 
 # TODO: Update legacy code to use SO3Vec/SO3WignerD interfaces
 # TODO: Convert to PyTorch objects to allow for GPU parallelism and autograd support
@@ -15,7 +15,7 @@ Rz = lambda theta: torch.tensor([[np.cos(theta),-np.sin(theta),0],[np.sin(theta)
 EulerRot = lambda alpha, beta, gamma: Rz(alpha) @ Ry(beta) @ Rz(gamma)
 
 
-def gen_rot(maxl, angles=None):
+def gen_rot(maxl, angles=None, device=None, dtype=None):
 	"""
 	Generate a rotation matrix corresponding to a Cartesian and also a Wigner-D
 	representation of a specific  rotation. If `angles` is :obj:`None`, will
@@ -27,22 +27,38 @@ def gen_rot(maxl, angles=None):
 		Maximum weight to include in the Wigner D-matrix list
 	angles : :obj:`list` of :obj:`float` or compatible
 		Three Euler angles (alpha, beta, gamma) to parametrize the rotation.
+
+	device : :obj:`torch.device`
+		Device of the output tensor
+	dtype : :obj:`torch.dtype`
+		Data dype of the output tensor
+
+	Returns
+	-------
+	D : :obj:`list` of :obj:`torch.Tensor`
+		List of Wigner D-matrices from `l=0` to `l=maxl`
+	R : :obj:`torch.Tensor`
+		Rotation matrix that will perform the same cartesian rotation
+	angles : :obj:`tuple`
+		Euler angles that defines the input rotation
 	"""
+	# TODO : Output D as SO3WignerD
 	if angles is None:
 		alpha, beta, gamma = np.random.rand(3) * 2*np.pi
 		beta = beta / 2
+		angles = alpha, beta, gamma
 	else:
 		assert len(angles) == 3
 		alpha, beta, gamma = angles
-	D = WignerD_list(maxl, alpha, beta, gamma)
-	R = EulerRot(alpha, beta, gamma)
+	D = WignerD_list(maxl, alpha, beta, gamma, device=device, dtype=dtype)
+	R = EulerRot(alpha, beta, gamma).to(device=device, dtype=dtype)
 
-	return SO3WignerD(D), R, angles
+	return D, R, angles
 
 
 def rotate_cart_vec(R, vec):
 	""" Rotate a Cartesian vector by a Euler rotation matrix. """
-	return torch.matmul(vec, R) # Broadcast multiplication along last axis.
+	return torch.einsum('ij,...j->...i', R, vec) # Broadcast multiplication along last axis.
 
 
 def rotate_part(D, z):

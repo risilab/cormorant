@@ -2,12 +2,11 @@ import torch
 
 # Hack to avoid circular imports
 from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar, so3_vec
+from cormorant.so3_lib import rotations as rot
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
-SO3Scalar = so3_scalar.SO3Scalar
 
-from cormorant.so3_lib import rotations as rot
 
 from numpy import pi
 

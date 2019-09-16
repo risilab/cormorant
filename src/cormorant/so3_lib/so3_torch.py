@@ -43,6 +43,7 @@ def _dispatch_op(op, val1, val2):
     # Both va1 and val2 are other instances of SO3Tensor
     elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
         _check_maxl(val1, val2)
+        # TODO: Make this less hacky
         val1._bin_op_type_check(type(val1), type(val2))
         val2._bin_op_type_check(type(val1), type(val2))
         applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
