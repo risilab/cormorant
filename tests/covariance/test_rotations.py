@@ -13,15 +13,10 @@ class TestRotations():
     @pytest.mark.parametrize('channels', [1, 2])
     @pytest.mark.parametrize('batch', [[1], [2], (1, 1)])
     def test_apply_euler(self, batch, channels, maxl):
-
         tau = SO3Tau([channels] * (maxl+1))
-
         vec = SO3Vec.rand(batch, tau, dtype=torch.double)
-
         wigner = SO3WignerD.euler(maxl, dtype=torch.double)
-
         so3_torch.apply_wigner(vec, wigner)
-
 
     @pytest.mark.parametrize('maxl', range(3))
     @pytest.mark.parametrize('channels', range(1, 3))
