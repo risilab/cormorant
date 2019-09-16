@@ -1,7 +1,10 @@
 import torch
 import numpy as np
 
-# 3D cartesian rotation matrices
+# TODO: Update legacy code to use SO3Vec/SO3WignerD interfaces
+# TODO: Convert to PyTorch objects to allow for GPU parallelism and autograd support
+
+# Explicitly construct 3D cartesian rotation matrices
 Rx = lambda theta: torch.tensor([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0,np.sin(theta),np.cos(theta)]], dtype=torch.double)
 Ry = lambda theta: torch.tensor([[np.cos(theta),0,np.sin(theta)],[0,1,0],[-np.sin(theta),0,np.cos(theta)]], dtype=torch.double)
 Rz = lambda theta: torch.tensor([[np.cos(theta),-np.sin(theta),0],[np.sin(theta),np.cos(theta),0],[0,0,1]], dtype=torch.double)
@@ -33,46 +36,21 @@ def gen_rot(maxl, angles=None):
 	return D, R
 
 
-def rotate_cart_vec(R, vec, autoconvert=True):
+def rotate_cart_vec(R, vec):
 	""" Rotate a Cartesian vector by a Euler rotation matrix. """
-	if autoconvert:
-		R = R.to(vec.device, vec.dtype)
 	return torch.matmul(vec, R) # Broadcast multiplication along last axis.
 
 
-def rotate_part(D, z, autoconvert=True):
+def rotate_part(D, z):
 	""" Apply a WignerD matrix using complex broadcast matrix multiplication. """
-	if autoconvert:
-		D = D.to(z.device, z.dtype)
 	Dr, Di = D.unbind(-1)
 	zr, zi = z.unbind(-1)
 
-	return torch.stack((torch.matmul(zr, Dr) - torch.matmul(zi, Di),
-						torch.matmul(zr, Di) + torch.matmul(zi, Dr)), -1)
+	matmul = lambda D, z : torch.einsum('ij,...jk->...ik', D, z)
 
+	return torch.stack((matmul(Dr, zr) - matmul(Di, zi),
+						matmul(Di, zr) + matmul(Dr, zi)), -1)
 
-def rotate_so3part(D, z, side='left', autoconvert=True, conjugate=False):
-	""" Apply a WignerD matrix using complex broadcast matrix multiplication. """
-	if autoconvert:
-		D = D.to(z.device, z.dtype)
-	if conjugate:
-		D = dagger(D)
-	Dr, Di = D.unbind(-1)
-	zr, zi = z.unbind(-1)
-
-	if side == 'left':
-		return torch.stack((torch.matmul(zr, Dr) - torch.matmul(zi, Di),
-							torch.matmul(zr, Di) + torch.matmul(zi, Dr)), -1)
-	elif side == 'right':
-		return torch.stack((torch.matmul(Dr, zr) - torch.matmul(Di, zi),
-							torch.matmul(Di, zr) + torch.matmul(Dr, zi)), -1)
-	else:
-		raise ValueError('Must chose side: left/right.')
-
-def dagger(D):
-	conj = torch.tensor([1, -1], dtype=D.dtype, device=D.device).view(1, 1, 2)
-	D = (D*conj).permute((1, 0, 2))
-	return D
 
 def rotate_rep(D_list, rep):
 	""" Apply a WignerD rotation part-wise to a representation. """
@@ -84,14 +62,10 @@ def rotate_rep(D_list, rep):
 	return [rotate_part(D, part) for (D, part) in zip(D_list, rep)]
 
 
-def rotate_so3rep(D_list, rep, side='left', conjugate=False):
-	""" Apply a part-wise left/right sided WignerD rotation to a SO3 (matrix) representation. """
-	ls = [(part.shape[-2]-1)//2 for part in rep]
-	D_maxls = (D_list[-1].shape[-2]-1)//2
-	assert((D_maxls >= max(ls))), 'Must have at least one D matrix for each rep! {} {}'.format(D_maxls, len(rep))
-
-	D_list = [D_list[l] for l in ls]
-	return [rotate_so3part(D, part, side=side, conjugate=conjugate) for (D, part) in zip(D_list, rep)]
+def dagger(D):
+	conj = torch.tensor([1, -1], dtype=D.dtype, device=D.device).view(1, 1, 2)
+	D = (D*conj).permute((1, 0, 2))
+	return D
 
 
 def create_J(j):
@@ -117,6 +91,7 @@ def create_Jy(j):
 	Jy = -(Jp - Jm) / complex(0, 2)
 
 	return Jy
+
 
 def create_Jx(j):
 	mrange = -np.arange(-j, j)

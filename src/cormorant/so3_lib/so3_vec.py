@@ -1,7 +1,8 @@
 import torch
 
 # Hack to avoid circular imports
-from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar, so3_wigner_d
+from cormorant.so3_lib import so3_tau, so3_tensor, so3_torch
+from cormorant.so3_lib import so3_scalar, so3_wigner_d
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
@@ -76,3 +77,21 @@ class SO3Vec(SO3Tensor):
     def _bin_op_type_check(type1, type2):
         if type1 == SO3Vec and type2 == SO3Vec:
             raise ValueError('Cannot multiply two SO3Vecs!')
+
+
+    def apply_wigner(self, wigner_d):
+        """
+        Apply a WignerD matrix to `self`
+
+        Parameters
+        ----------
+        wigner_d : :class:`SO3WignerD`
+            The Wigner D matrix rotation to apply to `self`
+
+        Returns
+        -------
+        :class:`SO3Vec`
+            The current :class:`SO3Vec` rotated by :class:`SO3Vec`
+        """
+
+        return so3_torch.apply_wigner(self, wigner_d)

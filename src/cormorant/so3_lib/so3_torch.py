@@ -15,6 +15,8 @@ SO3WignerD = so3_wigner_d.SO3WignerD
 from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
 from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar
 
+import cormorant.so3_lib.rotations as rot
+
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):
         raise ValueError('Two SO3Tensor subclasses have different maxl values '
@@ -148,3 +150,10 @@ def cat_mix(weights, reps_list):
     """
 
     return mix(weights, cat(reps_list))
+
+
+def apply_wigner(rep, wigner_d):
+    """
+    Apply a Wigner-D rotation to a :obj:`SO3Vec` representation
+    """
+    return SO3Vec(rot.rotate_rep(wigner_d, rep))

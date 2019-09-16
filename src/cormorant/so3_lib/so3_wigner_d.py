@@ -29,6 +29,12 @@ class SO3WignerD(SO3Tensor):
     the current scheme using PyTorch built-ins would be too slow to implement.
     A custom CUDA kernel would likely be necessary, and is a work in progress.
 
+    Warning
+    -------
+    The constructor __init__() does not check that the tensor is actually
+    a Wigner-D matrix, (that is an irreducible representation of the group SO3)
+    so it is important to ensure that the input tensor is generated appropraitely.
+
     Parameters
     ----------
 
@@ -116,8 +122,6 @@ class SO3WignerD(SO3Tensor):
         """ Overwrite factor method inherited from :obj:`SO3Tensor` since
         it would break covariance """
         raise NotImplementedError('Does not make sense as it would break covariance!')
-
-
 
     @staticmethod
     def zeros(maxl, device=None, dtype=None, requires_grad=False):
