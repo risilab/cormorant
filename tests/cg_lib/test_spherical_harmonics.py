@@ -5,6 +5,7 @@ import numpy as np
 
 from cormorant.cg_lib import CGDict
 from cormorant.cg_lib import spherical_harmonics, spherical_harmonics_rel
+from utils import complex_from_numpy
 
 # Test cg_product runs and aggregate=True works
 
@@ -28,8 +29,8 @@ class TestSphericalHarmonics():
     # Compare with SciyPy
     @pytest.mark.parametrize('maxl', range(3))
     @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1,1), (2,1), (1,2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
-    @pytest.mark.parametrize('natoms1', [1, 2, 3, 5])
-    @pytest.mark.parametrize('natoms2', [1, 2, 3, 5])
+    @pytest.mark.parametrize('natoms1', [1, 2, 5])
+    @pytest.mark.parametrize('natoms2', [1, 2, 5])
     def test_spherical_rel_harmonics_vs_scipy(self, maxl, batch, natoms1, natoms2):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)
 
@@ -97,14 +98,8 @@ def sph_harms_from_scipy(pos, maxl):
     sph_harms = []
     for l in range(maxl + 1):
         sph_harm_l = scipy.special.sph_harm(np.arange(-l, l+1).reshape(1, -1), l, phi, theta)
-        sph_harm_l = complex_from_numpy(sph_harm_l).reshape(s[:-1] + (1, 2*l+1, 2,))
+        sph_harm_l = complex_from_numpy(sph_harm_l, dtype=torch.double).reshape(s[:-1] + (1, 2*l+1, 2,))
 
         sph_harms.append(sph_harm_l)
 
     return sph_harms
-
-def complex_from_numpy(z):
-    """ Take a numpy array and output a complex array of the same size. """
-    zr, zi = torch.from_numpy(z.real), torch.from_numpy(z.imag)
-
-    return torch.stack((zr, zi), -1)
