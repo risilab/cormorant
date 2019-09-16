@@ -1,11 +1,12 @@
 import torch
 
-from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar
-
 # Hack to avoid circular imports
+from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar, so3_wigner_d
+
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Scalar = so3_scalar.SO3Scalar
+SO3WignerD = so3_wigner_d.SO3WignerD
 
 class SO3Vec(SO3Tensor):
     """
@@ -75,36 +76,3 @@ class SO3Vec(SO3Tensor):
     def _bin_op_type_check(type1, type2):
         if type1 == SO3Vec and type2 == SO3Vec:
             raise ValueError('Cannot multiply two SO3Vecs!')
-
-    # def mul(self, other):
-    #     """
-    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
-    #     or a :obj:`SO3Scalar`.
-    #     """
-    #     if type(other) in [float, int]:
-    #         mul = [other*part for part in self]
-    #     elif torch.is_tensor(other) is torch.Tensor:
-    #         raise NotImplementedError('Multiplication by a single '
-    #                                   'torch.Tensor not yet implemented!')
-    #     elif issubclass(SO3Scalar, other):
-    #         if self.maxl != other.maxl:
-    #             raise ValueError('SO3Vec and SO3Scalar do not have the same maxl! {} {}'.format(self.maxl, other.maxl))
-    #         mul = [mul_zscalar_zirrep(scalar, part, cdim=self.cdim, zdim=self.zdim) for scalar, part in zip(self, other)]
-    #     else:
-    #         return NotImplemented
-    #
-    #     return self.__class__(mul)
-    #
-    # def __mul__(self, other):
-    #     """
-    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
-    #     or a :obj:`SO3Scalar`.
-    #     """
-    #     return self.mul(other)
-    #
-    # def __rmul__(self, other):
-    #     """
-    #     Define multiplication by a scalar (:obj:`float`, or :obj:`torch.Tensor`),
-    #     or a :obj:`SO3Scalar`.
-    #     """
-    #     return self.mul(other)

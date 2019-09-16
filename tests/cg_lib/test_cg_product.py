@@ -96,7 +96,7 @@ class TestCGProduct():
         for part1, part2 in zip(cg_agg, cg_agg_explicit):
             assert torch.allclose(part1, part2)
 
-def _gen_rot(angles, maxl):
+def gen_rot(angles, maxl):
     alpha, beta, gamma = angles
     D = rot.WignerD_list(maxl, alpha, beta, gamma, dtype=torch.double)
     R = rot.EulerRot(alpha, beta, gamma)
@@ -118,7 +118,7 @@ class TestCGProductCovariance():
         rand_rep = lambda tau, batch: [torch.rand(batch + (t, 2*l+1, 2)).double() for l, t in enumerate(tau)]
 
         angles = torch.rand(3)
-        D, R = _gen_rot(angles, maxl)
+        D, R = gen_rot(angles, maxl)
 
         tau1 = [channels] * (maxl1 + 1)
         tau2 = [channels] * (maxl2 + 1)

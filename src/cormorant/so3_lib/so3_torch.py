@@ -2,13 +2,15 @@ import torch
 
 from itertools import zip_longest
 
-from cormorant.so3_lib import so3_tau, so3_tensor, so3_vec, so3_scalar, so3_weight
+from cormorant.so3_lib import so3_tau, so3_tensor
+from cormorant.so3_lib import so3_vec, so3_scalar, so3_weight, so3_wigner_d
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Vec = so3_vec.SO3Vec
 SO3Scalar = so3_scalar.SO3Scalar
 SO3Weight = so3_weight.SO3Weight
+SO3WignerD = so3_wigner_d.SO3WignerD
 
 from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
 from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar

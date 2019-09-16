@@ -3,23 +3,17 @@ from torch.utils.data import DataLoader
 
 import logging
 
-from cormorant.cg_lib import rotations as rot
+from cormorant.so3_lib import rotations as rot
 from cormorant.data import collate_fn
 
 
-def _gen_rot(data, angles, maxl):
-	alpha, beta, gamma = angles
-	D = rot.WignerD_list(maxl, alpha, beta, gamma)
-	R = rot.EulerRot(alpha, beta, gamma)
-
-	return D, R
 
 def covariance_test(model, data):
 	logging.info('Beginning covariance test!')
 	targets_rotout, outputs_rotin = [], []
 
 	angles = torch.rand(3)
-	D, R = _gen_rot(data, angles, model.maxl)
+	D, R = rot.gen_rot(model.maxl, angles)
 
 	data_rotout = data
 
