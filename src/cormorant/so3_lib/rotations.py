@@ -1,6 +1,10 @@
 import torch
 import numpy as np
 
+from cormorant.so3_lib import so3_wigner_d
+
+SO3WignerD = so3_wigner_d.SO3WignerD
+
 # TODO: Update legacy code to use SO3Vec/SO3WignerD interfaces
 # TODO: Convert to PyTorch objects to allow for GPU parallelism and autograd support
 
@@ -33,7 +37,7 @@ def gen_rot(maxl, angles=None):
 	D = WignerD_list(maxl, alpha, beta, gamma)
 	R = EulerRot(alpha, beta, gamma)
 
-	return D, R
+	return SO3WignerD(D), R, angles
 
 
 def rotate_cart_vec(R, vec):
@@ -46,7 +50,7 @@ def rotate_part(D, z):
 	Dr, Di = D.unbind(-1)
 	zr, zi = z.unbind(-1)
 
-	matmul = lambda D, z : torch.einsum('ij,...jk->...ik', D, z)
+	matmul = lambda D, z : torch.einsum('ij,...kj->...ki', D, z)
 
 	return torch.stack((matmul(Dr, zr) - matmul(Di, zi),
 						matmul(Di, zr) + matmul(Dr, zi)), -1)

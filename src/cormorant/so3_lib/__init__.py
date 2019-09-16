@@ -20,4 +20,4 @@ from cormorant.so3_lib.so3_wigner_d import SO3WignerD
 from cormorant.so3_lib.so3_torch import cat, mix, cat_mix
 
 # Rotation related stuff
-import cormorant.so3_lib.rotations
+from cormorant.so3_lib import rotations

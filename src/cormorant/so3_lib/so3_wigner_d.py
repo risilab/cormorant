@@ -1,13 +1,13 @@
 import torch
 
-from cormorant.so3_lib.rotations import WignerD_list
-
 # Hack to avoid circular imports
 from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar, so3_vec
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Scalar = so3_scalar.SO3Scalar
+
+from cormorant.so3_lib import rotations as rot
 
 from numpy import pi
 
@@ -106,7 +106,7 @@ class SO3WignerD(SO3Tensor):
             alpha, beta, gamma = torch.rand(3) * 2 * pi
             beta = beta / 2
 
-        wigner_d = WignerD_list(maxl, alpha, beta, gamma, device=device, dtype=dtype)
+        wigner_d = rot.WignerD_list(maxl, alpha, beta, gamma, device=device, dtype=dtype)
 
         return SO3WignerD(wigner_d)
 
