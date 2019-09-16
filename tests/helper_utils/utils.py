@@ -52,6 +52,6 @@ def complex_from_numpy(z, dtype=torch.float, device=torch.device('cpu')):
 
 def numpy_from_complex(z):
     """ Take a a complex array and return the commensurate numpy array. """
-    zr = torch.numpy(z[..., 0])
-    zi = torch.numpy(z[..., 0])
+    zr = (z[..., 0]).numpy()
+    zi = (z[..., 1]).numpy()
     return zr + 1j * zi

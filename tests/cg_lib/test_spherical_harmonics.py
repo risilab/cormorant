@@ -9,11 +9,12 @@ from utils import complex_from_numpy
 
 # Test cg_product runs and aggregate=True works
 
+
 class TestSphericalHarmonics():
 
     # Compare with SciyPy
     @pytest.mark.parametrize('maxl', range(3))
-    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1,1), (2,1), (1,2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
+    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
     def test_spherical_harmonics_vs_scipy(self, maxl, batch):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)
 
@@ -28,7 +29,7 @@ class TestSphericalHarmonics():
 
     # Compare with SciyPy
     @pytest.mark.parametrize('maxl', range(3))
-    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1,1), (2,1), (1,2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
+    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
     @pytest.mark.parametrize('natoms1', [1, 2, 5])
     @pytest.mark.parametrize('natoms2', [1, 2, 5])
     def test_spherical_rel_harmonics_vs_scipy(self, maxl, batch, natoms1, natoms2):
@@ -42,10 +43,12 @@ class TestSphericalHarmonics():
         sh_sp, norms_sp = sph_harms_rel_from_scipy(pos1, pos2, maxl)
 
         for l, (part1, part2) in enumerate(zip(sh, sh_sp)):
-            if l == 0: continue
+            if l == 0:
+                continue
             assert torch.allclose(part1, part2)
 
         assert torch.allclose(norms, norms_sp)
+
 
 def sph_harms_rel_from_scipy(pos1, pos2, maxl):
     """ Calculate the relative spherical harmonics using SciPy's special function reoutine """
@@ -69,7 +72,8 @@ def sph_harms_rel_from_scipy(pos1, pos2, maxl):
             for aidx2 in range(s12[2]):
                 vec1 = pos1[bidx, aidx1]
                 vec2 = pos2[bidx, aidx2]
-                if (vec1 == vec2).all(): continue
+                if (vec1 == vec2).all():
+                    continue
                 sh_temp = sph_harms_from_scipy(vec1-vec2, maxl)
                 norms[bidx, aidx1, aidx2] = (vec1-vec2).norm()
                 for l in range(maxl + 1):
@@ -83,7 +87,7 @@ def sph_harms_rel_from_scipy(pos1, pos2, maxl):
 
 
 def sph_harms_from_scipy(pos, maxl):
-    """ Calculate the spherical harmonics using SciPy's special function reoutine """
+    """ Calculate the spherical harmonics using SciPy's special function routine """
     s = pos.shape
 
     pos = pos.view(-1, 3)
