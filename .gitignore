@@ -21,6 +21,8 @@ __pycache__/
 *.json
 *.graphml
 *.ipynb
+*.swp
+*.swo
 
 # Sphinx
 docs/_build
