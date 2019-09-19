@@ -22,6 +22,19 @@ def _check_maxl(val1, val2):
         raise ValueError('Two SO3Tensor subclasses have different maxl values '
                          '({} {})!'.format(len(val1)-1, len(val2)-1))
 
+def _check_compatible_ops(op, val1, val2):
+    """
+    Function to check that two SO3Tensors are compatible with regards
+    to a specific binary operation.
+    """
+    type1 = val1.__class__
+    type2 = val2.__class__
+
+    if op == mul:
+        if type1 == SO3Vec and typ22 == SO3Vec:
+            raise ValueError('Cannot multiply two SO3Vecs together!')
+
+
 def _dispatch_op(op, val1, val2):
     """
     Used to dispatch a binary operator where at least one of the two inputs is a
@@ -43,9 +56,7 @@ def _dispatch_op(op, val1, val2):
     # Both va1 and val2 are other instances of SO3Tensor
     elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
         _check_maxl(val1, val2)
-        # TODO: Make this less hacky
-        val1._bin_op_type_check(type(val1), type(val2))
-        val2._bin_op_type_check(type(val1), type(val2))
+        _check_compatible_ops(op, val1, val2)
         applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
         output_class = type(val2)
     # Multiply val1 with a list/tuple

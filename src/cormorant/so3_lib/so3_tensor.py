@@ -301,10 +301,6 @@ class SO3Tensor(ABC):
 
     __rsub__ = __sub__
 
-    @staticmethod
-    def _bin_op_type_check(type1, type2):
-        pass
-
     def mul(self, other):
         return so3_torch.mul(self, other)
 

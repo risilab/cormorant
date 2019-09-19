@@ -73,11 +73,6 @@ class SO3Vec(SO3Tensor):
         if not all([zdim == 2 for zdim in zdims]):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
 
-    @staticmethod
-    def _bin_op_type_check(type1, type2):
-        if type1 == SO3Vec and type2 == SO3Vec:
-            raise ValueError('Cannot multiply two SO3Vecs!')
-
 
     def apply_wigner(self, wigner_d, dir='left'):
         """
