@@ -25,17 +25,16 @@ class TestCovariance():
     @pytest.mark.parametrize('maxl1', range(4))
     @pytest.mark.parametrize('maxl2', range(4))
     @pytest.mark.parametrize('maxl', range(4))
-    @pytest.mark.parametrize('channels1', [1, 5])
-    @pytest.mark.parametrize('channels2', [1, 5])
-    def test_CGProduct(self, batch, maxl1, maxl2, maxl, channels1, channels2):
+    @pytest.mark.parametrize('channels', [1, 5])
+    def test_CGProduct(self, batch, maxl1, maxl2, maxl, channels):
         maxl_all = max(maxl1, maxl2, maxl)
         D, R, _ = rot.gen_rot(maxl_all)
 
         cg_dict = CGDict(maxl=maxl_all, dtype=torch.double)
         cg_prod = CGProduct(maxl=maxl, dtype=torch.double, cg_dict=cg_dict)
 
-        tau1 = SO3Tau([channels1] * (maxl1+1))
-        tau2 = SO3Tau([channels2] * (maxl2+1))
+        tau1 = SO3Tau([channels] * (maxl1+1))
+        tau2 = SO3Tau([channels] * (maxl2+1))
 
         vec1 = SO3Vec.randn(tau1, batch, dtype=torch.double)
         vec2 = SO3Vec.randn(tau2, batch, dtype=torch.double)

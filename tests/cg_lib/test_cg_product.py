@@ -4,7 +4,7 @@ import pytest
 from cormorant.cg_lib import CGProduct, cg_product, cg_product_tau
 from cormorant.cg_lib import CGDict
 from cormorant.so3_lib import SO3Tau, SO3Vec
-import cormorant.cg_lib.rotations as rot
+import cormorant.so3_lib.rotations as rot
 
 # Test cg_product runs and aggregate=True works
 

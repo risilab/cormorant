@@ -3,7 +3,7 @@ import pytest
 
 from cormorant.models import Cormorant
 
-from ..utils import get_dataloader
+from ..helper_utils.utils import get_dataloader
 
 class TestCormorant():
 
