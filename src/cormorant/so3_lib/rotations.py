@@ -120,25 +120,30 @@ def rotate_cart_vec(R, vec):
     return torch.einsum('ij,...j->...i', R, vec)  # Broadcast multiplication along last axis.
 
 
-def rotate_part(D, z):
+def rotate_part(D, z, dir='left'):
     """ Apply a WignerD matrix using complex broadcast matrix multiplication. """
     Dr, Di = D.unbind(-1)
     zr, zi = z.unbind(-1)
 
-    matmul = lambda D, z: torch.einsum('ij,...kj->...ki', D, z)
+    if dir == 'left':
+        matmul = lambda D, z: torch.einsum('ij,...kj->...ki', D, z)
+    elif dir == 'right':
+        matmul = lambda D, z: torch.einsum('ji,...kj->...ki', D, z)
+    else:
+        raise ValueError('Must apply Wigner rotation from dir=left/right! got dir={}'.format(dir))
 
     return torch.stack((matmul(Dr, zr) - matmul(Di, zi),
                         matmul(Di, zr) + matmul(Dr, zi)), -1)
 
 
-def rotate_rep(D_list, rep):
+def rotate_rep(D_list, rep, dir='left'):
     """ Apply a WignerD rotation part-wise to a representation. """
     ls = [(part.shape[-2]-1)//2 for part in rep]
     D_maxls = (D_list[-1].shape[-2]-1)//2
     assert((D_maxls >= max(ls))), 'Must have at least one D matrix for each rep! {} {}'.format(D_maxls, len(rep))
 
     D_list = [D_list[l] for l in ls]
-    return [rotate_part(D, part) for (D, part) in zip(D_list, rep)]
+    return [rotate_part(D, part, dir=dir) for (D, part) in zip(D_list, rep)]
 
 
 def dagger(D):
@@ -218,7 +223,7 @@ def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=t
 
     Returns
     -------
-    D = 
+    D =
 
 
     """

@@ -15,14 +15,15 @@ class TestSphericalHarmonics():
     # Compare with SciyPy
     @pytest.mark.parametrize('maxl', range(3))
     @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
-    def test_spherical_harmonics_vs_scipy(self, maxl, batch):
+    @pytest.mark.parametrize('conj', [True, False])
+    def test_spherical_harmonics_vs_scipy(self, maxl, batch, conj):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)
 
         pos = torch.rand(batch + (3,), dtype=torch.double)
 
-        sh = spherical_harmonics(cg_dict, pos, maxl, normalize=True, sh_norm='qm')
+        sh = spherical_harmonics(cg_dict, pos, maxl, normalize=True, conj=conj, sh_norm='qm')
 
-        sh_sp = sph_harms_from_scipy(pos, maxl)
+        sh_sp = sph_harms_from_scipy(pos, maxl, conj=conj)
 
         for part1, part2 in zip(sh, sh_sp):
             assert torch.allclose(part1, part2)
@@ -32,15 +33,16 @@ class TestSphericalHarmonics():
     @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
     @pytest.mark.parametrize('natoms1', [1, 2, 5])
     @pytest.mark.parametrize('natoms2', [1, 2, 5])
-    def test_spherical_rel_harmonics_vs_scipy(self, maxl, batch, natoms1, natoms2):
+    @pytest.mark.parametrize('conj', [True, False])
+    def test_spherical_rel_harmonics_vs_scipy(self, maxl, batch, natoms1, natoms2, conj):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)
 
         pos1 = torch.rand(batch + (natoms1, 3), dtype=torch.double)
         pos2 = torch.rand(batch + (natoms2, 3), dtype=torch.double)
 
-        sh, norms = spherical_harmonics_rel(cg_dict, pos1, pos2, maxl, sh_norm='qm')
+        sh, norms = spherical_harmonics_rel(cg_dict, pos1, pos2, maxl, conj=conj, sh_norm='qm')
 
-        sh_sp, norms_sp = sph_harms_rel_from_scipy(pos1, pos2, maxl)
+        sh_sp, norms_sp = sph_harms_rel_from_scipy(pos1, pos2, maxl, conj=conj)
 
         for l, (part1, part2) in enumerate(zip(sh, sh_sp)):
             if l == 0:
@@ -50,7 +52,7 @@ class TestSphericalHarmonics():
         assert torch.allclose(norms, norms_sp)
 
 
-def sph_harms_rel_from_scipy(pos1, pos2, maxl):
+def sph_harms_rel_from_scipy(pos1, pos2, maxl, conj=False):
     """ Calculate the relative spherical harmonics using SciPy's special function reoutine """
     s1 = pos1.shape
     s2 = pos2.shape
@@ -74,7 +76,7 @@ def sph_harms_rel_from_scipy(pos1, pos2, maxl):
                 vec2 = pos2[bidx, aidx2]
                 if (vec1 == vec2).all():
                     continue
-                sh_temp = sph_harms_from_scipy(vec1-vec2, maxl)
+                sh_temp = sph_harms_from_scipy(vec1-vec2, maxl, conj=conj)
                 norms[bidx, aidx1, aidx2] = (vec1-vec2).norm()
                 for l in range(maxl + 1):
                     sph_harms[l][bidx, aidx1, aidx2, 0, :, :] = sh_temp[l]
@@ -86,7 +88,7 @@ def sph_harms_rel_from_scipy(pos1, pos2, maxl):
     return sph_harms, norms
 
 
-def sph_harms_from_scipy(pos, maxl):
+def sph_harms_from_scipy(pos, maxl, conj=False):
     """ Calculate the spherical harmonics using SciPy's special function routine """
     s = pos.shape
 
@@ -102,6 +104,8 @@ def sph_harms_from_scipy(pos, maxl):
     sph_harms = []
     for l in range(maxl + 1):
         sph_harm_l = scipy.special.sph_harm(np.arange(-l, l+1).reshape(1, -1), l, phi, theta)
+        if conj:
+            sph_harm_l = sph_harm_l.conj()
         sph_harm_l = complex_from_numpy(sph_harm_l, dtype=torch.double).reshape(s[:-1] + (1, 2*l+1, 2,))
 
         sph_harms.append(sph_harm_l)

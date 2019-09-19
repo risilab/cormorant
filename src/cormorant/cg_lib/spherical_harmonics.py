@@ -20,6 +20,8 @@ class SphericalHarmonics(CGModule):
         Calculate spherical harmonics from ``l=0, ..., maxl``.
     normalize : `bool`, optional
         Normalize the cartesian vectors used to calculate the spherical harmonics.
+    conj : `bool`, optional
+        Return the conjugate of the (conventionally defined) spherical harmonics.
     sh_norm : `str`, optional
         Chose the normalization convention for the spherical harmonics.
         The options are:
@@ -34,11 +36,12 @@ class SphericalHarmonics(CGModule):
     device : :obj:`torch.device`
         Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
     """
-    def __init__(self, maxl, normalize=True, sh_norm='unit',
+    def __init__(self, maxl, normalize=True, conj=False, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
 
         self.normalize = normalize
         self.sh_norm = sh_norm
+        self.conj = conj
 
         super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
 
@@ -56,7 +59,8 @@ class SphericalHarmonics(CGModule):
         sph_harms : :obj:`list` of :obj:`torch.Tensor`
             Output list of spherical harmonics from :math:`\ell=0` to :math:`\ell=maxl`
         """
-        return spherical_harmonics(self.cg_dict, pos, self.maxl, self.normalize, self.sh_norm)
+        return spherical_harmonics(self.cg_dict, pos, self.maxl,
+                                   self.normalize, self.conj, self.sh_norm)
 
 
 class SphericalHarmonicsRel(CGModule):
@@ -83,6 +87,8 @@ class SphericalHarmonicsRel(CGModule):
         Calculate spherical harmonics from ``l=0, ..., maxl``.
     normalize : `bool`, optional
         Normalize the cartesian vectors used to calculate the spherical harmonics.
+    conj : `bool`, optional
+        Return the conjugate of the (conventionally defined) spherical harmonics.
     sh_norm : `str`, optional
         Chose the normalization convention for the spherical harmonics.
         The options are:
@@ -97,11 +103,12 @@ class SphericalHarmonicsRel(CGModule):
     device : :obj:`torch.device`
         Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
     """
-    def __init__(self, maxl, normalize=False, sh_norm='unit',
+    def __init__(self, maxl, normalize=False, conj=False, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
 
         self.normalize = normalize
         self.sh_norm = sh_norm
+        self.conj = conj
 
         super().__init__(cg_dict=cg_dict, maxl=maxl, device=device, dtype=dtype)
 
@@ -125,10 +132,11 @@ class SphericalHarmonicsRel(CGModule):
         sph_harms : :obj:`list` of :obj:`torch.Tensor`
             Output matrix of spherical harmonics from :math:`\ell=0` to :math:`\ell=maxl`
         """
-        return spherical_harmonics_rel(self.cg_dict, pos1, pos2, self.maxl, self.normalize, self.sh_norm)
+        return spherical_harmonics_rel(self.cg_dict, pos1, pos2, self.maxl,
+                                       self.normalize, self.conj, self.sh_norm)
 
 
-def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='unit'):
+def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, conj=False, sh_norm='unit'):
     r"""
     Functional form of the Spherical Harmonics. See documentation of
     :obj:`SphericalHarmonics` for details.
@@ -150,7 +158,7 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='unit'):
 
     sph_harms = [psi0]
     if maxsh >= 1:
-        psi1 = pos_to_rep(pos)
+        psi1 = pos_to_rep(pos, conj=conj)
         psi1 *= sqrt(3/(4*pi))
         sph_harms.append(psi1)
 
@@ -174,7 +182,7 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, sh_norm='unit'):
 
     return SO3Vec(sph_harms)
 
-def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, sh_norm='unit'):
+def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, conj=False, sh_norm='unit'):
     r"""
     Functional form of the relative Spherical Harmonics. See documentation of
     :obj:`SphericalHarmonicsRel` for details.
@@ -182,28 +190,35 @@ def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, sh_norm=
     rel_pos = pos1.unsqueeze(-2) - pos2.unsqueeze(-3)
     rel_norms = rel_pos.norm(dim=-1, keepdim=True)
 
-    rel_sph_harm = spherical_harmonics(cg_dict, rel_pos, maxsh, normalize=normalize, sh_norm=sh_norm)
+    rel_sph_harm = spherical_harmonics(cg_dict, rel_pos, maxsh, normalize=normalize,
+                                       conj=conj, sh_norm=sh_norm)
 
     return rel_sph_harm, rel_norms.squeeze(-1)
 
-def pos_to_rep(pos):
+def pos_to_rep(pos, conj=False):
     r"""
     Convert a tensor of cartesian position vectors to an l=1 spherical tensor.
 
     Parameters
     ----------
-    pos : torch.Tensor
-        A set of input cartesian vectors.
-        Can have arbitrary batch dimensions as long
-        as the last dimension has length three, for x, y, z.
+    pos : :obj:`torch.Tensor`
+        A set of input cartesian vectors. Can have arbitrary batch dimensions
+         as long as the last dimension has length three, for x, y, z.
+    conj : :obj:`bool`
+        Return the complex conjugated representation.
+
 
     Returns
     -------
-    psi1 : torch.Tensor
+    psi1 : :obj:`torch.Tensor`
         The input cartesian vectors converted to a l=1 spherical tensor.
 
     """
     pos_x, pos_y, pos_z = pos.unbind(-1)
+
+    # Only the y coordinates get mapped to imaginary terms
+    if conj:
+        pos_y *= -1
 
     pos_m = torch.stack([pos_x, -pos_y], -1)/sqrt(2.)
     pos_0 = torch.stack([pos_z, torch.zeros_like(pos_z)], -1)

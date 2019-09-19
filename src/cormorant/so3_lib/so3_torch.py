@@ -153,8 +153,8 @@ def cat_mix(weights, reps_list):
     return mix(weights, cat(reps_list))
 
 
-def apply_wigner(rep, wigner_d):
+def apply_wigner(wigner_d, rep, dir='left'):
     """
     Apply a Wigner-D rotation to a :obj:`SO3Vec` representation
     """
-    return SO3Vec(rot.rotate_rep(wigner_d, rep))
+    return SO3Vec(rot.rotate_rep(wigner_d, rep, dir=dir))
