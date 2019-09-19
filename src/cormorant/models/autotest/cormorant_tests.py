@@ -4,20 +4,23 @@ from torch.utils.data import DataLoader
 import logging
 
 from cormorant.so3_lib import rotations as rot
+from cormorant.so3_lib import SO3WignerD
 from cormorant.data import collate_fn
-
 
 
 def covariance_test(model, data):
 	logging.info('Beginning covariance test!')
 	targets_rotout, outputs_rotin = [], []
 
-	angles = torch.rand(3)
-	D, R = rot.gen_rot(model.maxl, angles)
+	device, dtype = data['positions'].device, data['positions'].dtype
+
+	D, R, _ = rot.gen_rot(model.maxl, device=device, dtype=dtype)
+
+	D = SO3WignerD(D).to(model.device, model.dtype)
 
 	data_rotout = data
 
-	data_rotin = {key: val.clone() if type(val) is torch.Tensor else None for key, val in data.items()}
+	data_rotin = {key: val.clone() if torch.is_tensor(val) else None for key, val in data.items()}
 	data_rotin['positions'] = rot.rotate_cart_vec(R, data_rotin['positions'])
 
 	outputs_rotout, reps_rotout, _ = model(data_rotout, covariance_test=True)
@@ -25,7 +28,7 @@ def covariance_test(model, data):
 
 	invariance_test = (outputs_rotout - outputs_rotin).norm().item()
 
-	reps_rotout = [rot.rotate_rep(D, reps) for reps in reps_rotout]
+	reps_rotout = [reps.apply_wigner(D) for reps in reps_rotout]
 
 	rep_diff = [(level_in - level_out).abs() for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 

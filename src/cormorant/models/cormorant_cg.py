@@ -36,13 +36,14 @@ class CormorantCG(CGModule):
             # First add the edge, since the output type determines the next level
             edge_lvl = CormorantEdgeLevel(tau_atom, tau_edge, tau_pos[level], num_channels[level], max_sh[level],
                                       cutoff_type, hard_cut_rad[level], soft_cut_rad[level], soft_cut_width[level],
-                                      gaussian_mask=gaussian_mask)
+                                      gaussian_mask=gaussian_mask, device=device, dtype=dtype)
             edge_levels.append(edge_lvl)
             tau_edge = edge_lvl.tau
 
             # Now add the NBody level
-            atom_lvl = CormorantAtomLevel(tau_atom, tau_edge, maxl[level], num_channels[level+1], level_gain[level], weight_init,
-                                        cg_dict=self.cg_dict)
+            atom_lvl = CormorantAtomLevel(tau_atom, tau_edge, maxl[level], num_channels[level+1],
+                                          level_gain[level], weight_init,
+                                          device=device, dtype=dtype, cg_dict=cg_dict)
             atom_levels.append(atom_lvl)
             tau_atom = atom_lvl.tau
 

@@ -77,7 +77,8 @@ class Cormorant(CGModule):
         self.num_species = num_species
 
         # Set up spherical harmonics
-        self.sph_harms = SphericalHarmonicsRel(max(max_sh), cg_dict=self.cg_dict)
+        self.sph_harms = SphericalHarmonicsRel(max(max_sh), conj=True,
+                                               device=device, dtype=dtype, cg_dict=cg_dict)
 
         # Set up position functions, now independent of spherical harmonics
         self.rad_funcs = RadialFilters(max_sh, basis_set, num_channels, num_cg_levels,
