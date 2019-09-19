@@ -1,12 +1,13 @@
 import torch
 import pytest
 
-from cormorant.so3_lib import so3_torch, SO3Vec, SO3Scalar, SO3Weight
+from cormorant.so3_lib import so3_torch, SO3Tau
+from cormorant.so3_lib import SO3Vec, SO3Scalar, SO3Weight, SO3WignerD
 from cormorant.so3_lib import rotations as rot
 
-from cormorant.cg_lib import CGProduct
+from cormorant.cg_lib import CGProduct, CGDict
 
-from ..utils import get_dataloader
+from ..helper_utils.utils import get_dataloader
 
 def gen_rotated_data(dataloader, maxl):
     D, R = rot.gen_rot(maxl)
@@ -20,22 +21,37 @@ def gen_rotated_data(dataloader, maxl):
 
 class TestCovariance():
 
-    def test_CGProduct(self, maxl1, maxl2, maxl, channels1, channels2):
-        D, R = rot.gen_rot(maxl)
+    @pytest.mark.parametrize('batch', [(1,), (3,), (1, 1), (3, 3)])
+    @pytest.mark.parametrize('maxl1', range(4))
+    @pytest.mark.parametrize('maxl2', range(4))
+    @pytest.mark.parametrize('maxl', range(4))
+    @pytest.mark.parametrize('channels1', [1, 5])
+    @pytest.mark.parametrize('channels2', [1, 5])
+    def test_CGProduct(self, batch, maxl1, maxl2, maxl, channels1, channels2):
+        maxl_all = max(maxl1, maxl2, maxl)
+        D, R, _ = rot.gen_rot(maxl_all)
 
-        wigner = SO3WignerD(D)
-
-        cg_dict = CGDict(maxl=maxl, dtype=torch.double)
+        cg_dict = CGDict(maxl=maxl_all, dtype=torch.double)
         cg_prod = CGProduct(maxl=maxl, dtype=torch.double, cg_dict=cg_dict)
 
         tau1 = SO3Tau([channels1] * (maxl1+1))
         tau2 = SO3Tau([channels2] * (maxl2+1))
 
-        vec1 = SO3Vec.randn(tau1)
-        vec2 = SO3Vec.randn(tau2)
+        vec1 = SO3Vec.randn(tau1, batch, dtype=torch.double)
+        vec2 = SO3Vec.randn(tau2, batch, dtype=torch.double)
 
-        vec1r = vec1.apply_wigner(D)
-        vec2r = vec2.apply_wigner(D)
+        vec1i = vec1.apply_wigner(D, dir='left')
+        vec2i = vec2.apply_wigner(D, dir='left')
 
         vec_prod = cg_prod(vec1, vec2)
-        vecr_prod = cg_prod(vec1r, vec2r)
+        veci_prod = cg_prod(vec1i, vec2i)
+
+        vecf_prod = vec_prod.apply_wigner(D, dir='left')
+
+        # diff = (sph_harmsr - sph_harmsd).abs()
+        diff = [(p1 - p2).abs().max() for p1, p2 in zip(veci_prod, vecf_prod)]
+        print(diff)
+        assert all([d < 1e-6 for d in diff])
+
+
+        # assert (veci_prod - vecf_prod).allclose()

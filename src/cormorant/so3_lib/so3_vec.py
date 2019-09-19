@@ -79,7 +79,7 @@ class SO3Vec(SO3Tensor):
             raise ValueError('Cannot multiply two SO3Vecs!')
 
 
-    def apply_wigner(self, wigner_d):
+    def apply_wigner(self, wigner_d, dir='left'):
         """
         Apply a WignerD matrix to `self`
 
@@ -87,6 +87,8 @@ class SO3Vec(SO3Tensor):
         ----------
         wigner_d : :class:`SO3WignerD`
             The Wigner D matrix rotation to apply to `self`
+        dir : :obj:`str`
+            The direction to apply the Wigner-D matrices. Options are left/right.
 
         Returns
         -------
@@ -94,4 +96,4 @@ class SO3Vec(SO3Tensor):
             The current :class:`SO3Vec` rotated by :class:`SO3Vec`
         """
 
-        return so3_torch.apply_wigner(self, wigner_d)
+        return so3_torch.apply_wigner(wigner_d, self, dir=dir)
