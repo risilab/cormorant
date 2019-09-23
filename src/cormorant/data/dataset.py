@@ -19,7 +19,7 @@ class ProcessedDataset(Dataset):
             self.num_pts = len(data['charges'])
         else:
             if num_pts > len(data['charges']):
-                logging.warn('Desired number of points ({}) is greater than the number of data points ({}) available in the dataset!'.format(num_pts, len(data['charges'])))
+                logging.warning('Desired number of points ({}) is greater than the number of data points ({}) available in the dataset!'.format(num_pts, len(data['charges'])))
                 self.num_pts = len(data['charges'])
             else:
                 self.num_pts = num_pts
@@ -33,7 +33,7 @@ class ProcessedDataset(Dataset):
         if subtract_thermo:
             thermo_targets = [key.split('_')[0] for key in data.keys() if key.endswith('_thermo')]
             if len(thermo_targets) == 0:
-                logging.warn('No thermochemical targets included! Try reprocessing dataset with --force-download!')
+                logging.warning('No thermochemical targets included! Try reprocessing dataset with --force-download!')
             else:
                 logging.info('Removing thermochemical energy from targets {}'.format(' '.join(thermo_targets)))
             for key in thermo_targets:

@@ -22,8 +22,8 @@ class SO3Tau():
         else:
             try:
                 tau = tau.tau
-            except e:
-                raise ValueError('Input does not have a defined .tau property!')
+            except AttributeError: 
+                raise AttributeError('Input is of type %s does not have a defined .tau property!' % type(tau))
 
         self._tau = tuple(tau)
 
