@@ -61,35 +61,30 @@ class CormorantCG(CGModule):
 
         Parameters
         ----------
-        atom_reps : :obj:`list` of :obj:`torch.Tensor`
-            Input atom representations. List is length `maxl+1`, each with shape
-            :math:`(N_{batch}, N_{atom}, N_{channels}, 2*l+1, 2)`
+        atom_reps :  SO3 Vector
+            Input atom representations.
         atom_mask : :obj:`torch.Tensor` with data type `torch.byte`
             Batch mask for atom representations. Shape is
             :math:`(N_{batch}, N_{atom})`.
-        edge_net : :obj:`list` of :obj:`torch.Tensor`
-            Input edge scalar features. List is length `maxl+1`, each with shape
-            :math:`(N_{batch}, N_{atom}, N_{atom}, N_{channels}, 2)`
+        edge_net : SO3 Scalar or None`
+            Input edge scalar features.
         edge_mask : :obj:`torch.Tensor` with data type `torch.byte`
             Batch mask for atom representations. Shape is
             :math:`(N_{batch}, N_{atom}, N_{atom})`.
-        rad_funcs : :obj:`list` of :obj:`list` of :obj:`torch.Tensor`
-            The (possibly learnable) radial filters output from
-            :obj:`cormorant.nn.position_functions.RadialFilters`.
+        rad_funcs : :obj:`list` of SO3 Scalars
+            The (possibly learnable) radial filters.
         edge_mask : :obj:`torch.Tensor`
             Matrix of the magnitudes of relative position vectors of pairs of atoms.
             :math:`(N_{batch}, N_{atom}, N_{atom})`.
-        sph_harm : :obj:`list` of :obj:`torch.Tensor`
+        sph_harm : SO3 Vector
             Representation of spherical harmonics calculated from the relative
-            position vectors of pairs of points. Each tensor has shape
-            :math:`(N_{batch}, N_{atom}, N_{atom}, N_{channels}, 2*l+1, 2)`
-            for `l` up to `maxl_sh`.
+            position vectors of pairs of points.
 
         Returns
         -------
-        atoms_all : :obj:`list` of :obj:`list` of :obj:`torch.Tensor`
+        atoms_all : list of SO3 Vectors
             The concatenated output of the representations output at each level.
-        edges_all : :obj:`list` of :obj:`list` of :obj:`torch.Tensor`
+        edges_all : list of SO3 Scalars
             The concatenated output of the scalar edge network output at each level.
         """
         assert len(self.atom_levels) == len(self.edge_levels) == len(rad_funcs)

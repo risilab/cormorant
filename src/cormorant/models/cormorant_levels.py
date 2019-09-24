@@ -135,6 +135,23 @@ class CormorantAtomLevel(CGModule):
         self.tau = self.cat_mix.tau
 
     def forward(self, atom_reps, edge_reps, mask):
+        """
+        Runs a forward pass of the network.
+
+        Parameters
+        ----------
+        atom_reps : SO3Vec
+            Representation of the atomic environment.
+        edge_reps : SO3Vec
+            Representation of the connections between atoms
+        mask : pytorch Tensor
+            Mask determining which elements of atom_reps are active.
+
+        Returns
+        -------
+        reps_out : SO3Vec
+            Output representation of the atomic environment.
+        """
         # Aggregate information based upon edge reps
         reps_ag = self.cg_aggregate(edge_reps, atom_reps)
 
