@@ -67,7 +67,7 @@ class CormorantEdgeLevel(CGModule):
         self.mask_layer = MaskLevel(nout, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
                                     gaussian_mask=gaussian_mask, device=self.device, dtype=self.dtype)
 
-    def forward(self, edge_in, atom_reps, pos_funcs, base_mask, mask, norms, spherical_harmonics):
+    def forward(self, edge_in, atom_reps, pos_funcs, base_mask, norms):
         # Caculate the dot product matrix.
         edge_dot = self.dot_matrix(atom_reps)
 
