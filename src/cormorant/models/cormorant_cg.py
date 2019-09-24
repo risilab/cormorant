@@ -92,12 +92,64 @@ class CormorantCG(CGModule):
         # Construct iterated multipoles
         atoms_all = []
         edges_all = []
+        
+        #### DEBUG ####
+        from cormorant.so3_lib import rotations as rot
+        from cormorant.so3_lib import SO3WignerD
+        print(dir(self))
+        print(self.maxl)
+        maxl = 10  # SETTING IT BIG ENOUGH FOR TESTING USE... NOT GENERALIZEABLE
+        device, dtype = self.device, self.dtype
+        D, R, _ = rot.gen_rot(maxl, device=device, dtype=dtype)
+        D = SO3WignerD(D).to(device, dtype)
+        atom_reps = atom_reps.apply_wigner(D)
+        sph_harm_rot = sph_harm.apply_wigner(D)
+        print('sph harm rot test')
+        for si_rot, si in zip(sph_harm_rot, sph_harm):
+            print(torch.max(torch.abs(si_rot - si)))
+
+        # atoms_rot_all = []
+        # edges_rot_all = []
+        ###############
 
         for idx, (atom_level, edge_level, max_sh) in enumerate(zip(self.atom_levels, self.edge_levels, self.max_sh)):
+            # #### DEBUG ####
+            if edge_net is not None:
+                edge_net_copy = edge_net
+            else:
+                edge_net_copy = None
+            atom_reps_copy = atom_reps.apply_wigner(D)
+            print('atom rep copy check')
+            for si_rot, si in zip(atom_reps_copy, atom_reps):
+                print(torch.max(torch.abs(si_rot - si)))
+            ###############
+
             edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, norms)
             edge_reps = edge_net * sph_harm
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)
+
             atoms_all.append(atom_reps)
             edges_all.append(edge_net)
+
+            #### DEBUG ####
+            edge_net_rot = edge_level(edge_net_copy, atom_reps_copy, rad_funcs[idx], edge_mask, norms)
+            edge_reps_rot = edge_net_rot * sph_harm_rot
+            atom_reps_rot = atom_level(atom_reps_copy, edge_reps_rot, atom_mask)
+
+            print('~~Test Covariance Layer %d~~' % (idx +1))
+            print('Max Abs Error:')
+            print('edge net (before multiplying by spherical harmonics)')
+            for k, (a, b) in enumerate(zip(edge_net, edge_net_rot)):
+                print("l=%d" % k, torch.max(torch.abs(a - b)))
+            print('edge reps (after multiplying by spherical harmonics)')
+            for k, (a, b) in enumerate(zip(edge_reps, edge_reps_rot)):
+                print("l=%d" % k, torch.max(torch.abs(a - b)))
+            print('atom reps')
+            for k, (a, b) in enumerate(zip(atom_reps, atom_reps_rot)):
+                print("l=%d" % k, torch.max(torch.abs(a - b)))
+            ###############
+        #### DEBUG ####
+        raise Exception
+        ###############
 
         return atoms_all, edges_all
