@@ -2,8 +2,8 @@ import pytest
 import torch
 from cormorant.so3_lib import rotations as rot
 from cormorant.so3_lib import SO3Vec
-
-from cormorant.models import CormorantAtomLevel
+from cormorant.nn import RadialFilters
+from cormorant.models import CormorantAtomLevel, CormorantEdgeLevel
 from ..helper_utils.utils import get_dataloader
 from cormorant.cg_lib import SphericalHarmonicsRel
 # from cormorant.models import CormorantEdgeLevel
@@ -77,19 +77,50 @@ class TestCormorantAtomLevel(object):
             assert(torch.max(torch.abs(output_from_rot[i] - output[i])) < 1E-5)
 
 
-# class TestCormorantEdgeLevel(object):
-#     @pytest.mark.parametrize('taus', [1, 3])
-#     @pytest.mark.parametrize('num_channels', [3])
-#     @pytest.mark.parametrize('maxl', [1, 3])
-#     def test_covariance(self, taus, num_channels, maxl):
-#         env = build_environment(tau, maxl, num_channels)
-#         datasets, data, num_species, charge_scale, sph_harms = env
-#         device, dtype = data['positions'].device, data['positions'].dtype
-#         D, R, _ = rot.gen_rot(maxl, device=device, dtype=dtype)
-# 
-#         # Build Atom layer
-#         tlist = [tau] * maxl
-#         print(tlist)
-#         edge_lvl = CormorantEdgeLevel(tlist, tlist, maxl, num_channels, 1, 'rand',
-#                                       device=device, dtype=dtype, cg_dict=None)
-#         return
+class TestCormorantEdgeLevel(object):
+    @pytest.mark.parametrize('num_channels', [3])
+    # @pytest.mark.parametrize('maxl', [1, 3])
+    # @pytest.mark.parametrize('tau', [1, 3])
+    # @pytest.mark.parametrize('basis', [1, 3])
+    @pytest.mark.parametrize('maxl', [3])
+    @pytest.mark.parametrize('tau', [3])
+    @pytest.mark.parametrize('basis', [3])
+    # @pytest.mark.parametrize('edge_net_type', [None, 'sph_harms'])
+    @pytest.mark.parametrize('edge_net_type', [None])
+    def test_covariance(self, tau, num_channels, maxl, basis, edge_net_type):
+        env = build_environment(tau, maxl, num_channels)
+        datasets, data, num_species, charge_scale, sph_harms = env
+        device, dtype = data['positions'].device, data['positions'].dtype
+        D, R, _ = rot.gen_rot(maxl, device=device, dtype=dtype)
+
+        # Setup Input
+        atom_rep, atom_mask, edge_scalars, edge_mask, atom_positions = prep_input(data, tau, maxl)
+        # atom_positions_rot = rot.rotate_cart_vec(R, atom_positions)
+
+        # Calculate spherical harmonics and radial functions
+        spherical_harmonics, norms = sph_harms(atom_positions, atom_positions)
+        rad_funcs = RadialFilters([maxl-1], [basis, basis], [num_channels], 1,
+                                  device=device, dtype=dtype)
+        rad_func_levels = rad_funcs(norms, edge_mask * (norms > 0).byte())
+        tau_pos = rad_funcs.tau[0]
+
+        # Build the initial edge network
+        if edge_net_type is None:
+            edge_reps = None
+        elif edge_net_type == 'sph_harms':
+            # edge_rep_list = [torch.cat([sph_l] * tau, axis=-3) for sph_l in spherical_harmonics]
+            # edge_reps = SO3Vec(edge_rep_list)
+            raise Exception("IMPLEMENT THIS, ERIK!")
+        else:
+            raise ValueError
+
+        # Build Atom layer
+        tlist = [tau] * maxl
+        print(tlist)
+        edge_lvl = CormorantEdgeLevel(tlist, tlist, tau_pos, num_channels, maxl,
+                                      cutoff_type='soft', device=device, dtype=dtype,
+                                      hard_cut_rad=1.73, soft_cut_rad=1.73,
+                                      soft_cut_width=0.2)
+
+        edge_reps = edge_lvl(edge_reps, atom_rep, rad_func_levels[0], edge_mask, atom_mask, norms, spherical_harmonics)
+        return
