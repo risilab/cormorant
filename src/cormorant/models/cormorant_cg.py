@@ -104,7 +104,7 @@ class CormorantCG(CGModule):
         D = SO3WignerD(D).to(device, dtype)
         atom_reps = atom_reps.apply_wigner(D)
         sph_harm_rot = sph_harm.apply_wigner(D)
-        print('sph harm rot test')
+        print('sph harm is different')
         for si_rot, si in zip(sph_harm_rot, sph_harm):
             print(torch.max(torch.abs(si_rot - si)))
 
@@ -134,7 +134,9 @@ class CormorantCG(CGModule):
             #### DEBUG ####
             edge_net_rot = edge_level(edge_net_copy, atom_reps_copy, rad_funcs[idx], edge_mask, norms)
             edge_reps_rot = edge_net_rot * sph_harm_rot
+            edge_reps_rot_2 = edge_net_rot * sph_harm
             atom_reps_rot = atom_level(atom_reps_copy, edge_reps_rot, atom_mask)
+            atom_reps_rot_2 = atom_level(atom_reps_copy, edge_reps_rot_2, atom_mask)
 
             print('~~Test Covariance Layer %d~~' % (idx +1))
             print('Max Abs Error:')
@@ -142,10 +144,16 @@ class CormorantCG(CGModule):
             for k, (a, b) in enumerate(zip(edge_net, edge_net_rot)):
                 print("l=%d" % k, torch.max(torch.abs(a - b)))
             print('edge reps (after multiplying by spherical harmonics)')
-            for k, (a, b) in enumerate(zip(edge_reps, edge_reps_rot)):
+            for k, (a, b) in enumerate(zip(edge_reps.apply_wigner(D), edge_reps_rot)):
                 print("l=%d" % k, torch.max(torch.abs(a - b)))
+            
             print('atom reps')
-            for k, (a, b) in enumerate(zip(atom_reps, atom_reps_rot)):
+            atom_reps_out_rot = atom_reps.apply_wigner(D)
+            for k, (a, b) in enumerate(zip(atom_reps_out_rot, atom_reps_rot)):
+                print("l=%d" % k, torch.max(torch.abs(a - b)))
+            
+            print('atom reps_2')
+            for k, (a, b) in enumerate(zip(atom_reps_out_rot, atom_reps_rot_2)):
                 print("l=%d" % k, torch.max(torch.abs(a - b)))
             ###############
         #### DEBUG ####
