@@ -43,7 +43,7 @@ def get_dataloader():
 
 
 def complex_from_numpy(z, dtype=torch.float, device=torch.device('cpu')):
-    """ Take a numpy array and output a complex array of the same size. """
+    """ Take a numpy array and output a complex tensor of the same size. """
     zr = torch.from_numpy(z.real).to(dtype=dtype, device=device)
     zi = torch.from_numpy(z.imag).to(dtype=dtype, device=device)
 
@@ -51,7 +51,7 @@ def complex_from_numpy(z, dtype=torch.float, device=torch.device('cpu')):
 
 
 def numpy_from_complex(z):
-    """ Take a a complex array and return the commensurate numpy array. """
+    """ Take a a complex tensor and return the commensurate numpy array. """
     zr = (z[..., 0]).numpy()
     zi = (z[..., 1]).numpy()
     return zr + 1j * zi

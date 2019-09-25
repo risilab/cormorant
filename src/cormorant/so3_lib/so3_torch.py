@@ -1,5 +1,6 @@
 import torch
 import cormorant.so3_lib.rotations as rot
+import warnings
 
 from itertools import zip_longest
 
@@ -32,8 +33,9 @@ def _check_mult_compatible(val1, val2):
 
     if val1_has_rdim and val2_has_rdim:
         # raise ValueError('Cannot multiply two SO3Vecs together!')
-        raise RuntimeWarning("Both Inputs have representation dimensions."
-                             "Multiplying them together may break covariance.")
+        warnings.warn("Both Inputs have representation dimensions. "
+                      "Multiplying them together may break covariance.",
+                      RuntimeWarning)
 
 
 def _dispatch_op(op, val1, val2):
@@ -105,7 +107,7 @@ def _dispatch_mul(val1, val2):
         _check_maxl(val1, val2)
         applied_op = [mul_zscalar_zscalar(part1, part2)
                       for part1, part2 in zip(val1, val2)]
-        output_class = SO3Vec
+        output_class = SO3Scalar
     # Both va1 and val2 are other instances of SO3Tensor
     elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
         _check_maxl(val1, val2)
