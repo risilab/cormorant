@@ -1,12 +1,12 @@
 import torch
 
 from abc import ABC, abstractmethod
-from itertools import zip_longest
 
 
 from cormorant.so3_lib import so3_torch, so3_tau
 
 SO3Tau = so3_tau.SO3Tau
+
 
 class SO3Tensor(ABC):
     """
@@ -54,7 +54,8 @@ class SO3Tensor(ABC):
     @abstractmethod
     def rdim(self):
         """
-        Define the representation (2*l+1) dimension for each part.
+        Define the representation (2*l+1) dimension for each part. Should be None
+        if it is not applicable for this type of SO3Tensor.
         """
         pass
 
@@ -130,7 +131,7 @@ class SO3Tensor(ABC):
         if len(set(bshapes)) != 1:
             raise ValueError('Every part must have the same shape! {}'.format(bshapes))
 
-        return bshape
+        return bshapes
 
     @property
     def shapes(self):
@@ -205,10 +206,9 @@ class SO3Tensor(ABC):
         """
         Check equality of two :obj:`SO3Tensor` compatible objects.
         """
-        if len(self) != len(other):
+        if len(rep1) != len(rep2):
             raise ValueError('')
         return all(torch.allclose(part1, part2, **kwargs) for part1, part2 in zip(rep1, rep2))
-
 
     def __and__(self, other):
         return self.cat([self, other])
@@ -304,6 +304,9 @@ class SO3Tensor(ABC):
     def mul(self, other):
         return so3_torch.mul(self, other)
 
+    def complex_mul(self, other):
+        return so3_torch.mul(self, other)
+
     def __mul__(self, other):
         """
         Add element wise `torch.Tensors`
@@ -361,7 +364,7 @@ class SO3Tensor(ABC):
         shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
 
         return cls([torch.rand(shape, device=device, dtype=dtype,
-                          requires_grad=requires_grad) for shape in shapes])
+                               requires_grad=requires_grad) for shape in shapes])
 
     @classmethod
     def randn(cls, tau, batch, device=None, dtype=None, requires_grad=False):
@@ -372,7 +375,7 @@ class SO3Tensor(ABC):
         shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
 
         return cls([torch.randn(shape, device=device, dtype=dtype,
-                          requires_grad=requires_grad) for shape in shapes])
+                                requires_grad=requires_grad) for shape in shapes])
 
     @classmethod
     def zeros(cls, tau, batch, device=None, dtype=None, requires_grad=False):
@@ -383,7 +386,7 @@ class SO3Tensor(ABC):
         shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
 
         return cls([torch.zeros(shape, device=device, dtype=dtype,
-                          requires_grad=requires_grad) for shape in shapes])
+                                requires_grad=requires_grad) for shape in shapes])
 
     @classmethod
     def ones(cls, tau, batch, device=None, dtype=None, requires_grad=False):
@@ -394,4 +397,4 @@ class SO3Tensor(ABC):
         shapes = [cls._get_shape(batch, l, t) for l, t in enumerate(tau)]
 
         return cls([torch.ones(shape, device=device, dtype=dtype,
-                          requires_grad=requires_grad) for shape in shapes])
+                               requires_grad=requires_grad) for shape in shapes])

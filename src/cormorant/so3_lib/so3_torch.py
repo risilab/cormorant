@@ -1,9 +1,12 @@
 import torch
+import cormorant.so3_lib.rotations as rot
 
 from itertools import zip_longest
 
 from cormorant.so3_lib import so3_tau, so3_tensor
 from cormorant.so3_lib import so3_vec, so3_scalar, so3_weight, so3_wigner_d
+from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
+from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
@@ -12,27 +15,25 @@ SO3Scalar = so3_scalar.SO3Scalar
 SO3Weight = so3_weight.SO3Weight
 SO3WignerD = so3_wigner_d.SO3WignerD
 
-from cormorant.so3_lib.cplx_lib import mul_zscalar_zirrep, mul_zscalar_zscalar
-from cormorant.so3_lib.cplx_lib import mix_zweight_zvec, mix_zweight_zscalar
-
-import cormorant.so3_lib.rotations as rot
 
 def _check_maxl(val1, val2):
     if len(val1) != len(val2):
         raise ValueError('Two SO3Tensor subclasses have different maxl values '
                          '({} {})!'.format(len(val1)-1, len(val2)-1))
 
-def _check_compatible_ops(op, val1, val2):
+
+def _check_mult_compatible(val1, val2):
     """
     Function to check that two SO3Tensors are compatible with regards
     to a specific binary operation.
     """
-    type1 = val1.__class__
-    type2 = val2.__class__
+    val1_has_rdim = (val1.rdim is not None)
+    val2_has_rdim = (val2.rdim is not None)
 
-    if op == mul:
-        if type1 == SO3Vec and typ22 == SO3Vec:
-            raise ValueError('Cannot multiply two SO3Vecs together!')
+    if val1_has_rdim and val2_has_rdim:
+        # raise ValueError('Cannot multiply two SO3Vecs together!')
+        raise RuntimeWarning("Both Inputs have representation dimensions."
+                             "Multiplying them together may break covariance.")
 
 
 def _dispatch_op(op, val1, val2):
@@ -56,7 +57,6 @@ def _dispatch_op(op, val1, val2):
     # Both va1 and val2 are other instances of SO3Tensor
     elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
         _check_maxl(val1, val2)
-        _check_compatible_ops(op, val1, val2)
         applied_op = [op(part1, part2) for part1, part2 in zip(val1, val2)]
         output_class = type(val2)
     # Multiply val1 with a list/tuple
@@ -83,17 +83,75 @@ def _dispatch_op(op, val1, val2):
     return output_class(applied_op)
 
 
+def _dispatch_mul(val1, val2):
+    """
+    Used to dispatch a binary operator where at least one of the two inputs is a
+    SO3Tensor.
+    """
+
+    # Hack to make SO3Vec/SO3Scalar multiplication work
+    # TODO: Figure out better way of doing this?
+    if isinstance(val1, SO3Scalar) and isinstance(val2, SO3Vec):
+        _check_maxl(val1, val2)
+        applied_op = [mul_zscalar_zirrep(part1, part2, rdim=val2.rdim)
+                      for part1, part2 in zip(val1, val2)]
+        output_class = SO3Vec
+    elif isinstance(val1, SO3Vec) and isinstance(val2, SO3Scalar):
+        _check_maxl(val1, val2)
+        applied_op = [mul_zscalar_zirrep(part2, part1, rdim=val1.rdim)
+                      for part1, part2 in zip(val1, val2)]
+        output_class = SO3Vec
+    elif isinstance(val1, SO3Scalar) and isinstance(val2, SO3Scalar):
+        _check_maxl(val1, val2)
+        applied_op = [mul_zscalar_zscalar(part1, part2)
+                      for part1, part2 in zip(val1, val2)]
+        output_class = SO3Vec
+    # Both va1 and val2 are other instances of SO3Tensor
+    elif isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
+        _check_maxl(val1, val2)
+        _check_mult_compatible(val1, val2)
+        applied_op = [mul_zscalar_zscalar(part1, part2)
+                      for part1, part2 in zip(val1, val2)]
+        output_class = type(val2)
+    # Multiply val1 with a list/tuple
+    elif isinstance(val1, SO3Tensor) and type(val2) in [list, tuple]:
+        _check_maxl(val1, val2)
+        applied_op = [torch.mul(part1, part2) for part1, part2 in zip(val1, val2)]
+        output_class = type(val1)
+    # Multiply val1 with something else
+    elif isinstance(val1, SO3Tensor) and not isinstance(val2, SO3Tensor):
+        applied_op = [torch.mul(val2, part1) for part1 in val1]
+        output_class = type(val1)
+    # Multiply val2 with a list/tuple
+    elif not isinstance(val1, SO3Tensor) and type(val1) in [list, tuple]:
+        _check_maxl(val1, val2)
+        applied_op = [torch.mul(part1, part2) for part1, part2 in zip(val1, val2)]
+        output_class = type(val1)
+    # Multiply val2 with something else
+    elif not isinstance(val1, SO3Tensor) and isinstance(val2, SO3Tensor):
+        applied_op = [torch.mul(val1, part2) for part2 in val2]
+        output_class = type(val2)
+    else:
+        raise ValueError('Neither class inherits from SO3Tensor!')
+
+    return output_class(applied_op)
+
+
 def mul(val1, val2):
-    return _dispatch_op(torch.mul, val1, val2)
+    return _dispatch_mul(val1, val2)
+
 
 def add(val1, val2):
     return _dispatch_op(torch.add, val1, val2)
 
+
 def sub(val1, val2):
     return _dispatch_op(torch.sub, val1, val2)
 
+
 def div(val1, val2):
-    return _dispatch_op(torch.div, val1, val2)
+    raise NotImplementedError('Complex Division has not been implemented yet')
+    # return __dispatch_divtype(torch.div, val1, val2)
 
 
 def cat(reps_list):

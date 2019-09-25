@@ -61,6 +61,7 @@ def mul_zscalar_zirrep(scalar, part, rdim=-2, zdim=-1):
 
     return torch.stack([part_r*scalar_r - part_i*scalar_i, part_r*scalar_i + part_i*scalar_r], dim=zdim)
 
+
 def mul_zscalar_zscalar(scalar1, scalar2, zdim=-1):
     """
     Complex multiply the part of a :obj:`SO3Scalar` and a part of a
