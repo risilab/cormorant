@@ -113,7 +113,7 @@ class TestCGModule():
 
     # Check that .half() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
-    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('maxl', [2])
     def test_cg_mod_half(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
@@ -126,7 +126,7 @@ class TestCGModule():
 
     # Check that .float() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
-    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('maxl', [2])
     def test_cg_mod_float(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
@@ -137,6 +137,7 @@ class TestCGModule():
 
     # Check that .double() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    @pytest.mark.parametrize('maxl', [2])
     def test_cg_mod_double(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
@@ -147,7 +148,7 @@ class TestCGModule():
 
     # Check that .cpu() work as expected
     @pytest.mark.parametrize('device', devices)
-    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('maxl', [2])
     def test_cg_mod_cpu(self, maxl, device):
 
         cg_mod = CGModule(maxl=maxl, device=device)
@@ -158,7 +159,7 @@ class TestCGModule():
 
     # Check that .cuda() work as expected
     @pytest.mark.parametrize('device', devices)
-    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('maxl', [2])
     def test_cg_mod_cuda(self, maxl, device):
 
         if not torch.cuda.is_available():
