@@ -165,7 +165,7 @@ class CGModule(nn.Module):
         if self.cg_dict is not None:
             self.cg_dict.to(dtype=torch.half)
 
-        self._device = torch.half
+        self._dtype = torch.half
 
         return self
 
@@ -175,7 +175,7 @@ class CGModule(nn.Module):
         if self.cg_dict is not None:
             self.cg_dict.to(dtype=torch.float)
 
-        self._device = torch.float
+        self._dtype = torch.float
 
         return self
 
@@ -185,6 +185,6 @@ class CGModule(nn.Module):
         if self.cg_dict is not None:
             self.cg_dict.to(dtype=torch.double)
 
-        self._device = torch.double
+        self._dtype = torch.double
 
         return self

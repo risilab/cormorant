@@ -117,10 +117,12 @@ class TestCGModule():
     def test_cg_mod_half(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
+        print(cg_mod.dtype, dtype)
         cg_mod.half()
+        print(cg_mod.dtype, dtype)
         assert cg_mod.dtype == torch.half
         assert cg_mod.cg_dict.dtype == torch.half
-        assert all([t.device == torch.half for t in cg_mod.cg_dict.values()])
+        assert all([t.dtype == torch.half for t in cg_mod.cg_dict.values()])
 
     # Check that .float() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
@@ -131,7 +133,7 @@ class TestCGModule():
         cg_mod.float()
         assert cg_mod.dtype == torch.float
         assert cg_mod.cg_dict.dtype == torch.float
-        assert all([t.device == torch.float for t in cg_mod.cg_dict.values()])
+        assert all([t.dtype == torch.float for t in cg_mod.cg_dict.values()])
 
     # Check that .double() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
@@ -141,7 +143,7 @@ class TestCGModule():
         cg_mod.double()
         assert cg_mod.dtype == torch.double
         assert cg_mod.cg_dict.dtype == torch.double
-        assert all([t.device == torch.double for t in cg_mod.cg_dict.values()])
+        assert all([t.dtype == torch.double for t in cg_mod.cg_dict.values()])
 
     # Check that .cpu() work as expected
     @pytest.mark.parametrize('device', devices)
