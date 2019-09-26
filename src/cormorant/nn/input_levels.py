@@ -5,6 +5,8 @@ from cormorant.nn.generic_levels import BasicMLP
 from cormorant.nn.position_levels import RadPolyTrig
 from cormorant.nn.mask_levels import MaskLevel
 
+from cormorant.so3_lib import SO3Tau, SO3Vec
+
 
 ############# Input to network #############
 
@@ -26,63 +28,12 @@ class InputLinear(nn.Module):
         out = torch.where(atom_mask, self.lin(input_scalars), self.zero)
         out = out.view(input_scalars.shape[0:2] + (self.num_out, 1, 2))
 
-        return out
+        return SO3Vec([out])
 
-class InputMPNN_old(nn.Module):
-    def __init__(self, channels_in, channels_out, num_layers=1,
-                 soft_cut_rad=None, soft_cut_width=None, hard_cut_rad=None, cutoff_type=['learn'],
-                 channels_mlp=-1, num_hidden=1, layer_width=256,
-                 activation='leakyrelu', basis_set=(3, 3),
-                 device=torch.device('cpu'), dtype=torch.float):
-        super(InputMPNN_old, self).__init__()
+    @property
+    def tau(self):
+        return SO3Tau([self.num_out])
 
-        self.soft_cut_rad = soft_cut_rad
-        self.soft_cut_width = soft_cut_width
-        self.hard_cut_rad = hard_cut_rad
-
-        self.dtype = dtype
-        self.device = device
-
-        if channels_mlp < 0:
-            channels_mlp = max(channels_in, channels_out)
-
-        # List of channels at each level. The factor of two accounts for
-        # the fact that the passed messages are concatenated with the input states.
-        channels_lvls = [channels_in] + [channels_mlp]*(num_layers-1) + [2*channels_out]
-
-        self.channels_in = channels_in
-        self.channels_mlp = channels_mlp
-        self.channels_out = channels_out
-
-        self.mlps = nn.ModuleList()
-        for n1, n2 in zip(channels_lvls[:-1], channels_lvls[1:]):
-            mlp = BasicMLP(2*n1, n2, num_hidden=num_hidden, layer_width=layer_width, device=device, dtype=dtype)
-            self.mlps.append(mlp)
-
-        self.zero = torch.tensor(0, dtype=dtype, device=device)
-
-    def forward(self, features, atom_mask, edge_mask, norms):
-        num_batch, num_atoms, _ = features.shape
-
-        Adj = edge_mask * (norms > 0)
-        atom_mask = atom_mask.unsqueeze(-1)
-
-        if self.hard_cut_rad is not None:
-            Adj = (Adj * (norms < self.hard_cut_rad))
-
-        Adj = Adj.to(self.dtype)
-
-        if self.soft_cut_rad is not None and self.soft_cut_width is not None:
-            Adj *= torch.sigmoid(-(norms - self.soft_cut_rad)/self.soft_cut_width)
-
-        for mlp in self.mlps:
-            message_pass = torch.matmul(Adj, features)
-            message_pass = torch.cat([message_pass, features], dim=-1)
-            features = torch.where(atom_mask, mlp(message_pass), self.zero)
-
-        out = features.view((num_batch, num_atoms, self.channels_out, 1, 2))
-
-        return out
 
 
 class InputMPNN(nn.Module):
@@ -112,9 +63,6 @@ class InputMPNN(nn.Module):
         self.mlps = nn.ModuleList()
         self.masks = nn.ModuleList()
         self.rad_filts = nn.ModuleList()
-
-        # WARNING: temporarily overwriting basis set to be (0, 0)
-        basis_set = (0, 0)
 
         for chan_in, chan_out in zip(channels_lvls[:-1], channels_lvls[1:]):
             rad_filt = RadPolyTrig(0, basis_set, chan_in, mix='real', device=device, dtype=dtype)
@@ -163,4 +111,8 @@ class InputMPNN(nn.Module):
         # The output are the MLP features reshaped into a set of complex numbers.
         out = features.view(s[0:2] + (self.channels_out, 1, 2))
 
-        return out
+        return SO3Vec([out])
+
+    @property
+    def tau(self):
+        return SO3Tau([self.num_out])

@@ -6,13 +6,12 @@ from datetime import datetime
 from math import sqrt
 
 from cormorant.models import Cormorant
-from cormorant.tests import cormorant_tests
+from cormorant.models.autotest import cormorant_tests
 
-from cormorant.train import TrainCormorant
-from cormorant.train import init_argparse, init_file_paths, init_logger, init_cuda
-from cormorant.train import init_optimizer, init_scheduler
+from cormorant.engine import Engine
+from cormorant.engine import init_argparse, init_file_paths, init_logger, init_cuda
+from cormorant.engine import init_optimizer, init_scheduler
 from cormorant.data.utils import initialize_datasets
-from cormorant.cg_lib import global_cg_dict
 
 from cormorant.data.collate import collate_fn
 
@@ -35,9 +34,6 @@ def main():
     # Initialize device and data type
     device, dtype = init_cuda(args)
 
-    # Initializing CG coefficients
-    global_cg_dict(maxl=max(args.maxl+args.max_sh), dtype=dtype, device=device)
-
     # Initialize dataloder
     args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset,
                                                                     force_download=args.force_download, subtract_thermo=args.subtract_thermo
@@ -52,7 +48,7 @@ def main():
                          for split, dataset in datasets.items()}
 
     # Initialize model
-    model = Cormorant(args.num_cg_levels, args.maxl, args.max_sh, args.num_channels, num_species,
+    model = Cormorant(args.maxl, args.max_sh, args.num_cg_levels, args.num_channels, num_species,
                         args.cutoff_type, args.hard_cut_rad, args.soft_cut_rad, args.soft_cut_width,
                         args.weight_init, args.level_gain, args.charge_power, args.basis_set,
                         charge_scale, args.gaussian_mask,
@@ -70,7 +66,7 @@ def main():
     cormorant_tests(model, dataloaders['train'], args, charge_scale=charge_scale)
 
     # Instantiate the training class
-    trainer = TrainCormorant(args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype)
+    trainer = Engine(args, dataloaders, model, loss_fn, optimizer, scheduler, restart_epochs, device, dtype)
 
     # Load from checkpoint file. If no checkpoint file exists, automatically does nothing.
     trainer.load_checkpoint()

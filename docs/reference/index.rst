@@ -5,4 +5,6 @@ Reference
     :glob:
 
     cormorant
-    data
+    cg_lib
+    cg_ops
+    sph_harms

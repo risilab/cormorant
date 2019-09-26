@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 
-from . import BasicMLP, cat_reps
+from cormorant.nn import BasicMLP
+from cormorant.so3_lib import cat
 
 ############# Get Scalars #############
 
-class GetScalars(nn.Module):
+class GetScalarsAtom(nn.Module):
     def __init__(self, tau_levels, full_scalars=True, device=torch.device('cpu'), dtype=torch.float):
-        super(GetScalars, self).__init__()
+        super().__init__()
 
         self.device = device
         self.dtype = dtype
@@ -33,7 +34,7 @@ class GetScalars(nn.Module):
 
     def forward(self, reps_levels):
 
-        reps = cat_reps(reps_levels)
+        reps = cat(reps_levels)
 
         scalars = reps[0]
 

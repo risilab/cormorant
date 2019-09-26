@@ -3,61 +3,53 @@ from torch.utils.data import DataLoader
 
 import logging
 
-from cormorant.cg_lib import rotations as rot
+from cormorant.so3_lib import rotations as rot
+from cormorant.so3_lib import SO3WignerD
 from cormorant.data import collate_fn
 
-
-def _gen_rot(data, angles, maxl):
-	alpha, beta, gamma = angles
-	D = rot.WignerD_list(maxl, alpha, beta, gamma)
-	R = rot.EulerRot(alpha, beta, gamma)
-
-	return D, R
 
 def covariance_test(model, data):
 	logging.info('Beginning covariance test!')
 	targets_rotout, outputs_rotin = [], []
 
-	angles = torch.rand(3)
-	D, R = _gen_rot(data, angles, max(model.maxl))
+	device, dtype = data['positions'].device, data['positions'].dtype
+
+	D, R, _ = rot.gen_rot(model.maxl, device=device, dtype=dtype)
+
+	D = SO3WignerD(D).to(model.device, model.dtype)
 
 	data_rotout = data
 
-	data_rotin = {key: val.clone() if type(val) is torch.Tensor else None for key, val in data.items()}
+	data_rotin = {key: val.clone() if torch.is_tensor(val) else None for key, val in data.items()}
 	data_rotin['positions'] = rot.rotate_cart_vec(R, data_rotin['positions'])
 
 	outputs_rotout, reps_rotout, _ = model(data_rotout, covariance_test=True)
 	outputs_rotin, reps_rotin, _ = model(data_rotin, covariance_test=True)
 
-	reps_rotout, reps_rotin = reps_rotout[0], reps_rotin[0]
+	invariance_test = (outputs_rotout - outputs_rotin).norm().item()
 
-	invariance_test = (outputs_rotout - outputs_rotin).norm()
+	reps_rotout = [reps.apply_wigner(D) for reps in reps_rotout]
 
-	reps_rotout = [rot.rotate_rep(D, reps) for reps in reps_rotout]
-	covariance_test_norm = [[(part_in - part_out).norm().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
-	covariance_test_mean = [[(part_in - part_out).abs().mean().item() for (part_in, part_out) in zip(level_in, level_out)] for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
+	rep_diff = [(level_in - level_out).abs() for (level_in, level_out) in zip(reps_rotin, reps_rotout)]
 
-	covariance_test_max = torch.cat([torch.tensor([(part_in - part_out).abs().max().item() for (part_in, part_out) in zip(level_in, level_out)]) for (level_in, level_out) in zip(reps_rotin, reps_rotout)])
-	covariance_test_max = covariance_test_max.max().item()
+	covariance_test_norm = [torch.tensor([diff.norm() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
+	covariance_test_mean = [torch.tensor([diff.mean() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
+	covariance_test_max = [torch.tensor([diff.max() for diff in diffs_lvl]) for diffs_lvl in rep_diff]
 
-	if set([len(part) for part in reps_rotout]) == 1:
-		covariance_test_norm = torch.tensor(covariance_test_norm)
-		covariance_test_mean = torch.tensor(covariance_test_mean)
-	else:
-		covariance_test_norm = [torch.tensor(p) for p in covariance_test_norm]
-		covariance_test_mean = [torch.tensor(p) for p in covariance_test_mean]
-
+	covariance_test_max_all = max([max(lvl) for lvl in covariance_test_max]).item()
 
 	logging.info('Rotation Invariance test: {:0.5g}'.format(invariance_test))
-	logging.info('Largest deviation in covariance test : {:0.5g}'.format(covariance_test_max))
+	logging.info('Largest deviation in covariance test : {:0.5g}'.format(covariance_test_max_all))
 
 	# If the largest deviation in the covariance test is greater than 1e-5,
 	# display l1 and l2 norms of each irrep along each level.
-	if covariance_test_max > 1e-5:
-		logging.warning('Largest deviation in covariance test {:0.5g} detected! Detailed summary:'.format(covariance_test_max))
-		for lvl_idx, (lvl_norm, lvl_mean) in enumerate(zip(covariance_test_norm, covariance_test_mean)):
-			for ell_idx, (ell_norm, ell_mean) in enumerate(zip(lvl_norm, lvl_mean)):
-				logging.warning('(lvl, ell) = ({}, {}) -> {:0.5g} (mean) {:0.5g} (max)'.format(lvl_idx, ell_idx, ell_norm, ell_mean))
+	if covariance_test_max_all > 1e-5:
+		logging.warning('Largest deviation in covariance test {:0.5g} detected! Detailed summary:'.format(covariance_test_max_all))
+		for lvl_idx, (lvl_norm, lvl_mean, lvl_max) in enumerate(zip(covariance_test_norm, covariance_test_mean, covariance_test_max)):
+			for ell_idx, (ell_norm, ell_mean, ell_max) in enumerate(zip(lvl_norm, lvl_mean, lvl_max)):
+				logging.warning('(lvl, ell) = ({}, {}) -> '
+							    '{:0.5g} (norm) {:0.5g} (mean) {:0.5g} (max)'\
+								.format(lvl_idx, ell_idx, ell_norm, ell_mean, ell_max))
 
 
 def permutation_test(model, data):
@@ -106,8 +98,6 @@ def cormorant_tests(model, dataloader, args, tests=['covariance'], charge_scale=
 
 	logging.info("Testing network for symmetries:")
 	model.eval()
-
-	charge_power, num_species = model.charge_power, model.num_species
 
 	data = next(iter(dataloader))
 

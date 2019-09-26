@@ -21,7 +21,7 @@ RMSE = lambda x, y : sqrt(MSE(x, y))
 #### Initialize parameters for training run ####
 
 def init_argparse():
-    from cormorant.train.args import setup_argparse
+    from cormorant.engine.args import setup_argparse
 
     parser = setup_argparse()
     args = parser.parse_args()
