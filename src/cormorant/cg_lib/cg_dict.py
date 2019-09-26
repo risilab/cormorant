@@ -5,6 +5,7 @@ from scipy.special import factorial
 import logging
 logger = logging.getLogger(__name__)
 
+
 class CGDict():
     r"""
     A dictionary of Clebsch-Gordan (CG) coefficients to be used in CG operations.
@@ -13,6 +14,7 @@ class CGDict():
 
     .. math::
         \langle \ell_1, m_1, l_2, m_2 | l, m \rangle
+
     are used to decompose the tensor product of two
     irreps of maximum weights :math:`\ell_1` and :math:`\ell_2` into a direct
     sum of irreps with :math:`\ell = |\ell_1 -\ell_2|, \ldots, (\ell_1 + \ell_2)`.
@@ -24,11 +26,10 @@ class CGDict():
     The module has a dict-like interface with keys :math:`(l_1, l_2)` for
     :math:`\ell_1, l_2 \leq l_{\rm max}`. Each value is a matrix of shape
     :math:`D \times D`, where :math:`D = (2l_1+1)\times(2l_2+1)`.
-    The matrix has elements
-    .
+    The matrix has elements.
 
     Parameters
-    ==========
+    ----------
     maxl: int
         Maximum weight for which to calculate the Clebsch-Gordan coefficients.
         This refers to the maximum weight for the ``input tensors``, not the
@@ -43,6 +44,7 @@ class CGDict():
 
     dtype: torch.dtype, optional
         Data type of CG dictionary.
+
     """
 
     def __init__(self, maxl=None, transpose=True, dtype=torch.float, device=torch.device('cpu')):
@@ -93,7 +95,7 @@ class CGDict():
             return self
 
         # If self is false, old_maxl = 0 (uninitialized).
-        old_maxl = self.maxl if self else 0
+        # old_maxl = self.maxl if self else 0
 
         # Otherwise, update the CG coefficients.
         cg_dict_new = _gen_cg_dict(new_maxl, transpose=self.transpose, existing_keys=self._cg_dict.keys())
@@ -106,7 +108,6 @@ class CGDict():
         self._maxl = new_maxl
 
         return self
-
 
     def to(self, dtype=None, device=None):
         """
@@ -142,7 +143,7 @@ class CGDict():
         return self._cg_dict.items()
 
     def __getitem__(self, idx):
-        if  not self:
+        if not self:
             raise ValueError('CGDict() not initialized. Either set maxl, or use update_maxl()')
         return self._cg_dict[idx]
 

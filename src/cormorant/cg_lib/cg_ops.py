@@ -15,8 +15,8 @@ class CGProduct(CGModule):
     .. math::
 
         [tau^1_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
-
         [tau^2_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
+
     and outputs a new SO3 vector of type:
 
     .. math::

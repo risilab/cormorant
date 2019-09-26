@@ -32,7 +32,6 @@ class Cormorant(CGModule):
         length :obj:`num_cg_levels`)
     num_species : :obj:`int`
         Number of species of atoms included in the input dataset.
-    cutoff_type : :obj:``
 
     device : :obj:`torch.device`
         Device to initialize the level to
@@ -124,7 +123,7 @@ class Cormorant(CGModule):
 
         Parameters
         ----------
-        data : :ojb:`dict`
+        data : :obj:`dict`
             Dictionary of data to pass to the network.
         covariance_test : :obj:`bool`, optional
             If true, returns all of the atom-level representations twice.
