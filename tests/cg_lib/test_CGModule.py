@@ -1,6 +1,8 @@
 import torch
 import pytest
 
+from torch.nn import Parameter
+
 from cormorant.cg_lib import CGModule, CGDict
 
 devices = [torch.device('cpu')]
@@ -110,55 +112,72 @@ class TestCGModule():
         assert cg_mod.cg_dict.device == device2
         assert all([t.device == device2 for t in cg_mod.cg_dict.values()])
 
-        # Check that .half() work as expected
-        @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
-        def test_cg_mod_half(self, maxl, dtype):
+    # Check that .half() work as expected
+    @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    def test_cg_mod_half(self, maxl, dtype):
 
-            cg_mod = CGModule(maxl=maxl, dtype=dtype)
-            cg_mod.half()
-            assert cg_mod.dtype == torch.half
-            assert cg_mod.cg_dict.dtype == torch.half
-            assert all([t.device == torch.half for t in cg_mod.cg_dict.values()])
+        cg_mod = CGModule(maxl=maxl, dtype=dtype)
+        cg_mod.half()
+        assert cg_mod.dtype == torch.half
+        assert cg_mod.cg_dict.dtype == torch.half
+        assert all([t.device == torch.half for t in cg_mod.cg_dict.values()])
 
-        # Check that .float() work as expected
-        @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
-        def test_cg_mod_float(self, maxl, dtype):
+    # Check that .float() work as expected
+    @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    def test_cg_mod_float(self, maxl, dtype):
 
-            cg_mod = CGModule(maxl=maxl, dtype=dtype)
-            cg_mod.float()
-            assert cg_mod.dtype == torch.float
-            assert cg_mod.cg_dict.dtype == torch.float
-            assert all([t.device == torch.float for t in cg_mod.cg_dict.values()])
+        cg_mod = CGModule(maxl=maxl, dtype=dtype)
+        cg_mod.float()
+        assert cg_mod.dtype == torch.float
+        assert cg_mod.cg_dict.dtype == torch.float
+        assert all([t.device == torch.float for t in cg_mod.cg_dict.values()])
 
-        # Check that .double() work as expected
-        @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
-        def test_cg_mod_double(self, maxl, dtype):
+    # Check that .double() work as expected
+    @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    def test_cg_mod_double(self, maxl, dtype):
 
-            cg_mod = CGModule(maxl=maxl, dtype=dtype)
-            cg_mod.double()
-            assert cg_mod.dtype == torch.double
-            assert cg_mod.cg_dict.dtype == torch.double
-            assert all([t.device == torch.double for t in cg_mod.cg_dict.values()])
+        cg_mod = CGModule(maxl=maxl, dtype=dtype)
+        cg_mod.double()
+        assert cg_mod.dtype == torch.double
+        assert cg_mod.cg_dict.dtype == torch.double
+        assert all([t.device == torch.double for t in cg_mod.cg_dict.values()])
 
-        # Check that .cpu() work as expected
-        @pytest.mark.parametrize('device', devices)
-        def test_cg_mod_cpu(self, maxl, device):
+    # Check that .cpu() work as expected
+    @pytest.mark.parametrize('device', devices)
+    def test_cg_mod_cpu(self, maxl, device):
 
-            cg_mod = CGModule(maxl=maxl, device=device)
-            cg_mod.cpu()
-            assert cg_mod.device == torch.device('cpu')
-            assert cg_mod.cg_dict.device == torch.device('cpu')
-            assert all([t.device == torch.device('cpu') for t in cg_mod.cg_dict.values()])
+        cg_mod = CGModule(maxl=maxl, device=device)
+        cg_mod.cpu()
+        assert cg_mod.device == torch.device('cpu')
+        assert cg_mod.cg_dict.device == torch.device('cpu')
+        assert all([t.device == torch.device('cpu') for t in cg_mod.cg_dict.values()])
 
-        # Check that .cuda() work as expected
-        @pytest.mark.parametrize('device', devices)
-        def test_cg_mod_cuda(self, maxl, device):
+    # Check that .cuda() work as expected
+    @pytest.mark.parametrize('device', devices)
+    def test_cg_mod_cuda(self, maxl, device):
 
-            if not torch.cuda.is_available():
-                return
+        if not torch.cuda.is_available():
+            return
 
-            cg_mod = CGModule(maxl=maxl, device=device)
-            cg_mod.cuda()
-            assert cg_mod.device == torch.device('cuda')
-            assert cg_mod.cg_dict.device == torch.device('cuda')
-            assert all([t.device == torch.device('cuda') for t in cg_mod.cg_dict.values()])
+        cg_mod = CGModule(maxl=maxl, device=device)
+        cg_mod.cuda()
+        assert cg_mod.device == torch.device('cuda')
+        assert cg_mod.cg_dict.device == torch.device('cuda')
+        assert all([t.device == torch.device('cuda') for t in cg_mod.cg_dict.values()])
+
+    def test_register_parameter(self):
+
+        class BasicCGModule(CGModule):
+            def __init__(self):
+                super().__init__()
+                x = Parameter(torch.tensor(0.))
+                self.register_parameter('x', x)
+
+                self.y = Parameter(torch.tensor(1.))
+
+        basic_cg = BasicCGModule()
+
+        params = [key for key, val in basic_cg.named_parameters()]
+
+        assert 'x' in params
+        assert 'y' in params

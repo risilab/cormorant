@@ -131,31 +131,6 @@ class CGModule(nn.Module):
 
         return self
 
-    def __getattr__(self, name):
-        """
-        PyTorch's nn.Module has a __getattr__/__setattr__ function that throws
-        anerror if the user attemps to get/set an attribute that is not part
-        of nn.Module
-        """
-        if name in super().__dict__.keys():
-            return super().__getattr__(name)
-        elif name in self.__dict__:
-                return self.__dict__[name]
-        else:
-            raise AttributeError("'{}' object has no attribute '{}'".format(
-                        type(self).__name__, name))
-
-
-    def __setattr__(self, name, value):
-        """
-        PyTorch's nn.Module has a __getattr__/__setattr__ function that throws
-        anerror if the user attemps to get/set an attribute that is not part
-        of nn.Module
-        """
-        if name in super().__dict__.keys():
-            super().__setattr__(name, value)
-        else:
-            self.__dict__[name] = value
 
     def cuda(self, device=None):
         if device is None:
