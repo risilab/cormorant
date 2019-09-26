@@ -9,13 +9,13 @@ devices = [torch.device('cpu')]
 if torch.cuda.is_available():
     devices.append([torch.device('cuda')])
 
+
 class TestCGModule():
 
     # Test to see that an uninitialized CG dictionary doesn't do anything.
     def test_cg_mod_nodict(self):
         cg_mod = CGModule()
-
-        assert cg_mod.maxl == None
+        assert cg_mod.maxl is None
         assert not cg_mod.cg_dict
         assert cg_mod.device == torch.device('cpu')
         assert cg_mod.dtype == torch.float
@@ -25,14 +25,14 @@ class TestCGModule():
     def test_cg_mod_device(self, dtype):
 
         if dtype == torch.long:
-            with pytest.raises(ValueError) as e_info:
+            with pytest.raises(ValueError):
                 cg_mod = CGModule(dtype=dtype)
         else:
             cg_mod = CGModule(dtype=dtype)
             assert cg_mod.dtype == dtype
             assert cg_mod.device == torch.device('cpu')
-            assert cg_mod.maxl == None
-            assert cg_mod.cg_dict == None
+            assert cg_mod.maxl is None
+            assert cg_mod.cg_dict is None
 
     # Check the cg_dict device works correctly if maxl is set.
     @pytest.mark.parametrize('maxl', range(3))
@@ -46,7 +46,7 @@ class TestCGModule():
         assert cg_mod.cg_dict
         assert cg_mod.cg_dict.maxl == maxl
 
-    ########## Check initialization.
+    # ######### Check initialization.
     # Check the cg_dict device works correctly if maxl is set.
     @pytest.mark.parametrize('maxl', [None, 0, 1, 2])
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
@@ -67,7 +67,7 @@ class TestCGModule():
             assert cg_mod.cg_dict
             assert cg_mod.cg_dict.maxl == max(1, maxl) if maxl is not None else 1
 
-    ########### Test device/data types
+    # ########## Test device/data types
 
     # Check that the module and cg_dict's data types can be moved correctly.
     @pytest.mark.parametrize('dtype1', [torch.half, torch.float, torch.double])
@@ -99,7 +99,6 @@ class TestCGModule():
     @pytest.mark.parametrize('dtype2', [torch.half, torch.float, torch.double])
     @pytest.mark.parametrize('device1', devices)
     @pytest.mark.parametrize('device2', devices)
-
     def test_cg_mod_to(self, dtype1, dtype2, device1, device2):
 
         cg_mod = CGModule(maxl=1, dtype=dtype1, device=device1)
@@ -114,6 +113,7 @@ class TestCGModule():
 
     # Check that .half() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    @pytest.mark.parametrize('maxl', [0, 2])
     def test_cg_mod_half(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
@@ -124,6 +124,7 @@ class TestCGModule():
 
     # Check that .float() work as expected
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
+    @pytest.mark.parametrize('maxl', [0, 2])
     def test_cg_mod_float(self, maxl, dtype):
 
         cg_mod = CGModule(maxl=maxl, dtype=dtype)
@@ -144,6 +145,7 @@ class TestCGModule():
 
     # Check that .cpu() work as expected
     @pytest.mark.parametrize('device', devices)
+    @pytest.mark.parametrize('maxl', [0, 2])
     def test_cg_mod_cpu(self, maxl, device):
 
         cg_mod = CGModule(maxl=maxl, device=device)
@@ -154,6 +156,7 @@ class TestCGModule():
 
     # Check that .cuda() work as expected
     @pytest.mark.parametrize('device', devices)
+    @pytest.mark.parametrize('maxl', [0, 2])
     def test_cg_mod_cuda(self, maxl, device):
 
         if not torch.cuda.is_available():
@@ -166,7 +169,6 @@ class TestCGModule():
         assert all([t.device == torch.device('cuda') for t in cg_mod.cg_dict.values()])
 
     def test_register_parameter(self):
-
         class BasicCGModule(CGModule):
             def __init__(self):
                 super().__init__()

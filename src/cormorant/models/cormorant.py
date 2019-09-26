@@ -132,8 +132,6 @@ class Cormorant(CGModule):
         -------
         prediction : :obj:`torch.Tensor`
             The output of the layer
-
-
         """
         # Get and prepare the data
         atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions = self.prepare_input(data)
