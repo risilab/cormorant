@@ -39,7 +39,6 @@ class CormorantEdgeLevel(CGModule):
         `gaussian_mask` to be passed to :class:`cormorant.nn.MaskLevel`
     cat : :obj:`bool`
         Concatenate all the scalars in :class:`cormorant.nn.DotMatrix`
-
     device : :obj:`torch.device`
         Device to initialize the level to
     dtype : :obj:`torch.dtype`

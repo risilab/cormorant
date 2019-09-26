@@ -1,14 +1,12 @@
 import torch
 import torch.nn as nn
-from torch.nn import Module, Parameter, ParameterList
 
 from cormorant.cg_lib import CGModule
 from cormorant.so3_lib import SO3Tau, SO3Scalar
 
-#### DotMatrix -- a matrix of dot products as is used in the edge levels ###
 
 class DotMatrix(CGModule):
-    """
+    r"""
     Constructs a matrix of dot-products between scalars of the same representation type, as used in the edge levels.
     Input: Tensor of SO3-vectors psi_i. Each psi has the same tau.
     Output: Matrix of scalars (psi_i cdot psi_j)_c, where c is a channel index with |C| = \sum_\ell tau_\ell.
@@ -36,7 +34,6 @@ class DotMatrix(CGModule):
         signs = self.signs
         conj = self.conj
 
-
         reps1 = [part.unsqueeze(-4) for part in reps]
         reps2 = [part.unsqueeze(-5) for part in reps]
 
@@ -53,11 +50,10 @@ class DotMatrix(CGModule):
 
         return SO3Scalar(dot_products)
 
-########### BasicMLP used throughout the network for various reasons ###########
 
 class BasicMLP(nn.Module):
-    """ 
-    Multilayer perceptron.  Operates only on the last axis of the data.
+    """
+    Multilayer perceptron used in various locations.  Operates only on the last axis of the data.
 
     Parameters
     ----------
@@ -70,11 +66,11 @@ class BasicMLP(nn.Module):
     layer_width : int, optional
         Width of each hidden layer (number of channels).
     activation : string, optional
-        Type of nonlinearity to use
-    
-    Notes
-    -----
-    TODO: FINISH!
+        Type of nonlinearity to use.
+    device : :obj:`torch.device`, optional
+        Device to initialize the level to
+    dtype : :obj:`torch.dtype`, optional
+        Data type to initialize the level to
     """
 
     def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):

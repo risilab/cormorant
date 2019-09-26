@@ -12,7 +12,7 @@ class TestCGProduct():
 
     @pytest.mark.parametrize('maxl1', range(2))
     @pytest.mark.parametrize('maxl2', range(2))
-    @pytest.mark.parametrize('chan', [1, 2, 5])
+    @pytest.mark.parametrize('chan', [1, 5])
     @pytest.mark.parametrize('batch', [(1,), (2,), (1, 1), (1, 2), (2, 1), (2, 2)])
     @pytest.mark.parametrize('maxl_dict', range(2))
     @pytest.mark.parametrize('maxl_prod', range(2))
@@ -42,10 +42,10 @@ class TestCGProduct():
 
     @pytest.mark.parametrize('maxl1', range(2))
     @pytest.mark.parametrize('maxl2', range(2))
-    @pytest.mark.parametrize('chan', [1, 2, 5])
-    @pytest.mark.parametrize('batch', [1, 2, 5])
-    @pytest.mark.parametrize('atom1', [1, 2, 5])
-    @pytest.mark.parametrize('atom2', [1, 2, 4])
+    @pytest.mark.parametrize('chan', [1, 5])
+    @pytest.mark.parametrize('batch', [1, 5])
+    @pytest.mark.parametrize('atom1', [1, 5])
+    @pytest.mark.parametrize('atom2', [1, 4])
     @pytest.mark.parametrize('maxl_dict', range(2))
     @pytest.mark.parametrize('maxl_prod', range(2))
     def test_cg_aggregate(self, maxl_dict, maxl_prod, maxl1, maxl2, chan, batch, atom1, atom2):

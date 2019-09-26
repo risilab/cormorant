@@ -20,12 +20,11 @@ def gen_rotated_data(dataloader, maxl):
     return data_rotin, data_rotout
 
 class TestCovariance():
-
-    @pytest.mark.parametrize('batch', [(1,), (3,), (1, 1), (3, 3)])
-    @pytest.mark.parametrize('maxl1', range(4))
-    @pytest.mark.parametrize('maxl2', range(4))
-    @pytest.mark.parametrize('maxl', range(4))
-    @pytest.mark.parametrize('channels', [1, 5])
+    @pytest.mark.parametrize('batch', [(1,), (2,), (1, 1), (2, 2)])
+    @pytest.mark.parametrize('maxl1', [0, 1, 3])
+    @pytest.mark.parametrize('maxl2', [0, 1, 3])
+    @pytest.mark.parametrize('maxl', [0, 1, 3])
+    @pytest.mark.parametrize('channels', [1, 2])
     def test_CGProduct(self, batch, maxl1, maxl2, maxl, channels):
         maxl_all = max(maxl1, maxl2, maxl)
         D, R, _ = rot.gen_rot(maxl_all)
@@ -49,8 +48,4 @@ class TestCovariance():
 
         # diff = (sph_harmsr - sph_harmsd).abs()
         diff = [(p1 - p2).abs().max() for p1, p2 in zip(veci_prod, vecf_prod)]
-        print(diff)
         assert all([d < 1e-6 for d in diff])
-
-
-        # assert (veci_prod - vecf_prod).allclose()
