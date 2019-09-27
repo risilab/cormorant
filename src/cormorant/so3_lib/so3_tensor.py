@@ -14,7 +14,6 @@ class SO3Tensor(ABC):
 
     Parameters
     ----------
-
     data : iterable of of `torch.Tensor` with appropriate shape
         Input of a SO(3) vector.
     """

@@ -11,7 +11,6 @@ class SO3Tau():
 
     Parameters
     ----------
-
     tau : :obj:`list` of `int`, :obj:`SO3Tau`, or object with `.tau` property.
         Multiplicity of a SO(3) vector.
     """

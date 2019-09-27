@@ -10,7 +10,7 @@ def cg_product_tau(tau1, tau2, maxl=inf):
     given the multiplicty of two input SO3 Vectors.
 
     Parameters
-    ==========
+    ----------
     tau1 : :obj:`list` of ``int``, :obj:`SO3Tau`.
         Multiplicity of first representation.
 
@@ -21,7 +21,7 @@ def cg_product_tau(tau1, tau2, maxl=inf):
         Largest weight to include in CG Product.
 
     Return
-    ======
+    ------
 
     tau : :obj:`SO3Tau`
         Multiplicity of output representation.

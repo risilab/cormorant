@@ -81,12 +81,12 @@ class CGDict():
         Otherwise, do nothing.
 
         Parameters
-        ==========
+        ----------
         new_maxl: int
             New maximum weight.
 
         Return
-        ======
+        ------
         self: CGDict()
             Returns self with a possibly updated self.cg_dict.
         """
@@ -114,7 +114,7 @@ class CGDict():
         Convert CGDict() to a new device/dtype.
 
         Parameters
-        ==========
+        ----------
         device : torch.device, optional
             Device to move the cg_dict to.
         dtype : torch.dtype, optional
@@ -159,12 +159,12 @@ def _gen_cg_dict(maxl, transpose=False, existing_keys={}):
     Generate all Clebsch-Gordan coefficients for a weight up to maxl.
 
     Parameters
-    ==========
+    ----------
     maxl: int
         Maximum weight to generate CG coefficients.
 
     Return
-    ======
+    ------
     cg_dict:
         Dictionary of CG basis transformation matrices with keys :(l1, l2):,
         and matrices that convert a tensor product of irreps of type :l1: and :l2:
