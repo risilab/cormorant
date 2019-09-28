@@ -12,10 +12,16 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'sphinx.ext.graphviz'
+    'sphinx.ext.graphviz',
+    'sphinx.ext.intersphinx'
     # 'sphinxcontrib.plantuml'
 ]
 
+intersphinx_mapping = {
+            'python': ('https://docs.python.org/', None),
+            'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+            'PyTorch': ('https://pytorch.org/docs/master/', None)
+                }
 #    'sphinx.ext.autosummary',
 #    'sphinx.ext.todo',
 #    'sphinx.ext.doctest',
@@ -45,6 +51,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:  # only set the theme if we're building docs locally
     html_theme = 'sphinx_rtd_theme'
+    # html_theme = 'pytorch_sphinx_theme'
 
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
