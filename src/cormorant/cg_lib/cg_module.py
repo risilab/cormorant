@@ -3,6 +3,7 @@ from torch import nn
 
 from cormorant.cg_lib import CGDict
 
+
 class CGModule(nn.Module):
     """
     Clebsch-Gordan module. This functions identically to a normal PyTorch
@@ -24,13 +25,13 @@ class CGModule(nn.Module):
 
     Parameters
     ----------
-    cg_dict : CGDict(), optional
+    cg_dict : :class:`CGDict`, optional
         Specify an input CGDict to use for Clebsch-Gordan operations.
-    maxl : int, optional
+    maxl : :class:`int`, optional
         Maximum weight to initialize the Clebsch-Gordan dictionary.
-    device : torch.device, optional
+    device : :class:`torch.torch.device`, optional
         Device to initialize the module and Clebsch-Gordan dictionary to.
-    dtype : torch.dtype, optional
+    dtype : :class:`torch.torch.dtype`, optional
         Data type to initialize the module and Clebsch-Gordan dictionary to.
     """
     def __init__(self, cg_dict=None, maxl=None, device=None, dtype=None, *args, **kwargs):
@@ -43,10 +44,10 @@ class CGModule(nn.Module):
         """
         Initialize the default device and data type.
 
-        device : torch.device, optional
+        device : :class:`torch.torch.device`, optional
             Set device for CGDict and related. If unset defaults to torch.device('cpu').
 
-        dtype : torch.dtype, optional
+        dtype : :class:`torch.torch.dtype`, optional
             Set device for CGDict and related. If unset defaults to torch.float.
 
         """
@@ -130,7 +131,6 @@ class CGModule(nn.Module):
             self._dtype = dtype
 
         return self
-
 
     def cuda(self, device=None):
         if device is None:
