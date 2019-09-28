@@ -8,3 +8,4 @@ Reference
     cg_lib
     cg_ops
     sph_harms
+    data
