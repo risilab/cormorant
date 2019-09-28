@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from math import sqrt
 
-from cormorant.models import Cormorant
+from cormorant.models import CormorantQM9
 from cormorant.models.autotest import cormorant_tests
 
 from cormorant.engine import Engine
@@ -48,7 +48,7 @@ def main():
                          for split, dataset in datasets.items()}
 
     # Initialize model
-    model = Cormorant(args.maxl, args.max_sh, args.num_cg_levels, args.num_channels, num_species,
+    model = CormorantQM9(args.maxl, args.max_sh, args.num_cg_levels, args.num_channels, num_species,
                         args.cutoff_type, args.hard_cut_rad, args.soft_cut_rad, args.soft_cut_width,
                         args.weight_init, args.level_gain, args.charge_power, args.basis_set,
                         charge_scale, args.gaussian_mask,

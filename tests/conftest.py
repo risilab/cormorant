@@ -30,8 +30,8 @@ def sample_batch():
         one_hot[i, np.arange(n), charges_i-1] = 1.
 
     data = {'positions': torch.from_numpy(positions).float(),
-            'atom_mask': torch.from_numpy(atom_mask).byte(),
-            'edge_mask': torch.from_numpy(edge_mask).byte(),
+            'atom_mask': torch.from_numpy(atom_mask),
+            'edge_mask': torch.from_numpy(edge_mask),
             'one_hot': torch.from_numpy(one_hot).bool(),
             'charges': torch.from_numpy(charges).int(),
             'num_atoms': torch.from_numpy(num_atoms).int()

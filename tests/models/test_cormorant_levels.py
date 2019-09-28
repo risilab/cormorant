@@ -109,7 +109,7 @@ class TestCormorantEdgeLevel(object):
 
         rad_funcs = RadialFilters([maxl-1], [basis, basis], [num_channels], 1,
                                   device=device, dtype=dtype)
-        rad_func_levels = rad_funcs(norms, edge_mask * (norms > 0).byte())
+        rad_func_levels = rad_funcs(norms, edge_mask * (norms > 0))
         tau_pos = rad_funcs.tau[0]
 
         # Build the initial edge network

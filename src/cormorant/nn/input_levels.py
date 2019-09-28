@@ -11,32 +11,105 @@ from cormorant.so3_lib import SO3Tau, SO3Vec
 ############# Input to network #############
 
 class InputLinear(nn.Module):
-    def __init__(self, num_in, num_out, bias=True, device=torch.device('cpu'), dtype=torch.float):
+    """
+    Module to create rotationally invariant atom feature vectors
+    at the input level.
+
+    This module applies a simple linear mixing matrix to a one-hot of atom
+    embeddings based upon the number of atomic types.
+
+    Parameters
+    ----------
+    channels_in : :class:`int`
+        Number of input features before mixing (i.e., a one-hot atom-type embedding).
+    channels_out : :class:`int`
+        Number of output features after mixing.
+    bias : :class:`bool`, optional
+        Include a bias term in the linear mixing level.
+    device : :class:`torch.device`, optional
+        Device to instantite the module to.
+    dtype : :class:`torch.dtype`, optional
+        Data type to instantite the module to.
+    """
+    def __init__(self, channels_in, channels_out, bias=True,
+                 device=torch.device('cpu'), dtype=torch.float):
         super(InputLinear, self).__init__()
 
-        self.num_in = num_in
-        self.num_out = num_out
+        self.channels_in = channels_in
+        self.channels_out = channels_out
 
-        self.lin = nn.Linear(num_in, 2*num_out, bias=bias)
+        self.lin = nn.Linear(channels_in, 2*channels_out, bias=bias)
         self.lin.to(device=device, dtype=dtype)
 
         self.zero = torch.tensor(0, dtype=dtype, device=device)
 
-    def forward(self, input_scalars, atom_mask, *ignore):
+    def forward(self, features, atom_mask, ignore, edge_mask, norms):
+        """
+        Forward pass for :class:`InputLinear` layer.
+
+        Parameters
+        ----------
+        features : :class:`torch.Tensor`
+            Input atom features, i.e., a one-hot embedding of the atom type,
+            atom charge, and any other related inputs.
+        atom_mask : :class:`torch.Tensor`
+            Mask used to account for padded atoms for unequal batch sizes.
+        edge_features : :class:`torch.Tensor`
+            Unused. Included only for pedagogical purposes.
+        edge_mask : :class:`torch.Tensor`
+            Unused. Included only for pedagogical purposes.
+        norms : :class:`torch.Tensor`
+            Unused. Included only for pedagogical purposes.
+
+        Returns
+        -------
+        :class:`SO3Vec`
+            Processed atom features to be used as input to Clebsch-Gordan layers
+            as part of Cormorant.
+        """
         atom_mask = atom_mask.unsqueeze(-1)
 
-        out = torch.where(atom_mask, self.lin(input_scalars), self.zero)
-        out = out.view(input_scalars.shape[0:2] + (self.num_out, 1, 2))
+        out = torch.where(atom_mask, self.lin(features), self.zero)
+        out = out.view(input_scalars.shape[0:2] + (self.channels_out, 1, 2))
+
+        print('TAU:', SO3Vec([out]).tau)
 
         return SO3Vec([out])
 
     @property
     def tau(self):
-        return SO3Tau([self.num_out])
+        return SO3Tau([self.channels_out])
 
 
 
 class InputMPNN(nn.Module):
+    """
+    Module to create rotationally invariant atom feature vectors
+    at the input level.
+
+    This module applies creates a scalar
+
+    Parameters
+    ----------
+    channels_in : :class:`int`
+        Number of input features before mixing (i.e., a one-hot atom-type embedding).
+    channels_out : :class:`int`
+        Number of output features after mixing.
+    num_layers : :class:`int`
+        Number of message passing layers.
+    soft_cut_rad : :class:`float`
+        Radius of the soft cutoff used in the radial position functions.
+    soft_cut_width : :class:`float`
+        Radius of the soft cutoff used in the radial position functions.
+    hard_cut_rad : :class:`float`
+        Radius of the soft cutoff used in the radial position functions.
+    bias : :class:`bool`, optional
+        Include a bias term in the linear mixing level.
+    device : :class:`torch.device`, optional
+        Device to instantite the module to.
+    dtype : :class:`torch.dtype`, optional
+        Data type to instantite the module to.
+    """
     def __init__(self, channels_in, channels_out, num_layers=1,
                  soft_cut_rad=None, soft_cut_width=None, hard_cut_rad=None, cutoff_type=['learn'],
                  channels_mlp=-1, num_hidden=1, layer_width=256,
@@ -66,7 +139,6 @@ class InputMPNN(nn.Module):
 
         for chan_in, chan_out in zip(channels_lvls[:-1], channels_lvls[1:]):
             rad_filt = RadPolyTrig(0, basis_set, chan_in, mix='real', device=device, dtype=dtype)
-            # mask = MaskLevel(chan_in, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type, device=device, dtype=dtype)
             mask = MaskLevel(1, hard_cut_rad, soft_cut_rad, soft_cut_width, ['soft', 'hard'], device=device, dtype=dtype)
             mlp = BasicMLP(2*chan_in, chan_out, num_hidden=num_hidden, layer_width=layer_width, device=device, dtype=dtype)
 
@@ -77,7 +149,30 @@ class InputMPNN(nn.Module):
         self.dtype = dtype
         self.device = device
 
-    def forward(self, features, atom_mask, edge_mask, norms):
+    def forward(self, features, atom_mask, edge_features, edge_mask, norms):
+        """
+        Forward pass for :class:`InputMPNN` layer.
+
+        Parameters
+        ----------
+        features : :class:`torch.Tensor`
+            Input atom features, i.e., a one-hot embedding of the atom type,
+            atom charge, and any other related inputs.
+        atom_mask : :class:`torch.Tensor`
+            Mask used to account for padded atoms for unequal batch sizes.
+        edge_features : :class:`torch.Tensor`
+            Unused. Included only for pedagogical purposes.
+        edge_mask : :class:`torch.Tensor`
+            Mask used to account for padded edges for unequal batch sizes.
+        norms : :class:`torch.Tensor`
+            Matrix of relative distances between pairs of atoms.
+
+        Returns
+        -------
+        :class:`SO3Vec`
+            Processed atom features to be used as input to Clebsch-Gordan layers
+            as part of Cormorant.
+        """
         # Unsqueeze the atom mask to match the appropriate dimensions later
         atom_mask = atom_mask.unsqueeze(-1)
 
@@ -90,13 +185,21 @@ class InputMPNN(nn.Module):
         for mlp, rad_filt, mask in zip(self.mlps, self.rad_filts, self.masks):
             # Construct the learnable radial functions
             rad = rad_filt(norms, edge_mask)
+
+            # TODO: Real-valued SO3Scalar so we don't need any hacks
             # Convert to a form that MaskLevel expects
-            rad[0] = rad[0].unsqueeze(-1)
+            # Hack to account for the lack of real-valued SO3Scalar and
+            # structure of RadialFilters.
+            rad = rad[0][..., 0].unsqueeze(-1)
+
+            # OLD:
+            # Convert to a form that MaskLevel expects
+            # rad[0] = rad[0].unsqueeze(-1)
 
             # Mask the position function if desired
             edge = mask(rad, edge_mask, norms)
             # Convert to a form that MatMul expects
-            edge = edge[0].squeeze(-1)
+            edge = edge.squeeze(-1)
 
             # Now pass messages using matrix multiplication with the edge features
             # Einsum b: batch, a: atom, c: channel, x: to be summed over
@@ -115,4 +218,4 @@ class InputMPNN(nn.Module):
 
     @property
     def tau(self):
-        return SO3Tau([self.num_out])
+        return SO3Tau([self.channels_out])

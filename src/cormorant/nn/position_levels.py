@@ -94,7 +94,7 @@ class RadPolyTrig(nn.Module):
         s = norms.shape
 
         # Mask and reshape
-        edge_mask = (edge_mask * (norms > 0).byte()).unsqueeze(-1)
+        edge_mask = (edge_mask * (norms > 0)).unsqueeze(-1)
         norms = norms.unsqueeze(-1)
 
         # Get inverse powers
@@ -111,6 +111,9 @@ class RadPolyTrig(nn.Module):
             radial_functions = [linear(rad_prod).view(s + (self.num_channels, 2)) for linear in self.linear]
         elif self.mix == 'real':
             radial_functions = [linear(rad_prod).view(s + (self.num_channels,)) for linear in self.linear]
+            # Hack because real-valued SO3Scalar class has not been implemented yet.
+            # TODO: Implement real-valued SO3Scalar and fix this...
+            radial_functions = [torch.stack([rad, torch.zeros_like(rad)], dim=-1) for rad in radial_functions]
         else:
             radial_functions = [rad_prod.view(s + (self.num_rad, 2))] * (self.max_sh + 1)
 
