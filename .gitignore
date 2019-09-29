@@ -11,6 +11,7 @@ TODO.txt
 
 *.egg-info/
 __pycache__/
+*__pycache__/
 
 *.DS*
 *.log
@@ -23,6 +24,7 @@ __pycache__/
 *.ipynb
 *.swp
 *.swo
+*.pyc
 
 # Sphinx
 docs/_build
