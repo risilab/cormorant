@@ -43,13 +43,13 @@ class InputLinear(nn.Module):
 
         self.zero = torch.tensor(0, dtype=dtype, device=device)
 
-    def forward(self, features, atom_mask, ignore, edge_mask, norms):
+    def forward(self, atom_features, atom_mask, ignore, edge_mask, norms):
         """
         Forward pass for :class:`InputLinear` layer.
 
         Parameters
         ----------
-        features : :class:`torch.Tensor`
+        atom_features : :class:`torch.Tensor`
             Input atom features, i.e., a one-hot embedding of the atom type,
             atom charge, and any other related inputs.
         atom_mask : :class:`torch.Tensor`
@@ -69,10 +69,8 @@ class InputLinear(nn.Module):
         """
         atom_mask = atom_mask.unsqueeze(-1)
 
-        out = torch.where(atom_mask, self.lin(features), self.zero)
-        out = out.view(input_scalars.shape[0:2] + (self.channels_out, 1, 2))
-
-        print('TAU:', SO3Vec([out]).tau)
+        out = torch.where(atom_mask, self.lin(atom_features), self.zero)
+        out = out.view(atom_features.shape[0:2] + (self.channels_out, 1, 2))
 
         return SO3Vec([out])
 

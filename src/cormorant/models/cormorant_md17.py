@@ -190,8 +190,8 @@ class CormorantMD17(CGModule):
         one_hot = data['one_hot'].to(device, dtype)
         charges = data['charges'].to(device, dtype)
 
-        atom_mask = data['atom_mask'].to(device, torch.uint8)
-        edge_mask = data['edge_mask'].to(device, torch.uint8)
+        atom_mask = data['atom_mask'].to(device)
+        edge_mask = data['edge_mask'].to(device)
 
         charge_tensor = (charges.unsqueeze(-1)/charge_scale).pow(torch.arange(charge_power+1., device=device, dtype=dtype))
         charge_tensor = charge_tensor.view(charges.shape + (1, charge_power+1))

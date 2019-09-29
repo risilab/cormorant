@@ -190,7 +190,7 @@ class OutputPMLP(nn.Module):
             Tensor used for predictions.
         """
         # Reshape scalars appropriately
-        atom_scalars = scalars.view(atom_scalars.shape[:2] + (2*self.num_scalars,))
+        atom_scalars = atom_scalars.view(atom_scalars.shape[:2] + (2*self.num_scalars,))
 
         # First MLP applied to each atom
         x = self.mlp1(atom_scalars)

@@ -1,19 +1,20 @@
 import pytest
 
-from cormorant.models import Cormorant
+from cormorant.models import CormorantQM9, CormorantMD17
 
 
 class TestCormorant():
 
+    @pytest.mark.parametrize('Cormorant', [CormorantQM9, CormorantMD17])
     @pytest.mark.parametrize('maxl', [1, 2, [1, 2]])
     @pytest.mark.parametrize('max_sh', [1, 2])
     @pytest.mark.parametrize('num_channels', [1, 5, [1, 2], [2, 1, 4]])
+    @pytest.mark.parametrize('cutoff_type', ['hard', 'soft', 'learn', ['hard', 'soft'], ['hard', 'learn']])
     @pytest.mark.parametrize('level_gain', [1, 10])
-    def test_Cormorant(self, maxl, max_sh, num_channels, level_gain, sample_batch):
+    def test_Cormorant(self, Cormorant, maxl, max_sh, num_channels, level_gain, cutoff_type, sample_batch):
         data, num_species, charge_scale = sample_batch
 
         num_cg_levels = 3
-        cutoff_type = ['learn']
         hard_cut_rad = 1.
         soft_cut_rad = 1.
         soft_cut_width = 1.
