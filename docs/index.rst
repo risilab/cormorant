@@ -14,6 +14,7 @@ Contents
    installation
    usage
    architecture/index
+   cg_lib/index
    reference/index
    contributing
    authors

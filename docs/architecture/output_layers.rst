@@ -1,9 +1,12 @@
+.. _OutputLayers:
 =============
-Output Levels
+Output Layers
 =============
 
 Linear mixing layer
 -------------------
 
 Permutation-invariant MLP
---------------------------------
+-------------------------
+
+stuff

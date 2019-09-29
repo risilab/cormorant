@@ -5,6 +5,6 @@ Architecture
     :glob:
 
     architecture
-    input_levels
-    cg_levels
-    output_levels
+    input_layers
+    cg_layers
+    output_layers
