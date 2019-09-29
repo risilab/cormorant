@@ -8,6 +8,8 @@
 TODO.txt
 /scratch/
 /examples/data/
+/build/
+/dist/
 
 *.egg-info/
 __pycache__/
