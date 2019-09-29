@@ -14,14 +14,14 @@ class CGProduct(CGModule):
 
     .. math::
 
-        [tau^1_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
-        [tau^2_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
+        [\tau^1_{\text{min} [l_1]}, \tau^1_{\text{min} [l_1]+1}, ..., \tau^1_{\text{max} [l_1]}],
+        [\tau^2_{\text{min}[l_2]}, \tau^2_{\text{min}[l_2]+1}, ..., \tau^2_{\text{max} [l_2]}],
 
     and outputs a new SO3 vector of type:
 
     .. math::
 
-        [tau_{minl}, tau_{minl+1}, ..., tau_{maxl}]
+        [\tau_{\text{min} [l]}, \tau_{\text{min} [l]+1}, ..., \tau_{\text{max_l}}]
 
     Each part can have an arbitrary number of batch dimensions. These batch
     dimensions must be broadcastable, unless the option :aggregate=True: is used.

@@ -5,6 +5,7 @@ from math import pi
 
 from cormorant.so3_lib import SO3Tau, SO3Scalar
 
+
 class RadialFilters(nn.Module):
     """
     Generate a set of learnable scalar functions for the aggregation/point-wise
@@ -12,11 +13,17 @@ class RadialFilters(nn.Module):
 
     One set of radial filters is created for each irrep (l = 0, ..., max_sh).
 
-    :max_sh: Maximum l to use for the spherical harmonics.
-    :basis_set: Parameters of basis set to use. See RadPolyTrig for mroe details.
-    :num_channels_out: Number of output channels to mix the resulting function
-    into if mix is set to True in RadPolyTrig
-    :num_levels: Number of CG levels in the Cormorant.
+    Parameters
+    ----------
+    max_sh : :class:`int`
+        Maximum l to use for the spherical harmonics.
+    basis_set : iterable of :class:`int`
+        Parameters of basis set to use. See :class:`RadPolyTrig` for more details.
+    num_channels_out : :class:`int`
+        Number of output channels to mix the resulting function into if mix
+        is set to True in RadPolyTrig
+    num_levels : :class:`int`
+        Number of CG levels in the Cormorant.
     """
     def __init__(self, max_sh, basis_set, num_channels_out,
                  num_levels, device=torch.device('cpu'), dtype=torch.float):
@@ -38,6 +45,22 @@ class RadialFilters(nn.Module):
         self.zero = torch.tensor(0, device=device, dtype=dtype)
 
     def forward(self, norms, base_mask):
+        """
+        Forward pass of the network.
+
+        Parameters
+        ----------
+        norms : :class:`torch.Tensor`
+            Pairwise distance matrix between atoms.
+        base_mask : :class:`torch.Tensor`
+            Masking tensor with 1s on locations that correspond to active edges
+            and zero otherwise.
+
+        Returns
+        -------
+        rad_func_vals :  list of :class:`RadPolyTrig`
+            Values of the radial functions.
+        """
 
         return [rad_func(norms, base_mask) for rad_func in self.rad_funcs]
 
@@ -48,7 +71,6 @@ class RadPolyTrig(nn.Module):
     Rather than than introducing the bessel functions explicitly we just write out a basis
     that can produce them. Then, when apply a weight mixing matrix to reduce the number of channels
     at the end.
-    :max_sh:
     """
     def __init__(self, max_sh, basis_set, num_channels, mix=False, device=torch.device('cpu'), dtype=torch.float):
         super(RadPolyTrig, self).__init__()

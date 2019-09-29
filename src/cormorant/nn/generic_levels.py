@@ -8,8 +8,7 @@ from cormorant.so3_lib import SO3Tau, SO3Scalar
 class DotMatrix(CGModule):
     r"""
     Constructs a matrix of dot-products between scalars of the same representation type, as used in the edge levels.
-    Input: Tensor of SO3-vectors psi_i. Each psi has the same tau.
-    Output: Matrix of scalars (psi_i cdot psi_j)_c, where c is a channel index with |C| = \sum_\ell tau_\ell.
+
     """
     def __init__(self, tau_in=None, cat=True, device=None, dtype=None):
         super().__init__(device=device, dtype=dtype)
@@ -28,6 +27,19 @@ class DotMatrix(CGModule):
             self.signs = None
 
     def forward(self, reps):
+        """
+        Performs the forward pass.
+
+        Parameters
+        ----------
+        reps : :class:`SO3Vec <cormorant.so3_lib.SO3Vec>`
+            Input SO3 Vector. 
+        
+        Returns
+        -------
+        dot_products : :class:`SO3Scalar <cormorant.so3_lib.SO3Scalar>`
+            SO3 scalars representing a Matrix of form :math:`(\psi_i \cdot \psi_j)_c`, where c is a channel index with :math:`|C| = \sum_l \tau_l`.
+        """
         if self.tau_in is not None and self.tau_in != reps.tau:
             raise ValueError('Initialized tau not consistent with tau from forward! {} {}'.format(self.tau_in, reps.tau))
 
