@@ -1,0 +1,24 @@
+digraph AtomLayer {
+	color="#AAFFAA";
+	style=filled;
+	label="Atom Layer";
+
+	node [style=filled,color=darkgreen,shape=diamond];
+	vertex_atom_in [label="Atom Reps in"];
+	vertex_atom_out [label="Atom  Reps out"];
+
+	node [style=filled,color=lightblue,shape=oval];
+	edge_atom_in [label="Edge Scalars in"];
+
+	node [style=filled,color=lightblue,shape=oval];
+	cg_aggregate [label="CG Aggregate"];
+	cg_power [label="CG Power"];
+
+	node [color=black,shape=point];
+	cg_identity [label=""];
+
+	vertex_atom_in -> cg_aggregate
+	vertex_atom_in -> cg_power
+	vertex_atom_in -> cg_identity
+
+}

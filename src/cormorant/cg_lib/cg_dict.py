@@ -30,19 +30,16 @@ class CGDict():
 
     Parameters
     ----------
-    maxl: int
+    maxl: :class:`int`
         Maximum weight for which to calculate the Clebsch-Gordan coefficients.
         This refers to the maximum weight for the ``input tensors``, not the
         output tensors.
-
-    transpose: bool, optional
+    transpose: :class:`bool`, optional
         Transpose the CG coefficient matrix for each :math:`(\ell_1, \ell_2)`.
         This cannot be modified after instantiation.
-
-    device: torch.device, optional
+    device: :class:`torch.torch.device`, optional
         Device of CG dictionary.
-
-    dtype: torch.dtype, optional
+    dtype: :class:`torch.torch.dtype`, optional
         Data type of CG dictionary.
 
     """
@@ -82,12 +79,12 @@ class CGDict():
 
         Parameters
         ----------
-        new_maxl: int
+        new_maxl: :class:`int`
             New maximum weight.
 
         Return
         ------
-        self: CGDict()
+        self: :class:`CGDict`
             Returns self with a possibly updated self.cg_dict.
         """
         # If self is already initialized, and maxl is sufficiently large, do nothing
@@ -115,9 +112,9 @@ class CGDict():
 
         Parameters
         ----------
-        device : torch.device, optional
+        device : :class:`torch.torch.device`, optional
             Device to move the cg_dict to.
-        dtype : torch.dtype, optional
+        dtype : :class:`torch.torch.dtype`, optional
             Data type to convert the cg_dict to.
         """
         if dtype is None and device is None:
@@ -160,12 +157,12 @@ def _gen_cg_dict(maxl, transpose=False, existing_keys={}):
 
     Parameters
     ----------
-    maxl: int
+    maxl: :class:`int`
         Maximum weight to generate CG coefficients.
 
     Return
     ------
-    cg_dict:
+    cg_dict: :class:`dict`
         Dictionary of CG basis transformation matrices with keys :(l1, l2):,
         and matrices that convert a tensor product of irreps of type :l1: and :l2:
         into a direct sum of irreps :l: from :abs(l1-l2): to :l1+l2:
@@ -238,27 +235,22 @@ def _clebsch(j1, j2, j3, m1, m2, m3):
 
     Parameters
     ----------
-    j1 : float
+    j1 : :class:`float`
         Total angular momentum 1.
-
-    j2 : float
+    j2 : :class:`float`
         Total angular momentum 2.
-
-    j3 : float
+    j3 : :class:`float`
         Total angular momentum 3.
-
-    m1 : float
+    m1 : :class:`float`
         z-component of angular momentum 1.
-
-    m2 : float
+    m2 : :class:`float`
         z-component of angular momentum 2.
-
-    m3 : float
+    m3 : :class:`float`
         z-component of angular momentum 3.
 
     Returns
     -------
-    cg_coeff : float
+    cg_coeff : :class:`float`
         Requested Clebsch-Gordan coefficient.
 
     """
@@ -267,12 +259,12 @@ def _clebsch(j1, j2, j3, m1, m2, m3):
     vmin = int(np.max([-j1 + j2 + m3, -j1 + m1, 0]))
     vmax = int(np.min([j2 + j3 + m1, j3 - j1 + j2, j3 + m3]))
 
-    C = np.sqrt((2.0 * j3 + 1.0) * factorial(j3 + j1 - j2) *
-                factorial(j3 - j1 + j2) * factorial(j1 + j2 - j3) *
-                factorial(j3 + m3) * factorial(j3 - m3) /
-                (factorial(j1 + j2 + j3 + 1) *
-                factorial(j1 - m1) * factorial(j1 + m1) *
-                factorial(j2 - m2) * factorial(j2 + m2)))
+    C = np.sqrt((2.0 * j3 + 1.0) * factorial(j3 + j1 - j2)
+                * factorial(j3 - j1 + j2) * factorial(j1 + j2 - j3)
+                * factorial(j3 + m3) * factorial(j3 - m3)
+                / (factorial(j1 + j2 + j3 + 1)
+                * factorial(j1 - m1) * factorial(j1 + m1)
+                * factorial(j2 - m2) * factorial(j2 + m2)))
     S = 0
     for v in range(vmin, vmax + 1):
         S += (-1.0) ** (v + j2 + m2) / factorial(v) * \

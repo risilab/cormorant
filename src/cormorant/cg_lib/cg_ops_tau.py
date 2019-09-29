@@ -1,29 +1,28 @@
-import torch
-from torch.nn import Module, ModuleList, Parameter, ParameterList
-from math import sqrt, inf, pi
+from math import inf
 
 from cormorant.so3_lib import SO3Tau
 
+
 def cg_product_tau(tau1, tau2, maxl=inf):
     """
-    Calulate output multiplicty of the CG Product of two SO3 Vectors
+    Calulate output multiplicity of the CG Product of two SO3 Vectors
     given the multiplicty of two input SO3 Vectors.
 
     Parameters
     ----------
-    tau1 : :obj:`list` of ``int``, :obj:`SO3Tau`.
+    tau1 : :class:`list` of :class:`int`, :class:`SO3Tau`.
         Multiplicity of first representation.
 
-    tau2 : :obj:`list` of ``int``, :obj:`SO3Tau`.
+    tau2 : :class:`list` of :class:`int`, :class:`SO3Tau`.
         Multiplicity of second representation.
 
-    maxl : int
+    maxl : :class:`int`
         Largest weight to include in CG Product.
 
     Return
     ------
 
-    tau : :obj:`SO3Tau`
+    tau : :class:`SO3Tau`
         Multiplicity of output representation.
 
     """

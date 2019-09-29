@@ -1,9 +1,9 @@
 import torch
-from torch.nn import Module, ModuleList, Parameter, ParameterList
-from math import sqrt, inf, pi
+from math import inf
 
 from cormorant.cg_lib import CGModule, cg_product_tau
 from cormorant.so3_lib import SO3Tau, SO3Vec
+
 
 class CGProduct(CGModule):
     r"""
@@ -14,38 +14,38 @@ class CGProduct(CGModule):
 
     .. math::
 
-        [tau^1_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
-        [tau^2_{minl2}, tau^2_{minl2+1}, ..., tau^2_{maxl2}],
+        [\tau^1_{\text{min} [l_1]}, \tau^1_{\text{min} [l_1]+1}, ..., \tau^1_{\text{max} [l_1]}],
+        [\tau^2_{\text{min}[l_2]}, \tau^2_{\text{min}[l_2]+1}, ..., \tau^2_{\text{max} [l_2]}],
 
     and outputs a new SO3 vector of type:
 
     .. math::
 
-        [tau_{minl}, tau_{minl+1}, ..., tau_{maxl}]
+        [\tau_{\text{min} [l]}, \tau_{\text{min} [l]+1}, ..., \tau_{\text{max_l}}]
 
     Each part can have an arbitrary number of batch dimensions. These batch
     dimensions must be broadcastable, unless the option :aggregate=True: is used.
 
+
     Parameters
     ----------
-    rep1 : list of torch.Tensors
-        SO3Vector
-    rep2 : list of torch.Tensors
-        SO3Vector
-
-    minl : int
+    tau : :class:`list` of :class:`int`, :class:`SO3Tau`, or object with `.tau` property.
+        Multiplicity of the first SO(3) vector.
+    tau : :class:`list` of :class:`int`, :class:`SO3Tau`, or object with `.tau` property.
+        Multiplicity of the second SO(3) vector.
+    minl : :class:`int`, optional
         Minimum weight to include in CG Product
-    maxl : int
-        Minimum weight to include in CG Product
-    aggregate : bool, optional
+    maxl : :class:`int`, optional
+        Maximum weight to include in CG Product
+    aggregate : :class:`bool`, optional
         Apply an "aggregation" operation, or a pointwise convolution
-        with a SO3Vector as a filter.
-    cg_dict : CGDict, optional
+        with a :class:`SO3Vec` as a filter.
+    cg_dict : :class:`CGDict`, optional
         Specify a Clebsch-Gordan dictionary. If not specified, one will be
         generated automatically at runtime based upon maxl.
-    device : torch.device, optional
+    device : :class:`torch.torch.device`, optional
         Device to initialize the module and Clebsch-Gordan dictionary to.
-    dtype : torch.dtype, optional
+    dtype : :class:`torch.torch.dtype`, optional
         Data type to initialize the module and Clebsch-Gordan dictionary to.
 
     """
@@ -72,6 +72,16 @@ class CGProduct(CGModule):
             self.minl = 0
 
     def forward(self, rep1, rep2):
+        """
+        Performs the Clebsch-Gordan product.
+
+        Parameters
+        ----------
+        rep1 : :class:`SO3Vec`
+            First :class:`SO3Vec` in the CG product
+        rep2 : :class:`SO3Vec`
+            Second :class:`SO3Vec` in the CG product
+        """
         if self.tau1 and self.tau1 != SO3Tau.from_rep(rep1):
             raise ValueError('Input rep1 does not match predefined tau!')
 
@@ -107,7 +117,6 @@ class CGProduct(CGModule):
                                  '{} {}'.format(self.tau1, self.tau2))
 
 
-
 def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False, ignore_check=False):
     """
     Explicit function to calculate the Clebsch-Gordan product.
@@ -117,9 +126,9 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False, ignore_ch
         First :obj:`SO3Vector` in the CG product
     rep2 : list of :obj:`torch.Tensors`
         First :obj:`SO3Vector` in the CG product
-    minl : :obj:`int`
+    minl : :obj:`int`, optional
         Minimum weight to include in CG Product
-    maxl : :obj:`int`
+    maxl : :obj:`int`, optional
         Minimum weight to include in CG Product
     aggregate : :obj:`bool`, optional
         Apply an "aggregation" operation, or a pointwise convolution
@@ -153,7 +162,8 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False, ignore_ch
     for l1, part1 in zip(ells1, rep1):
         for l2, part2 in zip(ells2, rep2):
             lmin, lmax = max(abs(l1 - l2), minl), min(l1 + l2, maxL)
-            if lmin > lmax: continue
+            if lmin > lmax:
+                continue
 
             cg_mat = cg_dict[(l1, l2)][:(lmax+1)**2 - (lmin)**2, :]
 
@@ -176,10 +186,21 @@ def cg_product(cg_dict, rep1, rep2, maxl=inf, minl=0, aggregate=False, ignore_ch
 def complex_kron_product(z1, z2, aggregate=False):
     """
     Take two complex matrix tensors z1 and z2, and take their tensor product.
-    z1: batch1 x M1 x N1 x 2
-    z2: batch2 x M2 x N2 x 2
-    :aggregate: Apply aggregation/point-wise convolutional filter. Must have batch1 = B x A x A, batch2 = B x A
-    :return: batch x (M1 x M2) x (N1 x N2) x 2
+
+    Parameters
+    ----------
+    z1 : :class:`torch.Tensor`
+        Tensor of shape batch1 x M1 x N1 x 2.
+        The last dimension is the complex dimension.
+    z1 : :class:`torch.Tensor`
+        Tensor of shape batch2 x M2 x N2 x 2.
+    aggregate: :class:`bool`
+        Apply aggregation/point-wise convolutional filter. Must have batch1 = B x A x A, batch2 = B x A
+
+    Returns
+    -------
+    z1 : :class:`torch.Tensor`
+        Tensor of shape batch x (M1 x M2) x (N1 x N2) x 2
     """
     s1 = z1.shape
     s2 = z2.shape

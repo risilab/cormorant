@@ -11,8 +11,8 @@ class SO3Tau():
 
     Parameters
     ----------
-    tau : :obj:`list` of `int`, :obj:`SO3Tau`, or object with `.tau` property.
-        Multiplicity of a SO(3) vector.
+    tau : :class:`list` of :class:`int`, :class:`SO3Tau`, or class with `.tau` property.
+        Multiplicity of an SO(3) vector.
     """
     def __init__(self, tau):
         if type(tau) in [list, tuple]:
@@ -21,7 +21,7 @@ class SO3Tau():
         else:
             try:
                 tau = tau.tau
-            except AttributeError: 
+            except AttributeError:
                 raise AttributeError('Input is of type %s does not have a defined .tau property!' % type(tau))
 
         self._tau = tuple(tau)

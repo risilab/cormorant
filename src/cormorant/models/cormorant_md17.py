@@ -19,25 +19,27 @@ class CormorantMD17(CGModule):
 
     Parameters
     ----------
-    maxl : :obj:`int` of :obj:`list` of :obj:`int`
+    maxl : :obj:`int` of :class:`list` of :class:`int`
         Maximum weight in the output of CG products. (Expanded to list of
         length :obj:`num_cg_levels`)
-    max_sh : :obj:`int` of :obj:`list` of :obj:`int`
+    max_sh : :class:`int` of :class:`list` of :class:`int`
         Maximum weight in the output of the spherical harmonics  (Expanded to list of
         length :obj:`num_cg_levels`)
-    num_cg_levels : :obj:`int`
+    num_cg_levels : :class:`int`
         Number of cg levels to use.
-    num_channels : :obj:`int` of :obj:`list` of :obj:`int`
+    num_channels : :class:`int` of :class:`list` of :class:`int`
         Number of channels that the output of each CG are mixed to (Expanded to list of
         length :obj:`num_cg_levels`)
-    num_species : :obj:`int`
+    num_species : :class:`int`
         Number of species of atoms included in the input dataset.
-
-    device : :obj:`torch.device`
+    device : :class:`torch.device`
         Device to initialize the level to
-    dtype : :obj:`torch.dtype`
+    dtype : :class:`torch.torch.dtype`
         Data type to initialize the level to level to
-    cg_dict : :obj:`nn.cg_lib.CGDict`
+    dummy_torch_obj: :class:`torch.Tensor`
+        Object created for testing external links.
+    cg_dict : :class:`CGDict <cormorant.cg_lib.CGDict>`
+        Clebsch-gordan dictionary object.
     """
     def __init__(self, maxl, max_sh, num_cg_levels, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,

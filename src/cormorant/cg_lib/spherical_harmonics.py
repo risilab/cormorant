@@ -1,40 +1,40 @@
 import torch
-from torch.nn import Module
-from math import sqrt, inf, pi
+from math import sqrt, pi
 
 from cormorant.cg_lib import CGModule
 from cormorant.cg_lib import cg_product
 
-from cormorant.so3_lib import SO3Tau, SO3Vec
+from cormorant.so3_lib import SO3Vec
+
 
 class SphericalHarmonics(CGModule):
     r"""
     Calculate a list of spherical harmonics :math:`Y^\ell_m(\hat{\bf r})`
-    for a :obj:`torch.Tensor` of cartesian vectors :math:`{\bf r}`.
+    for a :class:`torch.Tensor` of cartesian vectors :math:`{\bf r}`.
 
-    This module subclasses :obj:`CGModule`, and maintains similar functionality.
+    This module subclasses :class:`CGModule`, and maintains similar functionality.
 
     Parameters
     ----------
-    maxl : `int`
+    maxl : :class:`int`
         Calculate spherical harmonics from ``l=0, ..., maxl``.
-    normalize : `bool`, optional
+    normalize : :class:`bool`, optional
         Normalize the cartesian vectors used to calculate the spherical harmonics.
-    conj : `bool`, optional
+    conj : :class:`bool`, optional
         Return the conjugate of the (conventionally defined) spherical harmonics.
-    sh_norm : `str`, optional
+    sh_norm : :class:`str`, optional
         Chose the normalization convention for the spherical harmonics.
         The options are:
 
         - 'qm': Quantum mechanical convention: :math:`\sum_m |Y^\ell_m|^2 = \frac{2\ell+1}{4\pi}`
 
         - 'unit': Quantum mechanical convention: :math:`\sum_m |Y^\ell_m|^2 = 1`
-    cg_dict : :obj:`CGDict`
+    cg_dict : :class:`CGDict`, optional
         Specify a Clebsch-Gordan Dictionary
-    dtype : :obj:`torch.dtype`
-        Specify the dtype to initialize the :obj:`CGDict`/:obj:`CGModule` to
-    device : :obj:`torch.device`
-        Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
+    dtype : :class:`torch.torch.dtype`, optional
+        Specify the dtype to initialize the :class:`CGDict`/:class:`CGModule` to
+    device : :class:`torch.torch.device`, optional
+        Specify the device to initialize the :class:`CGDict`/:class:`CGModule` to
     """
     def __init__(self, maxl, normalize=True, conj=False, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
@@ -51,12 +51,12 @@ class SphericalHarmonics(CGModule):
 
         Parameters
         ----------
-        pos : :obj:`torch.Tensor`
+        pos : :class:`torch.Tensor`
             Input tensor of cartesian vectors
 
         Returns
         -------
-        sph_harms : :obj:`list` of :obj:`torch.Tensor`
+        sph_harms : :class:`list` of :class:`torch.Tensor`
             Output list of spherical harmonics from :math:`\ell=0` to :math:`\ell=maxl`
         """
         return spherical_harmonics(self.cg_dict, pos, self.maxl,
@@ -79,29 +79,29 @@ class SphericalHarmonicsRel(CGModule):
     and :math:`{\bf r}^{(2)}_j`.
 
 
-    This module subclasses :obj:`CGModule`, and maintains similar functionality.
+    This module subclasses :class:`CGModule`, and maintains similar functionality.
 
     Parameters
     ----------
-    maxl : `int`
+    maxl : :class:`int`
         Calculate spherical harmonics from ``l=0, ..., maxl``.
-    normalize : `bool`, optional
+    normalize : :class:`bool`, optional
         Normalize the cartesian vectors used to calculate the spherical harmonics.
-    conj : `bool`, optional
+    conj : :class:`bool`, optional
         Return the conjugate of the (conventionally defined) spherical harmonics.
-    sh_norm : `str`, optional
+    sh_norm : :class:`str`, optional
         Chose the normalization convention for the spherical harmonics.
         The options are:
 
         - 'qm': Quantum mechanical convention: :math:`\sum_m |Y^\ell_m|^2 = \frac{2\ell+1}{4\pi}`
 
         - 'unit': Quantum mechanical convention: :math:`\sum_m |Y^\ell_m|^2 = 1`
-    cg_dict : :obj:`CGDict`
+    cg_dict : :class:`CGDict` or None, optional
         Specify a Clebsch-Gordan Dictionary
-    dtype : :obj:`torch.dtype`
-        Specify the dtype to initialize the :obj:`CGDict`/:obj:`CGModule` to
-    device : :obj:`torch.device`
-        Specify the device to initialize the :obj:`CGDict`/:obj:`CGModule` to
+    dtype : :class:`torch.torch.dtype`, optional
+        Specify the dtype to initialize the :class:`CGDict`/:class:`CGModule` to
+    device : :class:`torch.torch.device`, optional
+        Specify the device to initialize the :class:`CGDict`/:class:`CGModule` to
     """
     def __init__(self, maxl, normalize=False, conj=False, sh_norm='unit',
                  cg_dict=None, dtype=None, device=None):
@@ -122,14 +122,14 @@ class SphericalHarmonicsRel(CGModule):
 
         Parameters
         ----------
-        pos1 : :obj:`torch.Tensor`
+        pos1 : :class:`torch.Tensor`
             First tensor of cartesian vectors :math:`{\bf r}^{(1)}_i`.
-        pos2 : :obj:`torch.Tensor`
+        pos2 : :class:`torch.Tensor`
             Second tensor of cartesian vectors :math:`{\bf r}^{(2)}_j`.
 
         Returns
         -------
-        sph_harms : :obj:`list` of :obj:`torch.Tensor`
+        sph_harms : :class:`list` of :class:`torch.Tensor`
             Output matrix of spherical harmonics from :math:`\ell=0` to :math:`\ell=maxl`
         """
         return spherical_harmonics_rel(self.cg_dict, pos1, pos2, self.maxl,
@@ -139,7 +139,7 @@ class SphericalHarmonicsRel(CGModule):
 def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, conj=False, sh_norm='unit'):
     r"""
     Functional form of the Spherical Harmonics. See documentation of
-    :obj:`SphericalHarmonics` for details.
+    :class:`SphericalHarmonics` for details.
     """
     s = pos.shape[:-1]
 
@@ -166,9 +166,9 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, conj=False, sh_norm
         new_psi = psi1
         for l in range(2, maxsh+1):
             new_psi = cg_product(cg_dict, [new_psi], [psi1], minl=0, maxl=l, ignore_check=True)[-1]
-            ### Use equation Y^{m1}_{l1} \otimes Y^{m2}_{l2} = \sqrt((2*l1+1)(2*l2+1)/4*\pi*(2*l3+1)) <l1 0 l2 0|l3 0> <l1 m1 l2 m2|l3 m3> Y^{m3}_{l3}
+            # Use equation Y^{m1}_{l1} \otimes Y^{m2}_{l2} = \sqrt((2*l1+1)(2*l2+1)/4*\pi*(2*l3+1)) <l1 0 l2 0|l3 0> <l1 m1 l2 m2|l3 m3> Y^{m3}_{l3}
             # cg_coeff = CGcoeffs[1*(CGmaxL+1) + l-1][5*(l-1)+1, 3*(l-1)+1] # 5*l-4 = (l)^2 -(l-2)^2 + (l-1) + 1, notice indexing starts at l=2
-            cg_coeff = cg_dict[(1, l-1)][5*(l-1)+1, 3*(l-1)+1] # 5*l-4 = (l)^2 -(l-2)^2 + (l-1) + 1, notice indexing starts at l=2
+            cg_coeff = cg_dict[(1, l-1)][5*(l-1)+1, 3*(l-1)+1]  # 5*l-4 = (l)^2 -(l-2)^2 + (l-1) + 1, notice indexing starts at l=2
             new_psi *= sqrt((4*pi*(2*l+1))/(3*(2*l-1))) / cg_coeff
             sph_harms.append(new_psi)
     sph_harms = [part.view(s + part.shape[1:]) for part in sph_harms]
@@ -182,10 +182,11 @@ def spherical_harmonics(cg_dict, pos, maxsh, normalize=True, conj=False, sh_norm
 
     return SO3Vec(sph_harms)
 
+
 def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, conj=False, sh_norm='unit'):
     r"""
     Functional form of the relative Spherical Harmonics. See documentation of
-    :obj:`SphericalHarmonicsRel` for details.
+    :class:`SphericalHarmonicsRel` for details.
     """
     rel_pos = pos1.unsqueeze(-2) - pos2.unsqueeze(-3)
     rel_norms = rel_pos.norm(dim=-1, keepdim=True)
@@ -195,22 +196,23 @@ def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, conj=Fal
 
     return rel_sph_harm, rel_norms.squeeze(-1)
 
+
 def pos_to_rep(pos, conj=False):
     r"""
     Convert a tensor of cartesian position vectors to an l=1 spherical tensor.
 
     Parameters
     ----------
-    pos : :obj:`torch.Tensor`
+    pos : :class:`torch.Tensor`
         A set of input cartesian vectors. Can have arbitrary batch dimensions
          as long as the last dimension has length three, for x, y, z.
-    conj : :obj:`bool`
+    conj : :class:`bool`, optional
         Return the complex conjugated representation.
 
 
     Returns
     -------
-    psi1 : :obj:`torch.Tensor`
+    psi1 : :class:`torch.Tensor`
         The input cartesian vectors converted to a l=1 spherical tensor.
 
     """
@@ -228,6 +230,7 @@ def pos_to_rep(pos, conj=False):
 
     return psi1
 
+
 def rep_to_pos(rep):
     r"""
     Convert a tensor of l=1 spherical tensors to cartesian position vectors.
@@ -240,14 +243,14 @@ def rep_to_pos(rep):
 
     Parameters
     ----------
-    rep : torch.Tensor
+    rep : :class:`torch.Tensor`
         A set of input l=1 spherical tensors.
         Can have arbitrary batch dimensions as long
         as the last dimension has length three, for m = -1, 0, +1.
 
     Returns
     -------
-    pos : torch.Tensor
+    pos : :class:`torch.Tensor`
         The input l=1 spherical tensors converted to cartesian vectors.
 
     """
