@@ -10,6 +10,7 @@ prune examples/.ipynb_checkpoints
 
 include *.rst
 include tox.ini
+include LICENSE
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib *.bak *sw[po]
 
