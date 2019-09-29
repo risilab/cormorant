@@ -1,4 +1,5 @@
 .. _CGLayers:
+
 ====================
 Clesch-Gordan Layers
 ====================
@@ -10,3 +11,4 @@ Vertex Network
 
 Edge Network
 ------------
+
