@@ -284,14 +284,18 @@ class Engine:
         mae = MAE(predict, targets)
         rmse = RMSE(predict, targets)
 
+        mu, sigma = self.stats[self.args.target]
+        mae_units = sigma*mae
+        rmse_units = sigma*rmse
+
         datastrings = {'train': 'Training', 'test': 'Testing', 'valid': 'Validation'}
 
         if epoch >= 0:
             suffix = 'final'
-            logging.info('Epoch: {} Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse))
+            logging.info('Epoch: {} Complete! {} {} Loss: {:8.4f} {:8.4f}   w/units: {:8.4f} {:8.4f}'.format(epoch+1, description, datastrings[dataset], mae, rmse, mae_units, rmse_units))
         else:
             suffix = 'best'
-            logging.info('Training Complete! {} {} Loss: {:10.4f} {:10.4f}'.format(description, datastrings[dataset], mae, rmse))
+            logging.info('Training Complete! {} {} Loss: {:8.4f} {:8.4f}   w/units: {:8.4f} {:8.4f}'.format(description, datastrings[dataset], mae, rmse, mae_units, rmse_units))
 
         if self.args.predict:
             file = self.args.predictfile + '.' + suffix + '.' + dataset + '.pt'

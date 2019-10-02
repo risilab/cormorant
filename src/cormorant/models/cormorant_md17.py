@@ -8,14 +8,14 @@ from cormorant.cg_lib import CGModule, SphericalHarmonicsRel
 from cormorant.models.cormorant_cg import CormorantCG
 
 from cormorant.nn import RadialFilters
-from cormorant.nn import InputLinear, InputMPNN
-from cormorant.nn import OutputLinear, OutputPMLP, GetScalarsAtom
+from cormorant.nn import InputLinear
+from cormorant.nn import OutputLinear, GetScalarsAtom
 from cormorant.nn import NoLayer
 
 
-class Cormorant(CGModule):
+class CormorantMD17(CGModule):
     """
-    Basic Cormorant Network
+    Basic Cormorant Network used to train MD17 results in Cormorant paper.
 
     Parameters
     ----------
@@ -140,7 +140,7 @@ class Cormorant(CGModule):
 
         # Calculate spherical harmonics and radial functions
         spherical_harmonics, norms = self.sph_harms(atom_positions, atom_positions)
-        rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0).byte())
+        rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0))
 
         # Prepare the input reps for both the atom and edge network
         atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
@@ -190,8 +190,8 @@ class Cormorant(CGModule):
         one_hot = data['one_hot'].to(device, dtype)
         charges = data['charges'].to(device, dtype)
 
-        atom_mask = data['atom_mask'].to(device, torch.uint8)
-        edge_mask = data['edge_mask'].to(device, torch.uint8)
+        atom_mask = data['atom_mask'].to(device)
+        edge_mask = data['edge_mask'].to(device)
 
         charge_tensor = (charges.unsqueeze(-1)/charge_scale).pow(torch.arange(charge_power+1., device=device, dtype=dtype))
         charge_tensor = charge_tensor.view(charges.shape + (1, charge_power+1))
