@@ -39,11 +39,10 @@ def main():
                                                                     force_download=args.force_download
                                                                     )
 
-    units_qm9 = {'U0': 27.2114, 'U': 27.2114, 'G': 27.2114, 'H': 27.2114, 'ZPVE': 27211.4, 'gap': 27.2114, 'homo': 27.2114, 'lumo': 27.2114}
-    print(datasets['train'].data['U0'][:10])
+    qm9_to_eV = {'U0': 27.2114, 'U': 27.2114, 'G': 27.2114, 'H': 27.2114, 'zpve': 27211.4, 'gap': 27.2114, 'homo': 27.2114, 'lumo': 27.2114}
+
     for dataset in datasets.values():
-        dataset.convert_units(units_qm9)
-    print(datasets['train'].data['U0'][:10])
+        dataset.convert_units(qm9_to_eV)
 
     # Construct PyTorch dataloaders from datasets
     dataloaders = {split: DataLoader(dataset,
