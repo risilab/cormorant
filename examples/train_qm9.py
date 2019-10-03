@@ -23,7 +23,7 @@ logger = logging.getLogger('')
 def main():
 
     # Initialize arguments -- Just
-    args = init_argparse()
+    args = init_argparse('qm9')
 
     # Initialize file paths
     args = init_file_paths(args)
@@ -34,7 +34,7 @@ def main():
     # Initialize device and data type
     device, dtype = init_cuda(args)
 
-    # Initialize dataloder
+    # Initialize dataloader
     args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, 'qm9', subtract_thermo=args.subtract_thermo,
                                                                     force_download=args.force_download
                                                                     )
