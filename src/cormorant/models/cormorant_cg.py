@@ -95,7 +95,7 @@ class CormorantCG(CGModule):
 
         for idx, (atom_level, edge_level, max_sh) in enumerate(zip(self.atom_levels, self.edge_levels, self.max_sh)):
             edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, norms)
-            edge_reps = edge_net * sph_harm
+            edge_reps = edge_net * sph_harm[:max_sh+1]
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)
 
             atoms_all.append(atom_reps)
