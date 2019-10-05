@@ -23,7 +23,7 @@ logger = logging.getLogger('')
 def main():
 
     # Initialize arguments -- Just
-    args = init_argparse()
+    args = init_argparse('qm9')
 
     # Initialize file paths
     args = init_file_paths(args)
@@ -34,10 +34,15 @@ def main():
     # Initialize device and data type
     device, dtype = init_cuda(args)
 
-    # Initialize dataloder
-    args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset,
-                                                                    force_download=args.force_download, subtract_thermo=args.subtract_thermo
+    # Initialize dataloader
+    args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, 'qm9', subtract_thermo=args.subtract_thermo,
+                                                                    force_download=args.force_download
                                                                     )
+
+    qm9_to_eV = {'U0': 27.2114, 'U': 27.2114, 'G': 27.2114, 'H': 27.2114, 'zpve': 27211.4, 'gap': 27.2114, 'homo': 27.2114, 'lumo': 27.2114}
+
+    for dataset in datasets.values():
+        dataset.convert_units(qm9_to_eV)
 
     # Construct PyTorch dataloaders from datasets
     dataloaders = {split: DataLoader(dataset,

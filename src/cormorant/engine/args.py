@@ -4,9 +4,20 @@ from math import inf
 
 #### Argument parser ####
 
-def setup_argparse():
-
-    parser = argparse.ArgumentParser(description='Cormorant network options')
+def setup_shared_args(parser):
+    """
+    Sets up the argparse object for the qm9 dataset
+    
+    Parameters 
+    ----------
+    parser : :class:`argparse.ArgumentParser`
+        Argument Parser with arguments.
+    
+    Parameters 
+    ----------
+    parser : :class:`argparse.ArgumentParser`
+        The same Argument Parser, now with more arguments.
+    """
     # Optimizer options
     parser.add_argument('--num-epoch', type=int, default=255, metavar='N',
                         help='number of epochs to train (default: 511)')
@@ -97,13 +108,6 @@ def setup_argparse():
                         help='Directory to look up data from. (default: data/)')
 
     # Dataset options
-    parser.add_argument('--dataset', type=str, default='qm9',
-                        help='Data set. Options: (qm9, md17). Default: qm9.')
-    parser.add_argument('--target', type=str, default='',
-                        help='Learning target for a dataset (such as qm9) with multiple options.')
-    parser.add_argument('--subset', '--molecule', type=str, default='',
-                        help='Subset/molecule on data with subsets (such as md17).')
-
     parser.add_argument('--num-train', type=int, default=-1, metavar='N',
                         help='Number of samples to train on. Set to -1 to use entire dataset. (default: -1)')
     parser.add_argument('--num-valid', type=int, default=-1, metavar='N',
@@ -113,8 +117,6 @@ def setup_argparse():
 
     parser.add_argument('--force-download', action=BoolArg, default=False,
                         help='Force download and processing of dataset.')
-    parser.add_argument('--subtract-thermo', action=BoolArg, default=False,
-                        help='Subtract thermochemical energy from relvant learning targets in QM9 dataset (only).')
 
     # Computation options
     parser.add_argument('--cuda', dest='cuda', action='store_true',
@@ -179,8 +181,37 @@ def setup_argparse():
 
     parser.add_argument('--edge-cat', action='store_true',
                         help='Concatenate the scalars from different \ell in the dot-product-matrix part of the edge network.')
+    parser.add_argument('--target', type=str, default='',
+                        help='Learning target for a dataset (such as qm9) with multiple options.')
 
     return parser
+
+def setup_argparse(dataset):
+    """
+    Sets up the argparse object for a specific dataset.
+
+    Parameters
+    ----------
+    dataset : :class:`str`
+        Dataset being used.  Currently MD17 and QM9 are supported.
+
+    Returns
+    -------
+    parser : :class:`argparse.ArgumentParser`
+        Argument Parser with arguments.
+    """
+    parser = argparse.ArgumentParser(description='Cormorant network options for the md17 dataset.')
+    parser = setup_shared_args(parser)
+    if dataset == "md17":
+        parser.add_argument('--subset', '--molecule', type=str, default='',
+                            help='Subset/molecule on data with subsets (such as md17).')
+    elif dataset == "qm9":
+        parser.add_argument('--subtract-thermo', action=BoolArg, default=True,
+                            help='Subtract thermochemical energy from relvant learning targets in QM9 dataset.')
+    else:
+        raise ValueError("Dataset is not recognized")
+    return parser
+
 
 ###
 

@@ -23,7 +23,7 @@ logger = logging.getLogger('')
 def main():
 
     # Initialize arguments -- Just
-    args = init_argparse()
+    args = init_argparse('md17')
 
     # Initialize file paths
     args = init_file_paths(args)
@@ -34,10 +34,9 @@ def main():
     # Initialize device and data type
     device, dtype = init_cuda(args)
 
-    # Initialize dataloder
+    # Initialize dataloader
     args, datasets, num_species, charge_scale = initialize_datasets(args, args.datadir, args.dataset, subset=args.subset,
-                                                                    force_download=args.force_download, subtract_thermo=args.subtract_thermo
-                                                                    )
+                                                                    force_download=args.force_download)
 
     # Construct PyTorch dataloaders from datasets
     dataloaders = {split: DataLoader(dataset,

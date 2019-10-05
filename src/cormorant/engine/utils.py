@@ -20,13 +20,27 @@ RMSE = lambda x, y : sqrt(MSE(x, y))
 
 #### Initialize parameters for training run ####
 
-def init_argparse():
+def init_argparse(dataset):
+    """
+    Reads in the arguments for the script for a given dataset.
+
+    Parameters
+    ----------
+    dataset : :class:`str`
+        Dataset being used.  Currently 'md17' and 'qm9' are supported.
+
+    Returns
+    -------
+    args : :class:`Namespace`
+        Namespace with a dictionary of arguments where the key is the name of 
+        the argument and the item is the input value.
+    """
     from cormorant.engine.args import setup_argparse
 
-    parser = setup_argparse()
+    parser = setup_argparse(dataset)
     args = parser.parse_args()
-
-    print(args)
+    d = vars(args)
+    d['dataset'] = dataset
 
     return args
 
