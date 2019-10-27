@@ -21,7 +21,7 @@ Cloning the git repo
 
 Cormorant can be cloned directly from the git repo using::
 
-    TO BE IMPLEMENTED!!!
+    git clone https://github.com/risilab/cormorant.git
 
 Using pip
 `````````
@@ -57,4 +57,4 @@ To force CPU-based training, add the : --cpu: flag
 Architecture
 ================
 
-A more detailed description of the Cormorant architecture is available in `the Cormorant paper. <https://arxiv.org/abs/1906.04015>`_.
+A more detailed description of the Cormorant architecture is available in `the Cormorant paper <https://arxiv.org/abs/1906.04015>`_.

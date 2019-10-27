@@ -36,17 +36,12 @@ source_suffix = '.rst'
 master_doc = 'index'
 project = u'cormorant'
 year = '2019'
-author = u'Brandon Anderson'
+author = u'Brandon Anderson, Erik Thiede'
 copyright = '{0}, {1}'.format(year, author)
 version = release = u'0.1.0'
 
 pygments_style = 'trac'
 templates_path = ['.']
-# extlinks = {
-#     'issue': ('https://github.com/DiffusionMapsAcademics/pydiffmap/issues/%s', '#')
-#     'pr': ('https://github.com/DiffusionMapsAcademics/pydiffmap/pull/%s', 'PR #'),
-# }
-# on_rtd is whether we are on readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:  # only set the theme if we're building docs locally
