@@ -1,5 +1,3 @@
-.. _OutputLayers:
-=============
 Output Layers
 =============
 
