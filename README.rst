@@ -1,7 +1,7 @@
 ==========
 IMPORTANT!
 ==========
-This code is currently for reference only while Licensing issues are sorted out.  For now, it may not be used, copied, or distributed without written permission of the authors.  Check back soon for a version with the final license. 
+This code is intended for reference only while licensing issues are sorted out.  For now, it may not be used, copied, or distributed without written permission of the authors.  Check back soon for a version with the final license. 
 
 ========
 Overview
