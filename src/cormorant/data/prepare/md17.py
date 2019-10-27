@@ -14,7 +14,7 @@ md17_subsets = {'benzene': 'benzene_old_dft',
                'uracil': 'uracil_dft',
                'naphthalene': 'naphthalene_dft',
                'aspirin': 'aspirin_dft',
-               'salicylic_acid': 'salicylic_acid_dft',
+               'salicylic_acid': 'salicylic_dft',
                'malonaldehyde': 'malonaldehyde_dft',
                'ethanol': 'ethanol_dft',
                'toluene': 'toluene_dft',
@@ -23,6 +23,9 @@ md17_subsets = {'benzene': 'benzene_old_dft',
                }
 
 def download_dataset_md17(datadir, dataname, subset, splits=None, cleanup=True):
+    """
+    Downloads the MD17 dataset.
+    """
     if subset not in md17_subsets:
         logging.info('Molecule {} not included in list of downloadable MD17 datasets! Attempting to download based directly upon input key.'.format(subset))
         md17_molecule = subset

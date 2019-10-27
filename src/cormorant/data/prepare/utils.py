@@ -1,9 +1,19 @@
 import os, logging
 from urllib.request import urlopen
 
+
 def download_data(url, outfile='', binary=False):
     """
-    Download URL and return raw data.
+    Downloads data from a URL and returns raw data.
+
+    Parameters
+    ----------
+    url : str
+        URL to get the data from
+    outfile : str, optional
+        Where to save the data.
+    binary : bool, optional
+        If true, writes data in binary.
     """
     # Try statement to catch downloads.
     try:
@@ -25,7 +35,7 @@ def download_data(url, outfile='', binary=False):
         data = data.decode('utf-8')
 
     if outfile:
-        logging.info('Saving downlodaed data to file: {}'.format(outfile))
+        logging.info('Saving downloaded data to file: {}'.format(outfile))
 
         with open(outfile, writeflag) as f:
             f.write(data)

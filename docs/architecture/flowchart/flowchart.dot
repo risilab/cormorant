@@ -1,0 +1,99 @@
+digraph G {
+	compound=true
+
+	subgraph overall_network {
+		color="#AAFFAA";
+
+		node [style=filled,color="#AAAAFF",shape=rectangle, label="Input Layer"];
+		input
+		node [style=filled,color="#AAFFAA",shape=rectangle, label="CG Layer"];
+		cor_1; cor_2; cor_3;
+		node [style=filled,color="#FFAAAA",shape=rectangle, label="Output Layer"];
+		output;
+
+		input -> cor_1 -> cor_2 -> cor_3 -> output;
+		style=filled
+		color=lightblue
+		label = "Architecture"
+	}
+
+	subgraph CGLayer {
+		// color=black;
+		color="#AAFFAA";
+		// shape=rectangle;
+		style=filled;
+		label="CG Layer";
+
+		node [style=filled,color=darkgreen,shape=diamond];
+		vertex_in [label="Atom Reps in"];
+		vertex_out [label="Atom  Reps out"];
+
+		node [style=filled,color=lightblue,shape=oval];
+		edge_in [label="Edge Scalars in"];
+		edge_out [label="Edge Scalars out"];
+
+		node [color=white, label=""];
+		phantom_in;
+		phantom_out;
+
+		node [style=filled,color="#66FF66",shape=box];
+		vertex_net [label="Edge Network"];
+
+		node [style=filled,color=lightblue,shape=box];
+		edge_net [label="Atom Network"];
+
+		node [color=black,shape=point,label=""];
+		edge_layer_dot; vertex_layer_dot;
+
+		{ rank=same; vertex_in; edge_in; phantom_in; }
+		{ rank=same; vertex_out; edge_out; phantom_out; }
+		{ rank=same; vertex_net; vertex_layer_dot; }
+		{ rank=same; edge_net; edge_layer_dot; }
+
+		vertex_in -> edge_layer_dot [arrowhead=none]
+		edge_layer_dot -> vertex_net -> vertex_out;
+		edge_in -> edge_net -> vertex_layer_dot [arrowhead=none]
+		vertex_layer_dot -> edge_out;
+
+		edge_layer_dot -> edge_net [constraint=false];
+		vertex_layer_dot -> vertex_net [constraint=false];
+
+	}
+
+	subgraph AtomLayer {
+	color="#AAFFAA";
+	style=filled;
+	label="Atom Layer";
+
+	node [style=filled,color=darkgreen,shape=diamond];
+	vertex_atom_in [label="Atom Reps in"];
+	vertex_atom_out [label="Atom  Reps out"];
+
+	node [style=filled,color=lightblue,shape=oval];
+	edge_atom_in [label="Edge Scalars in"];
+
+	node [style=filled,color=lightblue,shape=oval];
+	cg_aggregate [label="CG Aggregate"];
+	cg_power [label="CG Power"];
+
+	node [color=black,shape=point];
+	cg_identity [label=""];
+
+	vertex_atom_in -> cg_aggregate
+	vertex_atom_in -> cg_power
+	vertex_atom_in -> cg_identity
+
+	{ rank=same; cg_aggregate; cg_power; cg_identity;}
+
+
+	}
+
+
+	subgraph EdgeLayer {
+	color="#AAFFAA";
+	style=filled;
+	label="Edge Layer";
+
+
+	}
+}

@@ -1,13 +1,16 @@
 import numpy as np
 import torch
 
-import logging, os, urllib
+import logging
+import os
+import urllib
 
 from os.path import join as join
 import urllib.request
 
 from cormorant.data.prepare.process import process_xyz_files, process_xyz_gdb9
 from cormorant.data.prepare.utils import download_data, is_int, cleanup_file
+
 
 def download_dataset_qm9(datadir, dataname, splits=None, calculate_thermo=True, exclude=True, cleanup=True):
     """
@@ -19,7 +22,8 @@ def download_dataset_qm9(datadir, dataname, splits=None, calculate_thermo=True, 
     # Important to avoid a race condition
     os.makedirs(gdb9dir, exist_ok=True)
 
-    logging.info('Downloading and processing GDB9 dataset. Output will be in directory: {}.'.format(gdb9dir))
+    logging.info(
+        'Downloading and processing GDB9 dataset. Output will be in directory: {}.'.format(gdb9dir))
 
     logging.info('Beginning download of GDB9 dataset!')
     gdb9_url_data = 'https://springernature.figshare.com/ndownloader/files/3195389'
@@ -38,7 +42,8 @@ def download_dataset_qm9(datadir, dataname, splits=None, calculate_thermo=True, 
     # Process GDB9 dataset, and return dictionary of splits
     gdb9_data = {}
     for split, split_idx in splits.items():
-        gdb9_data[split] = process_xyz_files(gdb9_tar_data, process_xyz_gdb9, file_idx_list=split_idx, stack=True)
+        gdb9_data[split] = process_xyz_files(
+            gdb9_tar_data, process_xyz_gdb9, file_idx_list=split_idx, stack=True)
 
     # Subtract thermochemical energy if desired.
     if calculate_thermo:
@@ -83,17 +88,20 @@ def gen_splits_gdb9(gdb9dir, cleanup=True):
     excluded_strings = []
     with open(gdb9_txt_excluded) as f:
         lines = f.readlines()
-        excluded_strings = [line.split()[0] for line in lines if len(line.split()) > 0]
+        excluded_strings = [line.split()[0]
+                            for line in lines if len(line.split()) > 0]
 
     excluded_idxs = [int(idx) - 1 for idx in excluded_strings if is_int(idx)]
 
-    assert len(excluded_idxs) == 3054, 'There should be exactly 3054 excluded atoms. Found {}'.format(len(excluded_idxs))
+    assert len(excluded_idxs) == 3054, 'There should be exactly 3054 excluded atoms. Found {}'.format(
+        len(excluded_idxs))
 
     # Now, create a list of indices
     Ngdb9 = 133885
     Nexcluded = 3054
 
-    included_idxs = np.array(sorted(list(set(range(Ngdb9)) - set(excluded_idxs))))
+    included_idxs = np.array(
+        sorted(list(set(range(Ngdb9)) - set(excluded_idxs))))
 
     # Now generate random permutations to assign molecules to training/validation/test sets.
     Nmols = Ngdb9 - Nexcluded
@@ -109,9 +117,11 @@ def gen_splits_gdb9(gdb9dir, cleanup=True):
     # Now use the permutations to generate the indices of the dataset splits.
     # train, valid, test, extra = np.split(included_idxs[data_perm], [Ntrain, Ntrain+Nvalid, Ntrain+Nvalid+Ntest])
 
-    train, valid, test, extra = np.split(data_perm, [Ntrain, Ntrain+Nvalid, Ntrain+Nvalid+Ntest])
+    train, valid, test, extra = np.split(
+        data_perm, [Ntrain, Ntrain+Nvalid, Ntrain+Nvalid+Ntest])
 
-    assert(len(extra) == 0), 'Split was inexact {} {} {} {}'.format(len(train), len(valid), len(test), len(extra))
+    assert(len(extra) == 0), 'Split was inexact {} {} {} {}'.format(
+        len(train), len(valid), len(test), len(extra))
 
     train = included_idxs[train]
     valid = included_idxs[valid]
@@ -158,19 +168,25 @@ def get_thermo_dict(gdb9dir, cleanup=True):
 
             # Loop over learning targets with defined thermochemical energy
             for therm_target, split_therm in zip(therm_targets, split[1:]):
-                therm_energy[therm_target][id2charge[split[0]]] = float(split_therm)
+                therm_energy[therm_target][id2charge[split[0]]
+                                           ] = float(split_therm)
 
     # Cleanup file when finished.
     cleanup_file(gdb9_txt_thermo, cleanup)
 
     return therm_energy
 
+
 def add_thermo_targets(data, therm_energy_dict):
     """
     Adds a new molecular property, which is the thermochemical energy.
 
-    :data: QM9 dataset split.
-    :therm_energy: Dictionary of thermochemical energies for relevant properties found using :get_thermo_dict:
+    Parameters
+    ----------
+    data : ?????
+        QM9 dataset split.
+    therm_energy : dict
+        Dictionary of thermochemical energies for relevant properties found using :get_thermo_dict:
     """
     # Get the charge and number of charges
     charge_counts = get_unique_charges(data['charges'])
@@ -181,7 +197,8 @@ def add_thermo_targets(data, therm_energy_dict):
 
         # Loop over each charge, and multiplicity of the charge
         for z, num_z in charge_counts.items():
-            if z == 0: continue
+            if z == 0:
+                continue
             # Now add the thermochemical energy per atomic charge * the number of atoms of that type
             thermo += target_therm[z] * num_z
 
@@ -190,12 +207,14 @@ def add_thermo_targets(data, therm_energy_dict):
 
     return data
 
+
 def get_unique_charges(charges):
     """
     Get count of each charge for each molecule.
     """
     # Create a dictionary of charges
-    charge_counts = {z: np.zeros(len(charges), dtype=np.int) for z in np.unique(charges)}
+    charge_counts = {z: np.zeros(len(charges), dtype=np.int)
+                     for z in np.unique(charges)}
     print(charge_counts.keys())
 
     # Loop over molecules, for each molecule get the unique charges

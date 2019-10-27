@@ -1,41 +1,50 @@
 import torch
 import torch.nn as nn
-from torch.nn import Module, Parameter, ParameterList
 
-#### DotMatrix -- a matrix of dot products as is used in the edge levels ###
+from cormorant.cg_lib import CGModule
+from cormorant.so3_lib import SO3Tau, SO3Scalar
 
-class DotMatrix(nn.Module):
+
+class DotMatrix(CGModule):
+    r"""
+    Constructs a matrix of dot-products between scalars of the same representation type, as used in the edge levels.
+
     """
-    Constructs a matrix of dot-products between scalars of the same representation type.
-    Input: Tensor of SO3-vectors psi_i. Each psi has the same tau.
-    Output: Matrix of scalars (psi_i cdot psi_j)_c, where c is a channel index with |C| = \sum_\ell tau_\ell.
-    """
-    def __init__(self, tau_in=None, cat=True, device=torch.device('cpu'), dtype=torch.float):
-        super(DotMatrix, self).__init__()
+    def __init__(self, tau_in=None, cat=True, device=None, dtype=None):
+        super().__init__(device=device, dtype=dtype)
         self.tau_in = tau_in
         self.cat = cat
 
         if self.tau_in is not None:
             if cat:
-                self.tau_out = [sum(tau_in)] * len(tau_in)
+                self.tau = SO3Tau([sum(tau_in)] * len(tau_in))
             else:
-                self.tau_out = [t for t in tau_in]
-            self.signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=device, dtype=dtype).unsqueeze(-1) for ell in range(len(tau_in)+1)]
-            self.conj = torch.tensor([1., -1.]).to(device=device, dtype=dtype)
+                self.tau = SO3Tau([t for t in tau_in])
+            self.signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=self.device, dtype=self.dtype).unsqueeze(-1) for ell in range(len(tau_in)+1)]
+            self.conj = torch.tensor([1., -1.]).to(device=self.device, dtype=self.dtype)
         else:
-            self.tau_out = None
+            self.tau = None
             self.signs = None
 
-
     def forward(self, reps):
-        assert((self.tau_in is None) or [part.shape[-3] for part in reps] == list(self.tau_in)), 'Incorrect input type specified!'
+        """
+        Performs the forward pass.
 
-        if self.tau_in is None:
-            signs = [torch.tensor(-1.).pow(torch.arange(-ell, ell+1).float()).to(device=reps[0].device, dtype=reps[0].dtype).unsqueeze(-1) for ell in range(len(tau)+1)]
-            conj = torch.tensor([1., -1.], dtype=reps[0].dtype, device=reps[0].device)
-        else:
-            signs = self.signs
-            conj = self.conj
+        Parameters
+        ----------
+        reps : :class:`SO3Vec <cormorant.so3_lib.SO3Vec>`
+            Input SO3 Vector. 
+        
+        Returns
+        -------
+        dot_products : :class:`SO3Scalar <cormorant.so3_lib.SO3Scalar>`
+            SO3 scalars representing a Matrix of form :math:`(\psi_i \cdot \psi_j)_c`, where c is a channel index with :math:`|C| = \sum_l \tau_l`.
+        """
+        if self.tau_in is not None and self.tau_in != reps.tau:
+            raise ValueError('Initialized tau not consistent with tau from forward! {} {}'.format(self.tau_in, reps.tau))
+
+        signs = self.signs
+        conj = self.conj
 
         reps1 = [part.unsqueeze(-4) for part in reps]
         reps2 = [part.unsqueeze(-5) for part in reps]
@@ -51,12 +60,30 @@ class DotMatrix(nn.Module):
             dot_products = torch.cat(dot_products, dim=-2)
             dot_products = [dot_products] * len(reps)
 
-        return dot_products
+        return SO3Scalar(dot_products)
 
-########### BasicMLP used throughout the network for various reasons ###########
 
 class BasicMLP(nn.Module):
-    """ Multilayer perceptron."""
+    """
+    Multilayer perceptron used in various locations.  Operates only on the last axis of the data.
+
+    Parameters
+    ----------
+    num_in : int
+        Number of input channels
+    num_out : int
+        Number of output channels
+    num_hidden : int, optional
+        Number of hidden layers.
+    layer_width : int, optional
+        Width of each hidden layer (number of channels).
+    activation : string, optional
+        Type of nonlinearity to use.
+    device : :obj:`torch.device`, optional
+        Device to initialize the level to
+    dtype : :obj:`torch.dtype`, optional
+        Data type to initialize the level to
+    """
 
     def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):
         super(BasicMLP, self).__init__()
@@ -97,6 +124,7 @@ class BasicMLP(nn.Module):
         self.linear[-1].weight *= scale
         if self.linear[-1].bias is not None:
             self.linear[-1].bias *= scale
+
 
 def get_activation_fn(activation):
     activation = activation.lower()

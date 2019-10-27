@@ -7,9 +7,13 @@
 /data/
 TODO.txt
 /scratch/
+/examples/data/
+/build/
+/dist/
 
 *.egg-info/
 __pycache__/
+*__pycache__/
 
 *.DS*
 *.log
@@ -20,6 +24,9 @@ __pycache__/
 *.json
 *.graphml
 *.ipynb
+*.swp
+*.swo
+*.pyc
 
 # Sphinx
 docs/_build

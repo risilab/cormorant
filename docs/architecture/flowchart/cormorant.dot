@@ -1,0 +1,16 @@
+digraph cormorant {
+	color="#AAFFAA";
+
+	node [style=filled,color="#AAAAFF",shape=rectangle, label="Input Layer"];
+	input
+	node [style=filled,color="#AAFFAA",shape=rectangle, label="CG Layer"];
+	cor_1; cor_2; cor_3;
+	node [style=filled,color="#FFAAAA",shape=rectangle, label="Output Layer"];
+	output;
+
+	input -> cor_1 -> cor_2 -> cor_3 -> output;
+	style=filled
+	color=lightblue
+	label = "Architecture"
+
+}

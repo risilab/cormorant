@@ -2,7 +2,15 @@ graft docs
 graft src
 graft ci
 graft tests
+graft manual_tests
 graft examples
 
 prune docs/_build
 prune examples/.ipynb_checkpoints
+
+include *.rst
+include tox.ini
+include LICENSE
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib *.bak *sw[po]
+
