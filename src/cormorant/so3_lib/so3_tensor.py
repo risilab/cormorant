@@ -1,8 +1,6 @@
 import torch
 
 from abc import ABC, abstractmethod
-
-
 from cormorant.so3_lib import so3_torch, so3_tau
 
 SO3Tau = so3_tau.SO3Tau

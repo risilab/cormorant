@@ -27,12 +27,14 @@ class InputLinear(nn.Module):
     bias : :class:`bool`, optional
         Include a bias term in the linear mixing level.
     device : :class:`torch.device`, optional
-        Device to instantite the module to.
+        Device to instantite the module to. Default is 'cpu'.
     dtype : :class:`torch.dtype`, optional
         Data type to instantite the module to.
     """
     def __init__(self, channels_in, channels_out, bias=True,
-                 device=torch.device('cpu'), dtype=torch.float):
+                 device=None, dtype=torch.float):
+        if device is None:
+            device = torch.device('cpu')
         super(InputLinear, self).__init__()
 
         self.channels_in = channels_in
@@ -79,7 +81,6 @@ class InputLinear(nn.Module):
         return SO3Tau([self.channels_out])
 
 
-
 class InputMPNN(nn.Module):
     """
     Module to create rotationally invariant atom feature vectors
@@ -109,10 +110,16 @@ class InputMPNN(nn.Module):
         Data type to instantite the module to.
     """
     def __init__(self, channels_in, channels_out, num_layers=1,
-                 soft_cut_rad=None, soft_cut_width=None, hard_cut_rad=None, cutoff_type=['learn'],
+                 soft_cut_rad=None, soft_cut_width=None, hard_cut_rad=None, cutoff_type=None,
                  channels_mlp=-1, num_hidden=1, layer_width=256,
-                 activation='leakyrelu', basis_set=(3, 3),
-                 device=torch.device('cpu'), dtype=torch.float):
+                 activation='leakyrelu', basis_set=None,
+                 device=None, dtype=torch.float):
+        if cutoff_type is None:
+            cutoff_type = ['learn']
+        if basis_set is None:
+            basis_set = (3, 3)
+        if device is None:
+            device = torch.device('cpu')
         super(InputMPNN, self).__init__()
 
         self.soft_cut_rad = soft_cut_rad

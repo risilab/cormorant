@@ -1,13 +1,8 @@
-import torch
 from torch.nn import Module
-
-from math import sqrt
-
-from itertools import zip_longest
 from functools import reduce
-
 from cormorant.cg_lib import CGModule
 from cormorant.so3_lib import so3_torch, SO3Weight, SO3Tau
+
 
 class MixReps(CGModule):
     """
@@ -51,9 +46,9 @@ class MixReps(CGModule):
         self.tau_out = SO3Tau(tau_out)
         self.real = real
 
-        if weight_init is 'randn':
+        if weight_init == 'randn':
             weights = SO3Weight.randn(self.tau_in, self.tau_out, device=device, dtype=dtype)
-        elif weight_init is 'rand':
+        elif weight_init == 'rand':
             weights = SO3Weight.rand(self.tau_in, self.tau_out, device=device, dtype=dtype)
             weights = 2*weights - 1
         else:
@@ -80,7 +75,7 @@ class MixReps(CGModule):
         """
         if SO3Tau.from_rep(rep) != self.tau_in:
             raise ValueError('Tau of input rep does not match initialized tau!'
-                            ' rep: {} tau: {}'.format(SO3Tau.from_rep(rep), self.tau_in))
+                             ' rep: {} tau: {}'.format(SO3Tau.from_rep(rep), self.tau_in))
 
         return so3_torch.mix(self.weights, rep)
 
@@ -107,10 +102,10 @@ class CatReps(Module):
         self.taus_in = taus_in = [SO3Tau(tau) for tau in taus_in if tau]
 
         if maxl is None:
-            maxl = max([tau.maxl for tau in taus_in])
+            maxl = max(tau.maxl for tau in taus_in)
         self.maxl = maxl
 
-        self.tau_out = reduce(lambda x,y: x & y, taus_in)[:self.maxl+1]
+        self.tau_out = reduce(lambda x, y: x & y, taus_in)[:self.maxl+1]
 
     def forward(self, reps):
         """
@@ -133,7 +128,7 @@ class CatReps(Module):
         reps_taus_in = [rep.tau for rep in reps]
         if reps_taus_in != self.taus_in:
             raise ValueError('Tau of input reps does not match predefined version!'
-                                'got: {} expected: {}'.format(reps_taus_in, self.taus_in))
+                             'got: {} expected: {}'.format(reps_taus_in, self.taus_in))
 
         if self.maxl is not None:
             reps = [rep.truncate(self.maxl) for rep in reps]
@@ -143,6 +138,7 @@ class CatReps(Module):
     @property
     def tau(self):
         return self.tau_out
+
 
 class CatMixReps(CGModule):
     """

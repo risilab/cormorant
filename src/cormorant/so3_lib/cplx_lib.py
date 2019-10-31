@@ -2,6 +2,7 @@ import torch
 
 #########  Weight mixing  ###########
 
+
 def mix_zweight_zvec(weight, part, zdim=-1):
     """
     Apply the linear matrix in :obj:`SO3Weight` and a part of a :obj:`SO3Vec`.

@@ -26,7 +26,9 @@ class RadialFilters(nn.Module):
         Number of CG levels in the Cormorant.
     """
     def __init__(self, max_sh, basis_set, num_channels_out,
-                 num_levels, device=torch.device('cpu'), dtype=torch.float):
+                 num_levels, device=None, dtype=torch.float):
+        if device is None:
+            device = torch.device('cpu')
         super(RadialFilters, self).__init__()
 
         self.num_levels = num_levels
@@ -72,7 +74,9 @@ class RadPolyTrig(nn.Module):
     that can produce them. Then, when apply a weight mixing matrix to reduce the number of channels
     at the end.
     """
-    def __init__(self, max_sh, basis_set, num_channels, mix=False, device=torch.device('cpu'), dtype=torch.float):
+    def __init__(self, max_sh, basis_set, num_channels, mix=False, device=None, dtype=torch.float):
+        if device is None:
+            device = torch.device('cpu')
         super(RadPolyTrig, self).__init__()
 
         trig_basis, rpow = basis_set

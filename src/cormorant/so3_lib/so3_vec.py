@@ -1,5 +1,3 @@
-import torch
-
 # Hack to avoid circular imports
 from cormorant.so3_lib import so3_tau, so3_tensor, so3_torch
 from cormorant.so3_lib import so3_scalar, so3_wigner_d
@@ -8,6 +6,7 @@ SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 SO3Scalar = so3_scalar.SO3Scalar
 SO3WignerD = so3_wigner_d.SO3WignerD
+
 
 class SO3Vec(SO3Tensor):
     """
@@ -63,16 +62,15 @@ class SO3Vec(SO3Tensor):
 
         shapes = [part.shape for part in data]
 
-        cdims = [shape[self.cdim] for shape in shapes]
+        # cdims = [shape[self.cdim] for shape in shapes]
         rdims = [shape[self.rdim] for shape in shapes]
         zdims = [shape[self.zdim] for shape in shapes]
 
-        if not all([rdim == 2*l+1 for l, rdim in enumerate(rdims)]):
+        if not all(rdim == 2*l+1 for l, rdim in enumerate(rdims)):
             raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, list(enumerate(rdims))))
 
-        if not all([zdim == 2 for zdim in zdims]):
+        if not all(zdim == 2 for zdim in zdims):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
-
 
     def apply_wigner(self, wigner_d, dir='left'):
         """

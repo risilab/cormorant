@@ -27,14 +27,14 @@ class DotMatrix(CGModule):
             self.signs = None
 
     def forward(self, reps):
-        """
+        r"""
         Performs the forward pass.
 
         Parameters
         ----------
         reps : :class:`SO3Vec <cormorant.so3_lib.SO3Vec>`
-            Input SO3 Vector. 
-        
+            Input SO3 Vector.
+
         Returns
         -------
         dot_products : :class:`SO3Scalar <cormorant.so3_lib.SO3Scalar>`
@@ -85,7 +85,9 @@ class BasicMLP(nn.Module):
         Data type to initialize the level to
     """
 
-    def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu', device=torch.device('cpu'), dtype=torch.float):
+    def __init__(self, num_in, num_out, num_hidden=1, layer_width=256, activation='leakyrelu', device=None, dtype=torch.float):
+        if device is None:
+            device = torch.device('cpu')
         super(BasicMLP, self).__init__()
 
         self.num_in = num_in

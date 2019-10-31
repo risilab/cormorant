@@ -1,5 +1,3 @@
-import torch
-
 from cormorant.so3_lib import so3_tau, so3_tensor
 
 SO3Tensor = so3_tensor.SO3Tensor

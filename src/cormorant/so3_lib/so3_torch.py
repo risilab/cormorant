@@ -33,8 +33,8 @@ def _check_mult_compatible(val1, val2):
 
     if val1_has_rdim and val2_has_rdim:
         # raise ValueError('Cannot multiply two SO3Vecs together!')
-        warnings.warn("Both Inputs have representation dimensions. "
-                      "Multiplying them together may break covariance.",
+        warnings.warn('Both Inputs have representation dimensions. '
+                      'Multiplying them together may break covariance.',
                       RuntimeWarning)
 
 
@@ -69,7 +69,7 @@ def _dispatch_op(op, val1, val2):
     # Multiply val1 with something else
     elif isinstance(val1, SO3Tensor) and not isinstance(val2, SO3Tensor):
         applied_op = [op(val2, part1) for part1 in val1]
-        output_class =  type(val1)
+        output_class = type(val1)
     # Multiply val2 with a list/tuple
     elif not isinstance(val1, SO3Tensor) and type(val1) in [list, tuple]:
         _check_maxl(val1, val2)
@@ -173,6 +173,7 @@ def cat(reps_list):
     reps_cat = [torch.cat(reps, dim=reps_list[0].cdim) for reps in reps_cat]
 
     return reps_list[0].__class__(reps_cat)
+
 
 def mix(weights, rep):
     """

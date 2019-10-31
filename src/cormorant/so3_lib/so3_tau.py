@@ -1,8 +1,6 @@
 import torch
-
-from math import inf
-
 from itertools import zip_longest
+
 
 class SO3Tau():
     """
@@ -82,7 +80,7 @@ class SO3Tau():
         """
         Return the multiplicity :class:`SO3Tau` corresponding to the concatenation
         (direct sum) of a list of objects of type :class:`SO3Tensor`.
-        
+
         Parameters
         ----------
         tau_list : :class:`list` of :class:`SO3Tau` or :class:`list` of :class:`int`s
@@ -95,7 +93,6 @@ class SO3Tau():
             Output tau of direct sum of input :class:`SO3Tensor`.
         """
         return SO3Tau([sum(taus) for taus in zip_longest(*tau_list, fillvalue=0)])
-
 
     def __and__(self, other):
         return SO3Tau.cat([self, other])
