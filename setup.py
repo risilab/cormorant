@@ -17,26 +17,15 @@ def read(*names, **kwargs):
         encoding=kwargs.get('encoding', 'utf8')
     ).read()
 
-# setup(
-#     name='cormorant',
-#     version='0.0.1',
-#     packages=find_packages(),
-#     package_dir={'': 'src'},
-#     install_requires=[
-#         'numpy', 'scipy', 'torch'
-#     ],
-#     license='TBD'
-# )
-
 setup(
     name='cormorant',
-    version='0.0.1',
+    version='0.1.0',
     description='Library for constructing Cormorant networks',
     long_description='%s\n%s' % (
         re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub('', read('README.rst')),
         re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
     ),
-    url="https://bitbucket.org/branderson/cormorant",
+    url="https://github.com/risilab/cormorant",
     packages=find_packages('src'),
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],

@@ -1,26 +1,26 @@
-from os.path import join as join
-import urllib.request
-
 import numpy as np
 import torch
+import logging
+import os
 
-import logging, os, urllib
+from os.path import join as join
 
-from cormorant.data.prepare.utils import download_data, is_int, cleanup_file
+from cormorant.data.prepare.utils import download_data, cleanup_file
 
 md17_base_url = 'http://quantum-machine.org/gdml/data/npz/'
 
 md17_subsets = {'benzene': 'benzene_old_dft',
-               'uracil': 'uracil_dft',
-               'naphthalene': 'naphthalene_dft',
-               'aspirin': 'aspirin_dft',
-               'salicylic_acid': 'salicylic_dft',
-               'malonaldehyde': 'malonaldehyde_dft',
-               'ethanol': 'ethanol_dft',
-               'toluene': 'toluene_dft',
-               'paracetamol': 'paracetamol_dft',
-               'azobenzene': 'azobenzene_dft'
-               }
+                'uracil': 'uracil_dft',
+                'naphthalene': 'naphthalene_dft',
+                'aspirin': 'aspirin_dft',
+                'salicylic_acid': 'salicylic_dft',
+                'malonaldehyde': 'malonaldehyde_dft',
+                'ethanol': 'ethanol_dft',
+                'toluene': 'toluene_dft',
+                'paracetamol': 'paracetamol_dft',
+                'azobenzene': 'azobenzene_dft'
+                }
+
 
 def download_dataset_md17(datadir, dataname, subset, splits=None, cleanup=True):
     """

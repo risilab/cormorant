@@ -1,3 +1,8 @@
+==========
+IMPORTANT!
+==========
+This code is currently for reference only while Licensing issues are sorted out.  For now, it may not be used, copied, or distributed without written permission of the authors.  Check back soon for a version with the final license. 
+
 ========
 Overview
 ========
@@ -21,12 +26,12 @@ Cloning the git repo
 
 Cormorant can be cloned directly from the git repo using::
 
-    TO BE IMPLEMENTED!!!
+    git clone https://github.com/risilab/cormorant.git
 
 Using pip
 `````````
 
-Cormorant is installable using pip.  You can currently install it from
+Cormorant is installable from source using pip.  You can currently install it from
 source by going to the directory with setup.py::
 
     pip install cormorant .
@@ -44,18 +49,17 @@ The example training script is in :examples/train_cormorant.py:. The same script
 can train both the datasets QM9 and MD17, and can also be extended to more general datasets.
 ::
 
-    python examples/train_cormorant.py --dataset=qm9
+    python examples/train_qm9.py
 
 ::
 
-    python examples/train_cormorant.py --dataset=md17
+    python examples/train_md17.py
 
 Note that if no GPU is available, the the training script will throw an error.
 To force CPU-based training, add the : --cpu: flag
 
-..
-  ================
-  Architecture
-  ================
+================
+Architecture
+================
 
-  A more detailed description of the Cormorant architecture is available here.
+A more detailed description of the Cormorant architecture is available in `the Cormorant paper <https://arxiv.org/abs/1906.04015>`_.

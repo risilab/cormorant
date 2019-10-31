@@ -1,4 +1,5 @@
-import os, logging
+import os
+import logging
 from urllib.request import urlopen
 
 
@@ -50,6 +51,7 @@ def is_int(str):
         return True
     except:
         return False
+
 
 # Cleanup. Use try-except to avoid race condition.
 def cleanup_file(file, cleanup=True):

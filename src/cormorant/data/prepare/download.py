@@ -28,7 +28,7 @@ def prepare_dataset(datadir, dataset, subset=None, splits=None, cleanup=True, fo
     Returns
     -------
     datafiles : dict of strings
-        Dictionary of strings pointing to the files containing the data. 
+        Dictionary of strings pointing to the files containing the data.
 
     Notes
     -----
@@ -58,7 +58,7 @@ def prepare_dataset(datadir, dataset, subset=None, splits=None, cleanup=True, fo
     new_download = False
     if all(datafiles_checks):
         logging.info('Dataset exists and is processed.')
-    elif all([not x for x in datafiles_checks]):
+    elif all(not x for x in datafiles_checks):
         # If checks are failed.
         new_download = True
     else:

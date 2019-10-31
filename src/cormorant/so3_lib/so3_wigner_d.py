@@ -1,14 +1,13 @@
 import torch
+from numpy import pi
 
 # Hack to avoid circular imports
-from cormorant.so3_lib import so3_tau, so3_tensor, so3_scalar, so3_vec
+from cormorant.so3_lib import so3_tau, so3_tensor
 from cormorant.so3_lib import rotations as rot
 
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 
-
-from numpy import pi
 
 class SO3WignerD(SO3Tensor):
     """
@@ -81,10 +80,10 @@ class SO3WignerD(SO3Tensor):
         rdims2 = [shape[self.rdim2] for shape in shapes]
         zdims = [shape[self.zdim] for shape in shapes]
 
-        if not all([rdim1 == 2*l+1 and rdim2 == 2*l+1 for l, (rdim1, rdim2) in enumerate(zip(rdims1, rdims2))]):
-            raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, list(enumerate(rdims))))
+        if not all(rdim1 == 2*l+1 and rdim2 == 2*l+1 for l, (rdim1, rdim2) in enumerate(zip(rdims1, rdims2))):
+            raise ValueError('Irrep dimension (dim={}) of each tensor should have shape 2*l+1! Found: {}'.format(self.rdim, list(enumerate(zip(rdims1, rdims2)))))
 
-        if not all([zdim == 2 for zdim in zdims]):
+        if not all(zdim == 2 for zdim in zdims):
             raise ValueError('Complex dimension (dim={}) of each tensor should have length 2! Found: {}'.format(self.zdim, zdims))
 
     @staticmethod
@@ -101,7 +100,7 @@ class SO3WignerD(SO3Tensor):
         angle and then instantiate a SO3WignerD accordingly.
         """
 
-        if angles == None:
+        if angles is None:
             alpha, beta, gamma = torch.rand(3) * 2 * pi
             beta = beta / 2
 
@@ -114,7 +113,6 @@ class SO3WignerD(SO3Tensor):
         """ Overwrite factor method inherited from :obj:`SO3Tensor` since
         it would break covariance """
         raise NotImplementedError('Does not make sense as it would break covariance!')
-
 
     @staticmethod
     def randn(maxl, device=None, dtype=None, requires_grad=False):

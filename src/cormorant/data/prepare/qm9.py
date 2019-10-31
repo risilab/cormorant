@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 import logging
 import os
@@ -9,7 +8,7 @@ from os.path import join as join
 import urllib.request
 
 from cormorant.data.prepare.process import process_xyz_files, process_xyz_gdb9
-from cormorant.data.prepare.utils import download_data, is_int, cleanup_file
+from cormorant.data.prepare.utils import is_int, cleanup_file
 
 
 def download_dataset_qm9(datadir, dataname, splits=None, calculate_thermo=True, exclude=True, cleanup=True):
@@ -215,7 +214,6 @@ def get_unique_charges(charges):
     # Create a dictionary of charges
     charge_counts = {z: np.zeros(len(charges), dtype=np.int)
                      for z in np.unique(charges)}
-    print(charge_counts.keys())
 
     # Loop over molecules, for each molecule get the unique charges
     for idx, mol_charges in enumerate(charges):

@@ -13,8 +13,8 @@ Contents
    readme
    installation
    usage
-   architecture/index
    cg_lib/index
+   architecture/index
    reference/index
    contributing
    authors

@@ -200,7 +200,7 @@ def littled(j, beta):
     return d
 
 
-def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=torch.device('cpu')):
+def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=None):
     """
     Calculates the Wigner D matrix for a given degree and Euler Angle.
 
@@ -227,6 +227,8 @@ def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=t
 
 
     """
+    if device is None:
+        device = torch.device('cpu')
     d = littled(j, beta)
 
     Jz = np.arange(-j, j+1)
@@ -244,15 +246,19 @@ def WignerD(j, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=t
     return D
 
 
-def WignerD_list(jmax, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=torch.device('cpu')):
+def WignerD_list(jmax, alpha, beta, gamma, numpy_test=False, dtype=torch.float, device=None):
     """
 
     """
+    if device is None:
+        device = torch.device('cpu')
     return [WignerD(j, alpha, beta, gamma, numpy_test=numpy_test, dtype=dtype, device=device) for j in range(jmax+1)]
 
 
-def complex_from_numpy(z, dtype=torch.float, device=torch.device('cpu')):
+def complex_from_numpy(z, dtype=torch.float, device=None):
     """ Take a numpy array and output a complex array of the same size. """
+    if device is None:
+        device = torch.device('cpu')
     zr = torch.from_numpy(z.real).to(dtype=dtype, device=device)
     zi = torch.from_numpy(z.imag).to(dtype=dtype, device=device)
 

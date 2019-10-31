@@ -1,10 +1,7 @@
 import torch
 import numpy as np
-
 import logging
-import os
 
-from torch.utils.data import DataLoader
 from cormorant.data.dataset import ProcessedDataset
 from cormorant.data.prepare import prepare_dataset
 
@@ -66,7 +63,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None,
 
     # Basic error checking: Check the training/test/validation splits have the same set of keys.
     keys = [list(data.keys()) for data in datasets.values()]
-    assert all([key == keys[0] for key in keys]
+    assert all(key == keys[0] for key in keys
                ), 'Datasets must have same set of keys!'
 
     # Get a list of all species across the entire dataset
@@ -127,11 +124,11 @@ def _get_species(datasets, ignore_check=False):
         all_species = all_species[1:]
 
     # Remove zeros if zero-padded charges exst for each split
-    split_species = {split: species[1:] if species[0] ==
-                     0 else species for split, species in split_species.items()}
+    split_species = {split: species[1:] if species[0] == 0
+                     else species for split, species in split_species.items()}
 
     # Now check that each split has at least one example of every atomic spcies from the entire dataset.
-    if not all([split.tolist() == all_species.tolist() for split in split_species.values()]):
+    if not all(split.tolist() == all_species.tolist() for split in split_species.values()):
         # Allows one to override this check if they really want to. Not recommended as the answers become non-sensical.
         if ignore_check:
             logging.error(

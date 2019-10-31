@@ -1,11 +1,7 @@
 import torch
+import logging
 from torch.utils.data import Dataset
 
-import os
-from itertools import islice
-from math import inf
-
-import logging
 
 class ProcessedDataset(Dataset):
     """

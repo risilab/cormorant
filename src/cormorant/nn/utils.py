@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from torch.nn import Module, Parameter, ParameterList
 
 from cormorant.so3_lib import SO3Tau
+
 
 class NoLayer(nn.Module):
     """
@@ -30,16 +30,21 @@ class NoLayer(nn.Module):
 # Save reps
 
 def save_grads(reps):
-    for part in reps: part.requires_grad_()
+    for part in reps:
+        part.requires_grad_()
+
     def closure(part):
         def assign_grad(grad):
-            if grad is not None: part.add_(grad)
+            if grad is not None:
+                part.add_(grad)
             return None
         return assign_grad
     grads = [torch.zeros_like(part) for part in reps]
-    for (part, grad) in zip(reps, grads): part.register_hook(closure(grad))
+    for (part, grad) in zip(reps, grads):
+        part.register_hook(closure(grad))
 
     return grads
+
 
 def save_reps(reps_dict, to_save, retain_grad=False):
     if 'reps_out' not in to_save:
@@ -52,11 +57,13 @@ def save_reps(reps_dict, to_save, retain_grad=False):
 
     return reps_dict
 
+
 def broadcastable(tau1, tau2):
     for t1, t2 in zip(tau1[::-1], tau2[::-1]):
         if not (t1 == 1 or t2 == 1 or t1 == t2):
             return False
     return True
+
 
 def conjugate_rep(rep):
     repc = [part.clone() for part in rep]

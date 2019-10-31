@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-from cormorant.so3_lib import SO3Scalar
 
 class MaskLevel(nn.Module):
     """
@@ -34,7 +33,9 @@ class MaskLevel(nn.Module):
         Data type to instantite the module to.
     """
     def __init__(self, num_channels, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
-                 gaussian_mask=False, eps=1e-3, device=torch.device('cpu'), dtype=torch.float):
+                 gaussian_mask=False, eps=1e-3, device=None, dtype=torch.float):
+        if device is None:
+            device = torch.device('cpu')
         super(MaskLevel, self).__init__()
 
         self.gaussian_mask = gaussian_mask

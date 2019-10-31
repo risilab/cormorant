@@ -1,10 +1,10 @@
 import torch
-
+from torch.nn import Parameter, ParameterList
 from cormorant.so3_lib import so3_tensor, so3_tau
+
 SO3Tau = so3_tau.SO3Tau
 SO3Tensor = so3_tensor.SO3Tensor
 
-from torch.nn import Parameter, ParameterList
 
 class SO3Weight(SO3Tensor):
     """
@@ -103,17 +103,6 @@ class SO3Weight(SO3Tensor):
         shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
 
         return SO3Weight([torch.randn(shape, device=device, dtype=dtype,
-                          requires_grad=requires_grad) for shape in shapes])
-
-    @staticmethod
-    def zeros(tau_in, tau_out, device=None, dtype=None, requires_grad=False):
-        """
-        Factory method to create a new all-zeros :obj:`SO3Weight`.
-        """
-
-        shapes = [(t2, t1, 2) for t1, t2 in zip(tau_in, tau_out)]
-
-        return SO3Weight([torch.zeros(shape, device=device, dtype=dtype,
                           requires_grad=requires_grad) for shape in shapes])
 
     @staticmethod
