@@ -123,11 +123,11 @@ def process_xyz_md17(datafile):
     atom_positions = []
     atom_types = []
     for line in xyz_lines:
-        if line[0] is '#':
+        if line[0] == '#':
             continue
-        if line_counter is 0:
+        if line_counter == 0:
             num_atoms = int(line)
-        elif line_counter is 1:
+        elif line_counter == 1:
             split = line.split(';')
             assert (len(split) == 1 or len(split) == 2), 'Improperly formatted energy/force line.'
             if (len(split) == 1):
@@ -140,7 +140,7 @@ def process_xyz_md17(datafile):
                 atom_forces = [[float(x.strip('[]\n')) for x in force.split(',')] for force in f]
         else:
             split = line.split()
-            if len(split) is 4:
+            if len(split) == 4:
                 type, x, y, z = split
                 atom_types.append(split[0])
                 atom_positions.append([float(x) for x in split[1:]])

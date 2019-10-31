@@ -7,7 +7,7 @@ from cormorant.so3_lib import cat
 ############# Get Scalars #############
 
 class GetScalarsAtom(nn.Module):
-    """
+    r"""
     Construct a set of scalar feature vectors for each atom by using the
     covariant atom :class:`SO3Vec` representations at various levels.
 
@@ -46,8 +46,6 @@ class GetScalarsAtom(nn.Module):
         else:
             self.num_scalars = sum(split_l0)
             self.split = split_l0
-
-        print('Number of scalars at top:', self.num_scalars)
 
     def forward(self, reps_all_levels):
         """

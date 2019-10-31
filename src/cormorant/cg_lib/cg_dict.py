@@ -44,10 +44,13 @@ class CGDict():
 
     """
 
-    def __init__(self, maxl=None, transpose=True, dtype=torch.float, device=torch.device('cpu')):
+    def __init__(self, maxl=None, transpose=True, dtype=torch.float, device=None):
 
         self.dtype = dtype
-        self.device = device
+        if device is None:
+            self.device = torch.device('cpu')
+        else:
+            self.device = device
         self._transpose = transpose
         self._maxl = None
         self._cg_dict = {}
@@ -151,7 +154,7 @@ class CGDict():
         return self.maxl is not None
 
 
-def _gen_cg_dict(maxl, transpose=False, existing_keys={}):
+def _gen_cg_dict(maxl, transpose=False, existing_keys=None):
     """
     Generate all Clebsch-Gordan coefficients for a weight up to maxl.
 
@@ -168,6 +171,8 @@ def _gen_cg_dict(maxl, transpose=False, existing_keys={}):
         into a direct sum of irreps :l: from :abs(l1-l2): to :l1+l2:
     """
     cg_dict = {}
+    if existing_keys is None:
+        existing_keys = {}
 
     for l1 in range(maxl+1):
         for l2 in range(maxl+1):

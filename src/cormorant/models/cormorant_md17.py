@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 
 import logging
 
@@ -69,7 +68,7 @@ class CormorantMD17(CGModule):
         super().__init__(maxl=max(maxl+max_sh), device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
 
-        print('CGDICT', cg_dict.maxl)
+        logging.info('CGdict maxl: {}'.format(cg_dict.maxl))
 
         self.num_cg_levels = num_cg_levels
         self.num_channels = num_channels
@@ -97,10 +96,10 @@ class CormorantMD17(CGModule):
         tau_in_edge = self.input_func_edge.tau
 
         self.cormorant_cg = CormorantCG(maxl, max_sh, tau_in_atom, tau_in_edge,
-                     tau_pos, num_cg_levels, num_channels, level_gain, weight_init,
-                     cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
-                     cat=True, gaussian_mask=False,
-                     device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
+                                        tau_pos, num_cg_levels, num_channels, level_gain, weight_init,
+                                        cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
+                                        cat=True, gaussian_mask=False,
+                                        device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         tau_cg_levels_atom = self.cormorant_cg.tau_levels_atom
         tau_cg_levels_edge = self.cormorant_cg.tau_levels_edge
@@ -117,7 +116,7 @@ class CormorantMD17(CGModule):
         self.output_layer_edge = NoLayer()
 
         logging.info('Model initialized. Number of parameters: {}'.format(
-            sum([p.nelement() for p in self.parameters()])))
+            sum(p.nelement() for p in self.parameters())))
 
     def forward(self, data, covariance_test=False):
         """
@@ -200,6 +199,7 @@ class CormorantMD17(CGModule):
         edge_scalars = torch.tensor([])
 
         return atom_scalars, atom_mask, edge_scalars, edge_mask, atom_positions
+
 
 def expand_var_list(var, num_cg_levels):
     if type(var) is list:

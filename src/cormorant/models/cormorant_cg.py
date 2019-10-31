@@ -1,13 +1,8 @@
-import torch
+import logging
 import torch.nn as nn
 
 from cormorant.models import CormorantAtomLevel, CormorantEdgeLevel
-
-from cormorant.nn import MaskLevel, DotMatrix
-from cormorant.nn import CatMixReps
-from cormorant.cg_lib import CGProduct, CGModule
-
-import logging
+from cormorant.cg_lib import CGModule
 
 
 class CormorantCG(CGModule):
@@ -22,8 +17,8 @@ class CormorantCG(CGModule):
 
         self.max_sh = max_sh
 
-        tau_atom_in = atom_in.tau if type(tau_in_atom) is CGModule else tau_in_atom
-        tau_edge_in = edge_in.tau if type(tau_in_edge) is CGModule else tau_in_edge
+        tau_atom_in = tau_in_atom.tau if type(tau_in_atom) is CGModule else tau_in_atom
+        tau_edge_in = tau_in_edge.tau if type(tau_in_edge) is CGModule else tau_in_edge
 
         logging.info('{} {}'.format(tau_atom_in, tau_edge_in))
 

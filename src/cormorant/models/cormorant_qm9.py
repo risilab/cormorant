@@ -67,7 +67,7 @@ class CormorantQM9(CGModule):
         super().__init__(maxl=max(maxl+max_sh), device=device, dtype=dtype, cg_dict=cg_dict)
         device, dtype, cg_dict = self.device, self.dtype, self.cg_dict
 
-        print('CGDICT', cg_dict.maxl)
+        logging.info('CGdict maxl: {}'.format(cg_dict.maxl))
 
         self.num_cg_levels = num_cg_levels
         self.num_channels = num_channels

@@ -2,18 +2,17 @@ import argparse
 
 from math import inf
 
-#### Argument parser ####
 
 def setup_shared_args(parser):
     """
     Sets up the argparse object for the qm9 dataset
-    
-    Parameters 
+
+    Parameters
     ----------
     parser : :class:`argparse.ArgumentParser`
         Argument Parser with arguments.
-    
-    Parameters 
+
+    Parameters
     ----------
     parser : :class:`argparse.ArgumentParser`
         The same Argument Parser, now with more arguments.
@@ -70,7 +69,7 @@ def setup_shared_args(parser):
     parser.add_argument('--predict', action=BoolArg, default=True,
                         help='Save predictions. (default)')
 
-    ### Arguments for files to save things to
+    # ## Arguments for files to save things to
     # Job prefix is used to name checkpoint/best file
     parser.add_argument('--prefix', '--jobname', type=str, default='nosave',
                         help='Prefix to set load, save, and logfile. (default: nosave)')
@@ -180,11 +179,12 @@ def setup_shared_args(parser):
                         help='Use gaussian mask instead of sigmoid mask.')
 
     parser.add_argument('--edge-cat', action='store_true',
-                        help='Concatenate the scalars from different \ell in the dot-product-matrix part of the edge network.')
+                        help='Concatenate the scalars from different ell in the dot-product-matrix part of the edge network.')
     parser.add_argument('--target', type=str, default='',
                         help='Learning target for a dataset (such as qm9) with multiple options.')
 
     return parser
+
 
 def setup_argparse(dataset):
     """
@@ -202,14 +202,14 @@ def setup_argparse(dataset):
     """
     parser = argparse.ArgumentParser(description='Cormorant network options for the md17 dataset.')
     parser = setup_shared_args(parser)
-    if dataset == "md17":
+    if dataset == 'md17':
         parser.add_argument('--subset', '--molecule', type=str, default='',
                             help='Subset/molecule on data with subsets (such as md17).')
-    elif dataset == "qm9":
+    elif dataset == 'qm9':
         parser.add_argument('--subtract-thermo', action=BoolArg, default=True,
                             help='Subtract thermochemical energy from relvant learning targets in QM9 dataset.')
     else:
-        raise ValueError("Dataset is not recognized")
+        raise ValueError('Dataset is not recognized')
     return parser
 
 
@@ -221,11 +221,11 @@ class BoolArg(argparse.Action):
     """
     def __init__(self, default=None, nargs=None, *args, **kwargs):
         if nargs is not None:
-            raise ValueError("nargs not allowed")
+            raise ValueError('nargs not allowed')
 
         # Set default
         if default is None:
-            raise ValueError("Default must be set!")
+            raise ValueError('Default must be set!')
 
         default = _arg_to_bool(default)
 
@@ -241,6 +241,7 @@ class BoolArg(argparse.Action):
             argval = True
 
         setattr(namespace, self.dest, argval)
+
 
 def _arg_to_bool(arg):
     # Convert argument to boolean
@@ -267,5 +268,6 @@ class Range(object):
     def __init__(self, start, end):
         self.start = start
         self.end = end
+
     def __eq__(self, other):
         return self.start <= other <= self.end

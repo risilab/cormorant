@@ -1,10 +1,7 @@
-import torch
-import torch.nn as nn
-
 from cormorant.cg_lib import CGProduct, CGModule
-
 from cormorant.nn import MaskLevel
 from cormorant.nn import CatMixReps, DotMatrix
+
 
 class CormorantEdgeLevel(CGModule):
     """
