@@ -220,11 +220,12 @@ def pos_to_rep(pos, conj=False):
 
     # Only the y coordinates get mapped to imaginary terms
     if conj:
-        pos_y *= -1
-
-    pos_m = torch.stack([pos_x, -pos_y], -1)/sqrt(2.)
+        pos_m = torch.stack([pos_x, pos_y], -1)/sqrt(2.)
+        pos_p = torch.stack([-pos_x, pos_y], -1)/sqrt(2.)
+    else:
+        pos_m = torch.stack([pos_x, -pos_y], -1)/sqrt(2.)
+        pos_p = torch.stack([-pos_x, -pos_y], -1)/sqrt(2.)
     pos_0 = torch.stack([pos_z, torch.zeros_like(pos_z)], -1)
-    pos_p = torch.stack([-pos_x, -pos_y], -1)/sqrt(2.)
 
     psi1 = torch.stack([pos_m, pos_0, pos_p], dim=-2).unsqueeze(-3)
 
