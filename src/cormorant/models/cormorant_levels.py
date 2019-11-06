@@ -63,7 +63,7 @@ class CormorantEdgeLevel(CGModule):
         self.mask_layer = MaskLevel(nout, hard_cut_rad, soft_cut_rad, soft_cut_width, cutoff_type,
                                     gaussian_mask=gaussian_mask, device=self.device, dtype=self.dtype)
 
-    def forward(self, edge_in, atom_reps, pos_funcs, base_mask, norms):
+    def forward(self, edge_in, atom_reps, pos_funcs, base_mask, norms, sq_norms):
         # Caculate the dot product matrix.
         edge_dot = self.dot_matrix(atom_reps)
 
@@ -71,7 +71,7 @@ class CormorantEdgeLevel(CGModule):
         edge_mix = self.cat_mix([edge_in, edge_dot, pos_funcs])
 
         # Apply mask to layer -- For now, only can be done after mixing.
-        edge_net = self.mask_layer(edge_mix, base_mask, norms)
+        edge_net = self.mask_layer(edge_mix, base_mask, norms, sq_norms)
 
         return edge_net
 

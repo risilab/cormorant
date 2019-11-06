@@ -50,7 +50,7 @@ class CormorantCG(CGModule):
         self.tau_levels_atom = [level.tau for level in atom_levels]
         self.tau_levels_edge = [level.tau for level in edge_levels]
 
-    def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, sph_harm):
+    def forward(self, atom_reps, atom_mask, edge_net, edge_mask, rad_funcs, norms, sq_norms, sph_harm):
         """
         Runs a forward pass of the Cormorant CG layers.
 
@@ -89,7 +89,7 @@ class CormorantCG(CGModule):
         edges_all = []
 
         for idx, (atom_level, edge_level, max_sh) in enumerate(zip(self.atom_levels, self.edge_levels, self.max_sh)):
-            edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, norms)
+            edge_net = edge_level(edge_net, atom_reps, rad_funcs[idx], edge_mask, norms, sq_norms)
             edge_reps = edge_net * sph_harm[:max_sh+1]
             atom_reps = atom_level(atom_reps, edge_reps, atom_mask)
 

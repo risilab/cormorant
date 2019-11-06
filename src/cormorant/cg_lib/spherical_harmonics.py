@@ -190,11 +190,12 @@ def spherical_harmonics_rel(cg_dict, pos1, pos2, maxsh, normalize=True, conj=Fal
     """
     rel_pos = pos1.unsqueeze(-2) - pos2.unsqueeze(-3)
     rel_norms = rel_pos.norm(dim=-1, keepdim=True)
+    rel_sq_norms = rel_pos.pow(2).sum(dim=-1, keepdim=True)
 
     rel_sph_harm = spherical_harmonics(cg_dict, rel_pos, maxsh, normalize=normalize,
                                        conj=conj, sh_norm=sh_norm)
 
-    return rel_sph_harm, rel_norms.squeeze(-1)
+    return rel_sph_harm, rel_norms.squeeze(-1), rel_sq_norms.squeeze(-1)
 
 
 def pos_to_rep(pos, conj=False):
