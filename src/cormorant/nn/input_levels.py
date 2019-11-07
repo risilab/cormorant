@@ -45,7 +45,7 @@ class InputLinear(nn.Module):
 
         self.zero = torch.tensor(0, dtype=dtype, device=device)
 
-    def forward(self, atom_features, atom_mask, ignore, edge_mask, norms):
+    def forward(self, atom_features, atom_mask, ignore, edge_mask, norms, sq_norms):
         """
         Forward pass for :class:`InputLinear` layer.
 
@@ -154,7 +154,7 @@ class InputMPNN(nn.Module):
         self.dtype = dtype
         self.device = device
 
-    def forward(self, features, atom_mask, edge_features, edge_mask, norms):
+    def forward(self, features, atom_mask, edge_features, edge_mask, norms, sq_norms):
         """
         Forward pass for :class:`InputMPNN` layer.
 
@@ -171,6 +171,8 @@ class InputMPNN(nn.Module):
             Mask used to account for padded edges for unequal batch sizes.
         norms : :class:`torch.Tensor`
             Matrix of relative distances between pairs of atoms.
+        sq_norms : :class:`torch.Tensor`
+            Matrix of relative distances between pairs of atoms, squared.
 
         Returns
         -------
@@ -202,7 +204,7 @@ class InputMPNN(nn.Module):
             # rad[0] = rad[0].unsqueeze(-1)
 
             # Mask the position function if desired
-            edge = mask(rad, edge_mask, norms)
+            edge = mask(rad, edge_mask, norms, sq_norms)
             # Convert to a form that MatMul expects
             edge = edge.squeeze(-1)
 

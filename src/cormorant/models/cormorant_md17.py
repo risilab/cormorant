@@ -35,8 +35,6 @@ class CormorantMD17(CGModule):
         Device to initialize the level to
     dtype : :class:`torch.torch.dtype`
         Data type to initialize the level to level to
-    dummy_torch_obj: :class:`torch.Tensor`
-        Object created for testing external links.
     cg_dict : :class:`CGDict <cormorant.cg_lib.CGDict>`
         Clebsch-gordan dictionary object.
     """
@@ -96,9 +94,10 @@ class CormorantMD17(CGModule):
         tau_in_edge = self.input_func_edge.tau
 
         self.cormorant_cg = CormorantCG(maxl, max_sh, tau_in_atom, tau_in_edge,
-                                        tau_pos, num_cg_levels, num_channels, level_gain, weight_init,
-                                        cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
-                                        cat=True, gaussian_mask=False,
+                                        tau_pos, num_cg_levels, num_channels,
+                                        level_gain, weight_init, cutoff_type,
+                                        hard_cut_rad, soft_cut_rad, soft_cut_width,
+                                        cat=True, gaussian_mask=gaussian_mask,
                                         device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         tau_cg_levels_atom = self.cormorant_cg.tau_levels_atom
@@ -142,8 +141,8 @@ class CormorantMD17(CGModule):
         rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0))
 
         # Prepare the input reps for both the atom and edge network
-        atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
-        edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
+        atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms, sq_norms)
+        edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms, sq_norms)
 
         # Clebsch-Gordan layers central to the network
         atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask,

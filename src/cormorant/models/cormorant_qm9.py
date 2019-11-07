@@ -19,25 +19,25 @@ class CormorantQM9(CGModule):
 
     Parameters
     ----------
-    maxl : :obj:`int` of :obj:`list` of :obj:`int`
+    maxl : :class:`int` of :class:`list` of :class:`int`
         Maximum weight in the output of CG products. (Expanded to list of
-        length :obj:`num_cg_levels`)
-    max_sh : :obj:`int` of :obj:`list` of :obj:`int`
+        length :class:`num_cg_levels`)
+    max_sh : :class:`int` of :class:`list` of :class:`int`
         Maximum weight in the output of the spherical harmonics  (Expanded to list of
-        length :obj:`num_cg_levels`)
-    num_cg_levels : :obj:`int`
+        length :class:`num_cg_levels`)
+    num_cg_levels : :class:`int`
         Number of cg levels to use.
-    num_channels : :obj:`int` of :obj:`list` of :obj:`int`
+    num_channels : :class:`int` of :class:`list` of :class:`int`
         Number of channels that the output of each CG are mixed to (Expanded to list of
-        length :obj:`num_cg_levels`)
-    num_species : :obj:`int`
+        length :class:`num_cg_levels`)
+    num_species : :class:`int`
         Number of species of atoms included in the input dataset.
-
-    device : :obj:`torch.device`
+    device : :class:`torch.device`
         Device to initialize the level to
-    dtype : :obj:`torch.dtype`
+    dtype : :class:`torch.torch.dtype`
         Data type to initialize the level to level to
-    cg_dict : :obj:`nn.cg_lib.CGDict`
+    cg_dict : :class:`CGDict <cormorant.cg_lib.CGDict>`
+        Clebsch-gordan dictionary object.
     """
     def __init__(self, maxl, max_sh, num_cg_levels, num_channels, num_species,
                  cutoff_type, hard_cut_rad, soft_cut_rad, soft_cut_width,
@@ -99,7 +99,7 @@ class CormorantQM9(CGModule):
                                         tau_pos, num_cg_levels, num_channels,
                                         level_gain, weight_init, cutoff_type,
                                         hard_cut_rad, soft_cut_rad, soft_cut_width,
-                                        cat=True, gaussian_mask=False,
+                                        cat=True, gaussian_mask=gaussian_mask,
                                         device=self.device, dtype=self.dtype, cg_dict=self.cg_dict)
 
         tau_cg_levels_atom = self.cormorant_cg.tau_levels_atom
@@ -143,8 +143,8 @@ class CormorantQM9(CGModule):
         rad_func_levels = self.rad_funcs(norms, edge_mask * (norms > 0))
 
         # Prepare the input reps for both the atom and edge network
-        atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
-        edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
+        atom_reps_in = self.input_func_atom(atom_scalars, atom_mask, edge_scalars, edge_mask, norms, sq_norms)
+        edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms, sq_norms)
 
         # Clebsch-Gordan layers central to the network
         atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask,
