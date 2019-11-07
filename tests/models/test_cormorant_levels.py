@@ -58,7 +58,7 @@ class TestCormorantAtomLevel(object):
         atom_positions_rot = rot.rotate_cart_vec(R, atom_positions)
 
         # Get nonrotated data
-        spherical_harmonics, norms = sph_harms(atom_positions, atom_positions)
+        spherical_harmonics, norms, __ = sph_harms(atom_positions, atom_positions)
         edge_rep_list = [torch.cat([sph_l] * tau, axis=-3) for sph_l in spherical_harmonics]
         edge_reps = SO3Vec(edge_rep_list)
         print(edge_reps.shapes)
@@ -70,7 +70,7 @@ class TestCormorantAtomLevel(object):
 
         # Get rotated outputdata
         atom_rep_rot = atom_rep.apply_wigner(D)
-        spherical_harmonics_rot, norms = sph_harms(atom_positions_rot, atom_positions_rot)
+        spherical_harmonics_rot, __, __ = sph_harms(atom_positions_rot, atom_positions_rot)
         edge_rep_list_rot = [torch.cat([sph_l] * tau, axis=-3) for sph_l in spherical_harmonics_rot]
         edge_reps_rot = SO3Vec(edge_rep_list_rot)
         output_from_rot = atom_lvl(atom_rep_rot, edge_reps_rot, atom_mask)
@@ -104,8 +104,8 @@ class TestCormorantEdgeLevel(object):
         atom_reps_rot = atom_reps.apply_wigner(D)
 
         # Calculate spherical harmonics and radial functions
-        __, norms = sph_harms(atom_positions, atom_positions)
-        __, norms_rot = sph_harms(atom_positions_rot, atom_positions_rot)
+        __, norms, sq_norms = sph_harms(atom_positions, atom_positions)
+        __, norms_rot, sq_norms = sph_harms(atom_positions_rot, atom_positions_rot)
 
         rad_funcs = RadialFilters([maxl-1], [basis, basis], [num_channels], 1,
                                   device=device, dtype=dtype)
@@ -133,8 +133,8 @@ class TestCormorantEdgeLevel(object):
                                       hard_cut_rad=1.73, soft_cut_rad=1.73,
                                       soft_cut_width=0.2)
 
-        output_edge_reps = edge_lvl(edge_reps, atom_reps, rad_func_levels[0], edge_mask, norms)
-        output_edge_reps_rot = edge_lvl(edge_reps, atom_reps_rot, rad_func_levels[0], edge_mask, norms)
+        output_edge_reps = edge_lvl(edge_reps, atom_reps, rad_func_levels[0], edge_mask, norms, sq_norms)
+        output_edge_reps_rot = edge_lvl(edge_reps, atom_reps_rot, rad_func_levels[0], edge_mask, norms, sq_norms)
 
         for i in range(maxl):
             assert(torch.max(torch.abs(output_edge_reps[i] - output_edge_reps_rot[i])) < 1E-5)

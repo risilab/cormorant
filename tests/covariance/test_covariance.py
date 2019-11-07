@@ -10,9 +10,9 @@ from cormorant.cg_lib import CGProduct, CGDict
 
 class TestCovariance():
     @pytest.mark.parametrize('batch', [(1,), (2,), (1, 1), (2, 2)])
-    @pytest.mark.parametrize('maxl1', [0, 1, 3])
-    @pytest.mark.parametrize('maxl2', [0, 1, 3])
-    @pytest.mark.parametrize('maxl', [0, 1, 3])
+    @pytest.mark.parametrize('maxl1', [0, 2])
+    @pytest.mark.parametrize('maxl2', [0, 2])
+    @pytest.mark.parametrize('maxl', [0, 2])
     @pytest.mark.parametrize('channels', [1, 2])
     def test_CGProduct(self, batch, maxl1, maxl2, maxl, channels):
         maxl_all = max(maxl1, maxl2, maxl)

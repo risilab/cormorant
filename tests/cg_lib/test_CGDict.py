@@ -55,8 +55,8 @@ class TestCGDict():
         assert cg_dict.dtype == cg_dict[(0,0)].dtype
         assert cg_dict.dtype == dtype2
 
-    @pytest.mark.parametrize('maxl1', [0, 1, 2, 3])
-    @pytest.mark.parametrize('maxl2', [0, 1, 2, 3])
+    @pytest.mark.parametrize('maxl1', [0, 1, 3])
+    @pytest.mark.parametrize('maxl2', [0, 1, 3])
     def test_cg_dict_update_maxl(self, maxl1, maxl2):
 
         maxl = max(maxl1, maxl2)

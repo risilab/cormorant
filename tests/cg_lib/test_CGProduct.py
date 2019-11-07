@@ -43,7 +43,7 @@ class TestCGProductInitialization():
     ########## Check initialization.
 
     # Check the cg_dict device works correctly if maxl is set.
-    @pytest.mark.parametrize('maxl', [None, 0, 1, 2])
+    @pytest.mark.parametrize('maxl', [None, 0, 2])
     @pytest.mark.parametrize('dtype', [None, torch.half, torch.float, torch.double])
     def test_cg_prod_set_from_cg_dict(self, maxl, dtype):
 
@@ -63,8 +63,8 @@ class TestCGProductInitialization():
             assert cg_prod.cg_dict.maxl == max(1, maxl) if maxl is not None else 1
 
     # Check the cg_dict device works correctly if maxl is set.
-    @pytest.mark.parametrize('maxl1', [0, 1, 2])
-    @pytest.mark.parametrize('maxl2', [0, 1, 2])
+    @pytest.mark.parametrize('maxl1', [0, 2])
+    @pytest.mark.parametrize('maxl2', [0, 2])
     @pytest.mark.parametrize('chan1', [1, 2])
     @pytest.mark.parametrize('chan2', [1, 2])
     @pytest.mark.parametrize('set_tau1', [True, False])

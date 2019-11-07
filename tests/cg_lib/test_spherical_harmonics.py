@@ -13,8 +13,8 @@ from utils import complex_from_numpy
 class TestSphericalHarmonics():
 
     # Compare with SciyPy
-    @pytest.mark.parametrize('maxl', range(3))
-    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
+    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('batch', [(1,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 3, 3)])
     @pytest.mark.parametrize('conj', [True, False])
     def test_spherical_harmonics_vs_scipy(self, maxl, batch, conj):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)
@@ -29,10 +29,10 @@ class TestSphericalHarmonics():
             assert torch.allclose(part1, part2)
 
     # Compare with SciyPy
-    @pytest.mark.parametrize('maxl', range(3))
-    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 2, 2), (2, 3, 3)])
-    @pytest.mark.parametrize('natoms1', [1, 2, 5])
-    @pytest.mark.parametrize('natoms2', [1, 2, 5])
+    @pytest.mark.parametrize('maxl', [0, 2])
+    @pytest.mark.parametrize('batch', [(1,), (2,), (5,), (1, 1), (2, 1), (1, 2), (1, 1, 1), (2, 3, 3)])
+    @pytest.mark.parametrize('natoms1', [1, 5])
+    @pytest.mark.parametrize('natoms2', [1, 5])
     @pytest.mark.parametrize('conj', [True, False])
     def test_spherical_rel_harmonics_vs_scipy(self, maxl, batch, natoms1, natoms2, conj):
         cg_dict = CGDict(maxl=maxl, dtype=torch.double)

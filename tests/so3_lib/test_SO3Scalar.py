@@ -8,7 +8,7 @@ rand_scalar = lambda batch, tau: SO3Scalar([torch.rand(batch + (t, 2)) for l, t 
 class TestSO3Scalar():
 
     @pytest.mark.parametrize('batch', [(1,), (2,), (7,), (1,1), (2, 2), (7, 7)])
-    @pytest.mark.parametrize('maxl', range(3))
+    @pytest.mark.parametrize('maxl', [0, 2])
     @pytest.mark.parametrize('channels', range(1, 3))
     def test_SO3Scalar_init_channels(self, batch, maxl, channels):
 
@@ -19,7 +19,7 @@ class TestSO3Scalar():
         assert test_vec.tau == tau_list
 
     @pytest.mark.parametrize('batch', [(1,), (2,), (7,), (1,1), (2, 2), (7, 7)])
-    @pytest.mark.parametrize('maxl', range(4))
+    @pytest.mark.parametrize('maxl', [0, 2])
     @pytest.mark.parametrize('channels', range(1, 4))
     def test_SO3Scalar_init_arb_tau(self, batch, maxl, channels):
 
