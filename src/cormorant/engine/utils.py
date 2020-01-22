@@ -107,6 +107,12 @@ def init_file_paths(args):
     else:
         raise ValueError('Dataset must be qm9 or md17!')
 
+    return args
+
+
+def logging_printout(args):
+    
+    # Printouts of various inputs before training (and after logger is initialized with correct logfile path)
     logger.info('Initializing simulation based upon argument string:')
     logger.info(' '.join([arg for arg in sys.argv]))
     logger.info('Log, best, checkpoint, load files: {} {} {} {}'.format(args.logfile, args.bestfile, args.checkfile, args.loadfile))
@@ -119,7 +125,10 @@ def init_file_paths(args):
         args.seed = seed
         torch.manual_seed(seed)
 
-    return args
+    logger.info('Values of all model arguments:')
+    logger.info('{}'.format(args))
+
+
 
 #### Initialize optimizer ####
 

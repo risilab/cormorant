@@ -158,10 +158,10 @@ class Engine:
         tcollate = tepoch-self.batch_time
 
         if self.args.textlog:
-            logstring = 'E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
+            logstring = self.args.prefix + ' E:{:3}/{}, B: {:5}/{}'.format(self.epoch+1, self.args.num_epoch, batch_idx, len(self.dataloaders['train']))
             logstring += '{:> 9.4f}{:> 9.4f}{:> 9.4f}'.format(sqrt(mini_batch_loss), self.mae, self.rmse)
             logstring += '  dt:{:> 6.2f}{:> 8.2f}{:> 8.2f}'.format(dtb, tepoch, tcollate)
-
+            logstring += '  {:.2E}'.format(self.scheduler.get_lr()[0])
             logging.info(logstring)
 
         if self.summarize:

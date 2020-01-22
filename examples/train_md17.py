@@ -9,7 +9,7 @@ from cormorant.models import CormorantMD17
 from cormorant.models.autotest import cormorant_tests
 
 from cormorant.engine import Engine
-from cormorant.engine import init_argparse, init_file_paths, init_logger, init_cuda
+from cormorant.engine import init_argparse, init_file_paths, init_logger, logging_printout, init_cuda
 from cormorant.engine import init_optimizer, init_scheduler
 from cormorant.data.utils import initialize_datasets
 
@@ -30,6 +30,9 @@ def main():
 
     # Initialize logger
     init_logger(args)
+
+    # Write input paramaters and paths to log
+    logging_printout(args)
 
     # Initialize device and data type
     device, dtype = init_cuda(args)
